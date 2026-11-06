@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Preview tượng</title>
+<style>body{margin:0;overflow:hidden;background:#241a10}canvas{display:block}
+.tag{position:fixed;bottom:12px;width:50%;text-align:center;color:#ffe9bb;font:600 20px sans-serif;text-shadow:0 2px 8px #000;z-index:5}</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div class="tag" style="left:0">A — Bảo tàng (CC0)</div>
+<div class="tag" style="right:0">B — Vàng (Tripo)</div>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a1e12);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.5;
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+camera.position.set(0, 3.4, 11);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.9, 0);
+scene.add(new THREE.HemisphereLight(0xffe8c4, 0x8a7a5a, 1.0));
+const sun = new THREE.DirectionalLight(0xffdfae, 2.4);
+sun.position.set(6, 10, 8); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 16), new THREE.MeshStandardMaterial({ color: 0x6d4a2f, roughness: 0.8 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+function place(gltf, x) {
+  const m = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  m.scale.setScalar(3.4 / size.y);
+  const bb2 = new THREE.Box3().setFromObject(m);
+  m.position.set(x - (bb2.min.x + bb2.max.x) / 2, -bb2.min.y, -(bb2.min.z + bb2.max.z) / 2);
+  scene.add(m);
+}
+new GLTFLoader().load('models/cand-a/scene.gltf', g => place(g, -3.4), undefined, e => console.error('A fail', e));
+new GLTFLoader().load('models/cand-b/buddha-statue.gltf', g => place(g, 3.4), undefined, e => console.error('B fail', e));
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>
