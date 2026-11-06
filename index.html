@@ -487,16 +487,17 @@ hallFloor.receiveShadow = true; hallGroup.add(hallFloor);
 const sceneTex = new THREE.TextureLoader().load('scene.webp');
 sceneTex.colorSpace = THREE.SRGBColorSpace;
 const backdrop = new THREE.Mesh(
-  new THREE.CylinderGeometry(17.5, 17.5, 11.5, 40, 1, true, -0.78, 1.56),
+  new THREE.CylinderGeometry(17.5, 17.5, 11.5, 40, 1, true, -0.94, 1.88),
   new THREE.MeshBasicMaterial({ map: sceneTex, fog: false }));
 backdrop.position.set(HALL_X, 5.4, -27);
 hallGroup.add(backdrop);
+box(36, 11.5, 0.4, MAT.woodDark, HALL_X, 5.2, -15.6, hallGroup);
 box(0.6, 9, 20, MAT.woodDark, HALL_X - 14.6, 4.5, 0, hallGroup);
 box(0.6, 9, 20, MAT.woodDark, HALL_X + 14.6, 4.5, 0, hallGroup);
 box(30, 0.6, 20, MAT.woodDark, HALL_X, 9.2, 0, hallGroup);
-for (let i = -2; i <= 2; i++) box(0.5, 9, 0.5, MAT.woodDark, HALL_X + i * 6.4, 4.5, 6.5, hallGroup);
+[-12.8, -6.4, 6.4, 12.8].forEach(dx => box(0.5, 9, 0.5, MAT.woodDark, HALL_X + dx, 4.5, 6.5, hallGroup));
 [-11.8, 11.8].forEach(dx => cyl(0.42, 0.48, 9.4, MAT.woodRed, HALL_X + dx, 4.7, -8.6, hallGroup));
-[-12.6, 12.6].forEach(dx => box(2.2, 10.5, 0.3, MAT.wall, HALL_X + dx, 5.2, -9.4, hallGroup));
+[-13.6, 13.6].forEach(dx => box(2.4, 10.5, 0.3, MAT.wall, HALL_X + dx, 5.2, -14.2, hallGroup));
 for (let i = -2; i <= 2; i++) {
   const l = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 12), MAT.lanternRed);
   l.scale.y = 0.85; l.position.set(HALL_X + i * 5.2, 7.6, 3.5); hallGroup.add(l);
