@@ -53,6 +53,7 @@
 
   /* Hint + toast */
   #hint { bottom:96px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); white-space:nowrap; pointer-events:none; }
+  #credit { position:fixed; left:10px; bottom:8px; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; }
   #toast { top:146px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(30,22,12,.88);
     border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
     opacity:0; transition:all .35s ease; pointer-events:none; max-width:88vw; text-align:center; }
@@ -92,6 +93,7 @@
 </div>
 
 <div class="ui" id="toast"></div>
+<div id="credit">Tượng Phật: “Buddha” của hullo (Sketchfab) — CC-BY-4.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi · Kéo để xoay góc nhìn · Bấm vào đệm trống để ngồi thiền</div>
 
 <div class="ui" id="actions">
@@ -113,6 +115,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /* ============ Renderer / Scene / Camera ============ */
 const container = document.getElementById('scene');
@@ -122,11 +126,15 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf2cf9e);
 scene.fog = new THREE.Fog(0xf0d3a2, 46, 100);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 const skyDome = new THREE.Mesh(new THREE.SphereGeometry(160, 24, 16),
   new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false,
     map: canvasTexture(16, 256, (g) => {
@@ -187,24 +195,24 @@ function nameTag(text, sub) {
   return s;
 }
 const MAT = {
-  stone: new THREE.MeshStandardMaterial({ color: 0xcfc8ba, roughness: 0.95 }),
-  woodDark: new THREE.MeshStandardMaterial({ color: 0x6d4a2f, roughness: 0.85 }),
-  woodRed: new THREE.MeshStandardMaterial({ color: 0x8e2f26, roughness: 0.7 }),
-  wall: new THREE.MeshStandardMaterial({ color: 0x7a3b2e, roughness: 0.9 }),
-  roof: new THREE.MeshStandardMaterial({ color: 0x4a4f57, roughness: 0.8 }),
-  roofRidge: new THREE.MeshStandardMaterial({ color: 0x394048, roughness: 0.8 }),
-  gold: new THREE.MeshStandardMaterial({ color: 0xd9a441, roughness: 0.35, metalness: 0.55 }),
-  leaf: new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.95 }),
-  leaf2: new THREE.MeshStandardMaterial({ color: 0x5d8f4e, roughness: 0.95 }),
-  trunk: new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 1 }),
-  bronze: new THREE.MeshStandardMaterial({ color: 0x4f4238, roughness: 0.55, metalness: 0.5 }),
-  cushion: new THREE.MeshStandardMaterial({ color: 0xa67c3f, roughness: 0.9 }),
-  cushionTop: new THREE.MeshStandardMaterial({ color: 0xc49a58, roughness: 0.9 }),
-  skin: new THREE.MeshStandardMaterial({ color: 0xf2c9a4, roughness: 0.65 }),
+  stone: new THREE.MeshStandardMaterial({ color: 0xddd5c2, roughness: 0.7 }),
+  woodDark: new THREE.MeshStandardMaterial({ color: 0x7d5133, roughness: 0.65 }),
+  woodRed: new THREE.MeshStandardMaterial({ color: 0xb23a28, roughness: 0.5 }),
+  wall: new THREE.MeshStandardMaterial({ color: 0xa04028, roughness: 0.65 }),
+  roof: new THREE.MeshStandardMaterial({ color: 0x5d6a86, roughness: 0.6 }),
+  roofRidge: new THREE.MeshStandardMaterial({ color: 0x4a5872, roughness: 0.6 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xf2b53a, roughness: 0.25, metalness: 0.5 }),
+  leaf: new THREE.MeshStandardMaterial({ color: 0x54a047, roughness: 0.7 }),
+  leaf2: new THREE.MeshStandardMaterial({ color: 0x6cb85a, roughness: 0.7 }),
+  trunk: new THREE.MeshStandardMaterial({ color: 0x7d5738, roughness: 0.8 }),
+  bronze: new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.4, metalness: 0.5 }),
+  cushion: new THREE.MeshStandardMaterial({ color: 0xc08c46, roughness: 0.6 }),
+  cushionTop: new THREE.MeshStandardMaterial({ color: 0xe0aa54, roughness: 0.55 }),
+  skin: new THREE.MeshStandardMaterial({ color: 0xffd2a8, roughness: 0.45 }),
   hair: new THREE.MeshStandardMaterial({ color: 0x2e2019, roughness: 0.8 }),
-  robe: new THREE.MeshStandardMaterial({ color: 0x5b7fa6, roughness: 0.85 }),
-  robeGold: new THREE.MeshStandardMaterial({ color: 0xd9a441, roughness: 0.6 }),
-  robeBrown: new THREE.MeshStandardMaterial({ color: 0x9a7b4f, roughness: 0.85 }),
+  robe: new THREE.MeshStandardMaterial({ color: 0x4f9be0, roughness: 0.5 }),
+  robeGold: new THREE.MeshStandardMaterial({ color: 0xf2b53a, roughness: 0.4 }),
+  robeBrown: new THREE.MeshStandardMaterial({ color: 0xbd8449, roughness: 0.55 }),
   lanternRed: new THREE.MeshStandardMaterial({ color: 0xd8402e, roughness: 0.5, emissive: 0x7a1503, emissiveIntensity: 0.7 }),
 };
 function box(w, h, d, mat, x, y, z, parent) {
@@ -244,7 +252,7 @@ scene.add(ground);
 
 /* grass rim */
 const grass = new THREE.Mesh(new THREE.PlaneGeometry(300, 300),
-  new THREE.MeshStandardMaterial({ color: 0x77a05e, roughness: 1 }));
+  new THREE.MeshStandardMaterial({ color: 0x86c168, roughness: 0.9 }));
 grass.rotation.x = -Math.PI / 2; grass.position.y = -0.03;
 scene.add(grass);
 
@@ -400,7 +408,7 @@ function lotusPond(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
   cyl(1.15, 0.95, 0.4, MAT.stone, 0, 0.2, 0, g, 22);
   const water = new THREE.Mesh(new THREE.CircleGeometry(1.0, 22),
-    new THREE.MeshStandardMaterial({ color: 0x6fa8a0, roughness: 0.15, metalness: 0.25 }));
+    new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.25 }));
   water.rotation.x = -Math.PI / 2; water.position.y = 0.41; g.add(water);
   const padMat = new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.9 });
   [[-0.4, -0.2], [0.35, 0.3], [0.05, -0.5]].forEach(([px, pz]) => {
@@ -568,12 +576,37 @@ for (let i = 0; i < 13; i++) {
   const p = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), goldStatue);
   p.scale.set(1, 0.55, 0.7); p.position.set(HALL_X - 6 + i, 0.98, -7.42); hallGroup.add(p);
 }
-buildBuddha(HALL_X - 3.1, 0.9, -8.9);
-buildBuddha(HALL_X + 3.1, 0.9, -8.9);
-cyl(0.52, 0.4, 0.62, MAT.bronze, HALL_X, 1.2, -8.6, hallGroup);
-cyl(0.62, 0.62, 0.1, MAT.bronze, HALL_X, 1.55, -8.6, hallGroup);
-for (let i = 0; i < 4; i++) cyl(0.016, 0.016, 0.55, stickMat, HALL_X + (Math.random() - 0.5) * 0.5, 1.85, -8.6 + (Math.random() - 0.5) * 0.5, hallGroup, 6);
-[-1.5, 1.5].forEach(dx => {
+/* central mandorla backdrop for the statue */
+(function () {
+  const mg = new THREE.Group(); mg.position.set(HALL_X, 3.05, -9.85); hallGroup.add(mg);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1.55, 36),
+    new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+  disc.scale.set(1, 1.42, 1); mg.add(disc);
+  const r1 = new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.06, 8, 36), goldStatue);
+  r1.scale.set(1, 1.42, 1); mg.add(r1);
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    const bead = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), goldStatue);
+    bead.position.set(Math.cos(a) * 1.58, Math.sin(a) * 2.24, 0); mg.add(bead);
+  }
+  const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.5, depthWrite: false }));
+  gs.scale.set(5.2, 5.2, 1); mg.add(gs);
+})();
+/* "Buddha" by hullo (Sketchfab), CC-BY-4.0 — falls back to the built statue if it fails */
+new GLTFLoader().load('models/buddha/scene.gltf', (gltf) => {
+  const m = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  m.scale.setScalar(3.6 / size.y);
+  const bb2 = new THREE.Box3().setFromObject(m);
+  m.position.set(HALL_X - (bb2.min.x + bb2.max.x) / 2, 0.9 - bb2.min.y, -8.95 - (bb2.min.z + bb2.max.z) / 2);
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  hallGroup.add(m);
+}, undefined, () => { buildBuddha(HALL_X, 0.9, -8.9); });
+cyl(0.52, 0.4, 0.62, MAT.bronze, HALL_X, 0.81, -7.15, hallGroup);
+cyl(0.62, 0.62, 0.1, MAT.bronze, HALL_X, 1.16, -7.15, hallGroup);
+for (let i = 0; i < 4; i++) cyl(0.016, 0.016, 0.55, stickMat, HALL_X + (Math.random() - 0.5) * 0.5, 1.46, -7.15 + (Math.random() - 0.5) * 0.5, hallGroup, 6);
+[-2.4, 2.4].forEach(dx => {
   cyl(0.09, 0.13, 1.15, MAT.wall, HALL_X + dx, 1.45, -8.8, hallGroup);
   const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb45e, transparent: true, opacity: 0.95, depthWrite: false }));
   fl.scale.set(0.55, 0.75, 1); fl.position.set(HALL_X + dx, 2.2, -8.8); hallGroup.add(fl);
@@ -587,10 +620,10 @@ for (let i = 0; i < 4; i++) cyl(0.016, 0.016, 0.55, stickMat, HALL_X + (Math.ran
   }
 });
 [-2.2, 2.2].forEach(dx => {
-  cyl(0.52, 0.38, 0.2, MAT.bronze, HALL_X + dx, 1.0, -7.9, hallGroup);
+  cyl(0.52, 0.38, 0.2, MAT.bronze, HALL_X + dx, 1.0, -7.55, hallGroup);
   [[0, 0xff8c3a], [0.22, 0x9ccc3c], [-0.22, 0xffb84d]].forEach(([ox, col]) => {
     const fr = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 8), new THREE.MeshStandardMaterial({ color: col, roughness: 0.6 }));
-    fr.position.set(HALL_X + dx + ox * 1.3, 1.26, -7.9); hallGroup.add(fr);
+    fr.position.set(HALL_X + dx + ox * 1.3, 1.26, -7.55); hallGroup.add(fr);
   });
 });
 function textBoard(lines, w, h) {
@@ -946,6 +979,9 @@ const camDelta = new THREE.Vector3();
 const desiredTarget = new THREE.Vector3();
 let firstFrame = true;
 
+scene.traverse((o) => {
+  if (o.isMesh && o.material && 'envMapIntensity' in o.material) o.material.envMapIntensity = 0.5;
+});
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
