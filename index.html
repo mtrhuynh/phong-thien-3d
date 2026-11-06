@@ -53,6 +53,12 @@
 
   /* Hint + toast */
   #hint { bottom:96px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); white-space:nowrap; pointer-events:none; }
+  #musicBar { position:fixed; top:64px; right:10px; z-index:30; display:flex; align-items:center; gap:8px;
+    padding:6px 10px; border-radius:999px; background:rgba(38,24,10,0.82); border:1px solid rgba(240,199,106,0.45);
+    color:#fdf3d8; font-size:13px; backdrop-filter:blur(6px); max-width:72vw; }
+  #musicBar button { background:rgba(240,199,106,0.16); border:1px solid rgba(240,199,106,0.4); color:#ffe9a8;
+    border-radius:999px; padding:4px 10px; font-size:13px; cursor:pointer; }
+  #musName { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
   .xam-inner { width:min(92vw, 430px); max-height:84vh; overflow-y:auto; padding:22px 24px; border-radius:18px; text-align:center;
@@ -104,6 +110,12 @@
 </div>
 
 <div class="ui" id="toast"></div>
+<div id="musicBar">
+  <button id="musPlay" title="Mở / tắt nhạc thiền">🎵 ▶</button>
+  <span id="musName">Nhạc thiền</span>
+  <button id="musNext" title="Bài tiếp">⏭</button>
+</div>
+<audio id="musAudio" preload="none"></audio>
 <div id="xamCard">
   <div class="xam-inner">
     <div class="xam-cap" id="xamCap">🎋 Quẻ số 1 · Thượng</div>
@@ -336,6 +348,14 @@ function eaveTips(w, d, yTop) {
 }
 eaveTips(19.5, 10.5, 6.35);
 eaveTips(13.5, 7.6, 8.95);
+const flameTex = canvasTexture(128, 128, (g) => {
+  const gr = g.createRadialGradient(64, 58, 2, 64, 64, 62);
+  gr.addColorStop(0, 'rgba(255,246,216,1)');
+  gr.addColorStop(0.35, 'rgba(255,214,110,0.85)');
+  gr.addColorStop(0.7, 'rgba(255,150,40,0.38)');
+  gr.addColorStop(1, 'rgba(232,120,12,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+});
 const glowTex = canvasTexture(128, 128, (g) => {
   const gr = g.createRadialGradient(64, 64, 2, 64, 64, 62);
   gr.addColorStop(0, 'rgba(255,190,90,0.85)'); gr.addColorStop(1, 'rgba(255,150,40,0)');
@@ -428,8 +448,8 @@ for (let i = 0; i < 16; i++) {
   burner.add(sp); smokes.push(sp);
 }
 let smokeBoost = 0; // >0 right after lighting incense
-const burnerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.9, depthWrite: false }));
-burnerGlow.scale.set(1.25, 0.65, 1); burnerGlow.position.y = 1.97; burner.add(burnerGlow);
+const burnerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
+burnerGlow.scale.set(1.55, 1.15, 1); burnerGlow.position.y = 2.02; burner.add(burnerGlow);
 const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.position.y = 2.05; burner.add(burnerLight);
 emberFx.push({ ember: burnerGlow, fl: burnerLight, seed: 3.7 });
 
@@ -655,8 +675,8 @@ for (let i = 0; i < 4; i++) {
   const tip = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), emberMat);
   tip.position.set(HALL_X + sx, 1.75, -7.15 + sz); hallGroup.add(tip);
 }
-const urnGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.9, depthWrite: false }));
-urnGlow.scale.set(1.15, 0.7, 1); urnGlow.position.set(HALL_X, 1.8, -7.15); hallGroup.add(urnGlow);
+const urnGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
+urnGlow.scale.set(1.4, 1.05, 1); urnGlow.position.set(HALL_X, 1.8, -7.15); hallGroup.add(urnGlow);
 const urnLight = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); urnLight.position.set(HALL_X, 1.9, -7.15); hallGroup.add(urnLight);
 emberFx.push({ ember: urnGlow, fl: urnLight, seed: 7.3 });
 [-1.45, 1.45].forEach(dx => {
@@ -752,8 +772,8 @@ function hallBurner(dx) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false }));
     sp.userData.ph = i / 12; b.add(sp); hallSmokes.push(sp);
   }
-  const ember = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.85, depthWrite: false }));
-  ember.scale.set(1.2, 0.75, 1); ember.position.y = 1.45; b.add(ember);
+  const ember = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
+  ember.scale.set(1.5, 1.1, 1); ember.position.y = 1.55; b.add(ember);
   const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
   emberFx.push({ ember, fl, seed: Math.random() * 10 });
 }
@@ -1019,6 +1039,29 @@ function lightIncense() {
   addSen(5);
   toast('Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏', 3200);
 }
+const MUS_TRACKS = [
+  ['thien.mp3', '🎵 Nhạc thiền không lời'], ['mua.mp3', '🌧️ Mưa & sấm xa'],
+  ['chim.mp3', '🐦 Chim rừng buổi sớm'], ['karma.mp3', '🧘 Meditation Karma'],
+  ['yoga.mp3', '🧘‍♀️ Yoga thư giãn'], ['serenity.mp3', '🌿 Serenity'],
+  ['relax.mp3', '🍃 Relaxation'], ['healing.mp3', '💗 Healing Sleep'],
+  ['moonlight.mp3', '🌙 Moonlight'], ['canon.mp3', '🎹 Canon in D']
+];
+const musAudio = document.getElementById('musAudio');
+musAudio.volume = 0.65;
+let musIdx = 0, musStarted = false;
+function musLoad(i, autoplay) {
+  musIdx = (i + MUS_TRACKS.length) % MUS_TRACKS.length;
+  musAudio.src = 'music/' + MUS_TRACKS[musIdx][0];
+  document.getElementById('musName').textContent = MUS_TRACKS[musIdx][1];
+  if (autoplay) { musAudio.play().catch(() => {}); musStarted = true; document.getElementById('musPlay').textContent = '🎵 ⏸'; }
+}
+document.getElementById('musPlay').addEventListener('click', () => {
+  if (!musStarted) { musLoad(musIdx, true); return; }
+  if (musAudio.paused) { musAudio.play().catch(() => {}); document.getElementById('musPlay').textContent = '🎵 ⏸'; }
+  else { musAudio.pause(); document.getElementById('musPlay').textContent = '🎵 ▶'; }
+});
+document.getElementById('musNext').addEventListener('click', () => musLoad(musIdx + 1, true));
+musAudio.addEventListener('ended', () => musLoad(musIdx + 1, true));
 document.getElementById('btnXam').addEventListener('click', () => {
   if (room !== 'hall') { goToRoom('hall'); setTimeout(drawXam, 750); } else drawXam();
 });
@@ -1161,7 +1204,10 @@ function animate() {
   emberFx.forEach((e) => {
     const f = 0.82 + Math.sin(t * 11 + e.seed * 7) * 0.12 + Math.sin(t * 23 + e.seed * 3) * 0.07;
     e.fl.intensity = 3.4 * f;
-    e.ember.material.opacity = 0.85 * f;
+    e.ember.material.opacity = 0.88 * f;
+    if (!e.ember.userData.bx) { e.ember.userData.bx = e.ember.scale.x; e.ember.userData.by = e.ember.scale.y; }
+    const sw = 1 + Math.sin(t * 13 + e.seed * 5) * 0.08;
+    e.ember.scale.set(e.ember.userData.bx * sw, e.ember.userData.by * (2 - sw) * 0.5 + e.ember.userData.by * 0.5, 1);
   });
 
   /* fortune jar shake */
