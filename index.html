@@ -487,31 +487,48 @@ hallFloor.receiveShadow = true; hallGroup.add(hallFloor);
 box(30, 10, 0.4, MAT.woodDark, HALL_X, 5, -10.2, hallGroup);
 /* ============ Modelled 3D altar (replaces the flat painting) ============ */
 const goldStatue = new THREE.MeshStandardMaterial({ color: 0xdfa83e, roughness: 0.3, metalness: 0.55, emissive: 0x7a5410, emissiveIntensity: 0.4 });
+function limb(a, b, r, mat, parent) {
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, dir.length(), 6, 12), mat);
+  m.position.copy(a).addScaledVector(dir, 0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  parent.add(m); return m;
+}
 function buildBuddha(x, baseY, z) {
   const g = new THREE.Group(); g.position.set(x, baseY, z); g.scale.setScalar(1.3); hallGroup.add(g);
-  cyl(1.3, 1.5, 0.32, MAT.woodRed, 0, 0.16, 0, g);
-  cyl(1.02, 1.24, 0.3, goldStatue, 0, 0.47, 0, g);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
+  cyl(1.35, 1.55, 0.3, MAT.woodRed, 0, 0.15, 0, g);
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
     const p = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), goldStatue);
-    p.scale.set(1, 0.45, 0.6);
-    p.position.set(Math.cos(a) * 1.12, 0.55, Math.sin(a) * 1.12);
+    p.scale.set(1, 0.5, 0.62);
+    p.position.set(Math.cos(a) * 1.28, 0.34, Math.sin(a) * 1.28);
     p.rotation.y = -a; g.add(p);
   }
-  cyl(0.34, 0.92, 1.15, goldStatue, 0, 1.2, 0, g);
-  const sh = new THREE.Mesh(new THREE.SphereGeometry(0.44, 14, 12), goldStatue);
-  sh.position.y = 1.85; sh.scale.set(1.25, 0.7, 0.9); g.add(sh);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 16, 14), goldStatue);
-  head.position.y = 2.28; g.add(head);
-  const bump = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), goldStatue);
-  bump.position.y = 2.58; g.add(bump);
-  const halo = new THREE.Mesh(new THREE.CircleGeometry(0.78, 28),
+  const prof = [[0.0, 0.3], [0.95, 0.3], [1.14, 0.42], [1.16, 0.58], [1.0, 0.78], [0.8, 0.95], [0.64, 1.12], [0.68, 1.34], [0.62, 1.52], [0.34, 1.64], [0.3, 1.74]];
+  const body = new THREE.Mesh(
+    new THREE.LatheGeometry(prof.map(p => new THREE.Vector2(p[0], p[1])), 28), goldStatue);
+  g.add(body);
+  limb(new THREE.Vector3(-0.52, 1.44, 0.06), new THREE.Vector3(-0.8, 0.9, 0.3), 0.15, goldStatue, g);
+  limb(new THREE.Vector3(0.52, 1.44, 0.06), new THREE.Vector3(0.8, 0.9, 0.3), 0.15, goldStatue, g);
+  limb(new THREE.Vector3(-0.8, 0.9, 0.3), new THREE.Vector3(0.08, 0.84, 0.68), 0.12, goldStatue, g);
+  limb(new THREE.Vector3(0.8, 0.9, 0.3), new THREE.Vector3(-0.08, 0.84, 0.68), 0.12, goldStatue, g);
+  const hands = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), goldStatue);
+  hands.scale.set(1.35, 0.5, 0.95); hands.position.set(0, 0.86, 0.7); g.add(hands);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.335, 18, 16), goldStatue);
+  head.position.y = 2.04; head.scale.set(0.94, 1.05, 0.96); g.add(head);
+  [-0.33, 0.33].forEach(dx => {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), goldStatue);
+    ear.scale.set(0.55, 1.5, 0.8); ear.position.set(dx, 1.93, 0); g.add(ear);
+  });
+  const bump = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), goldStatue);
+  bump.position.y = 2.38; g.add(bump);
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(0.82, 28),
     new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
-  halo.position.set(0, 2.3, -0.3); g.add(halo);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.045, 8, 28), goldStatue);
-  ring.position.set(0, 2.3, -0.3); g.add(ring);
+  halo.position.set(0, 2.06, -0.34); g.add(halo);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.84, 0.045, 8, 28), goldStatue);
+  ring.position.set(0, 2.06, -0.34); g.add(ring);
   const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.5, depthWrite: false }));
-  gs.scale.set(3.2, 3.2, 1); gs.position.set(0, 2.2, -0.1); g.add(gs);
+  gs.scale.set(3.4, 3.4, 1); gs.position.set(0, 2.0, -0.1); g.add(gs);
   return g;
 }
 box(17, 0.5, 3.6, MAT.woodDark, HALL_X, 0.25, -8.4, hallGroup);
@@ -535,21 +552,21 @@ for (let i = 0; i < 4; i++) cyl(0.016, 0.016, 0.55, stickMat, HALL_X + (Math.ran
   }
 });
 [-2.2, 2.2].forEach(dx => {
-  cyl(0.42, 0.3, 0.18, MAT.bronze, HALL_X + dx, 1.0, -7.9, hallGroup);
+  cyl(0.52, 0.38, 0.2, MAT.bronze, HALL_X + dx, 1.0, -7.9, hallGroup);
   [[0, 0xff8c3a], [0.22, 0x9ccc3c], [-0.22, 0xffb84d]].forEach(([ox, col]) => {
-    const fr = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshStandardMaterial({ color: col, roughness: 0.6 }));
-    fr.position.set(HALL_X + dx + ox, 1.2, -7.9); hallGroup.add(fr);
+    const fr = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 8), new THREE.MeshStandardMaterial({ color: col, roughness: 0.6 }));
+    fr.position.set(HALL_X + dx + ox * 1.3, 1.26, -7.9); hallGroup.add(fr);
   });
 });
 function textBoard(lines, w, h) {
-  const t = canvasTexture(512, Math.round(512 * h / w), (g, W, H) => {
+  const t = canvasTexture(640, Math.round(640 * h / w), (g, W, H) => {
     g.fillStyle = '#241407'; g.fillRect(0, 0, W, H);
-    g.strokeStyle = '#e8b64c'; g.lineWidth = 10; g.strokeRect(10, 10, W - 20, H - 20);
+    g.strokeStyle = '#e8b64c'; g.lineWidth = 12; g.strokeRect(12, 12, W - 24, H - 24);
     g.fillStyle = '#f5c95e'; g.textAlign = 'center';
-    g.font = 'bold 42px "Be Vietnam Pro", Georgia, serif';
-    g.fillText(lines[0], W / 2, 76);
-    g.font = '29px "Be Vietnam Pro", Georgia, serif'; g.fillStyle = '#f0d9a0';
-    lines.slice(1).forEach((ln, i) => g.fillText(ln, W / 2, 146 + i * 52));
+    g.font = 'bold 54px Arial, "Helvetica Neue", sans-serif';
+    g.fillText(lines[0], W / 2, 96);
+    g.font = '36px Arial, "Helvetica Neue", sans-serif'; g.fillStyle = '#f0d9a0';
+    lines.slice(1).forEach((ln, i) => g.fillText(ln, W / 2, 178 + i * 62));
   });
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h),
     new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 }));
@@ -818,7 +835,7 @@ function lightIncense() {
 const btnHall = document.getElementById('btnHall');
 const btnLantern = document.getElementById('btnLantern');
 btnLantern.addEventListener('click', () => {
-  window.open('https://mtrhuynh.github.io/phong-thien/?den=1', '_blank');
+  window.open('https://mtrhuynh.github.io/dua-den/', '_blank');
 });
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
