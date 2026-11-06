@@ -469,17 +469,17 @@ const HALL_X = 90;
 const hallGroup = new THREE.Group(); scene.add(hallGroup);
 const woodTex = canvasTexture(512, 512, (g) => {
   g.fillStyle = '#5d3d22'; g.fillRect(0, 0, 512, 512);
-  for (let r = 0; r < 6; r++) {
-    const y = r * 86, v = 96 + Math.floor(Math.random() * 18);
+  for (let r = 0; r < 8; r++) {
+    const y = r * 64, v = 96 + Math.floor(Math.random() * 18);
     g.fillStyle = `rgb(${v + 22},${v - 10},${v - 46})`;
-    g.fillRect(0, y + 2, 512, 82);
-    g.strokeStyle = 'rgba(40,22,10,0.55)'; g.lineWidth = 3; g.strokeRect(-4, y + 2, 520, 82);
+    g.fillRect(0, y + 2, 512, 60);
+    g.strokeStyle = 'rgba(40,22,10,0.55)'; g.lineWidth = 3; g.strokeRect(-4, y + 2, 520, 60);
     g.strokeStyle = 'rgba(60,35,16,0.35)'; g.lineWidth = 1.5;
-    for (let i = 0; i < 5; i++) { const gy = y + 12 + Math.random() * 60; g.beginPath(); g.moveTo(0, gy); g.bezierCurveTo(150, gy + 4, 340, gy - 4, 512, gy + 2); g.stroke(); }
-    g.fillStyle = 'rgba(40,22,10,0.6)'; g.fillRect(Math.random() * 400, y, 4, 86);
+    for (let i = 0; i < 5; i++) { const gy = y + 8 + Math.random() * 46; g.beginPath(); g.moveTo(0, gy); g.bezierCurveTo(150, gy + 4, 340, gy - 4, 512, gy + 2); g.stroke(); }
+    g.fillStyle = 'rgba(40,22,10,0.6)'; g.fillRect(Math.random() * 400, y, 4, 64);
   }
 });
-woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(5, 4);
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(10, 9);
 const hallFloor = new THREE.Mesh(new THREE.PlaneGeometry(30, 26),
   new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.8 }));
 hallFloor.rotation.x = -Math.PI / 2; hallFloor.position.set(HALL_X, 0, 3);
@@ -515,6 +515,14 @@ function buildBuddha(x, baseY, z) {
   const hands = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), goldStatue);
   hands.scale.set(1.4, 0.55, 1); hands.position.set(0, 0.88, 0.82); g.add(hands);
   cyl(0.17, 0.12, 0.09, MAT.bronze, 0, 1.06, 0.82, g);
+  const sash = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.7, 0.74, 1.25, 18, 1, true, -0.52, 1.04),
+    new THREE.MeshStandardMaterial({ color: 0xb8862e, roughness: 0.45, metalness: 0.5, side: THREE.DoubleSide }));
+  sash.position.y = 1.14; sash.rotation.z = -0.55; g.add(sash);
+  [-0.27, 0.27].forEach(dx => {
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), goldStatue);
+    foot.scale.set(1.15, 0.55, 1.5); foot.position.set(dx, 0.6, 1.02); g.add(foot);
+  });
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.335, 18, 16), goldStatue);
   head.position.y = 2.04; head.scale.set(0.94, 1.05, 0.96); g.add(head);
   [-0.33, 0.33].forEach(dx => {
@@ -523,17 +531,32 @@ function buildBuddha(x, baseY, z) {
   });
   const bump = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), goldStatue);
   bump.position.y = 2.38; g.add(bump);
-  const halo = new THREE.Mesh(new THREE.CircleGeometry(0.82, 28),
-    new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
-  halo.position.set(0, 2.06, -0.34); g.add(halo);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.84, 0.045, 8, 28), goldStatue);
-  ring.position.set(0, 2.06, -0.34); g.add(ring);
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(0.98, 30),
+    new THREE.MeshBasicMaterial({ color: 0xffd98a, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+  halo.scale.set(1, 1.5, 1); halo.position.set(0, 1.62, -0.44); g.add(halo);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.98, 0.05, 8, 30), goldStatue);
+  ring.scale.set(1, 1.5, 1); ring.position.set(0, 1.62, -0.44); g.add(ring);
+  for (let i = 0; i < 9; i++) {
+    const a = (15 + i * 18.75) * Math.PI / 180;
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.26, 8), goldStatue);
+    flame.position.set(Math.cos(a) * 1.0, 1.62 + Math.sin(a) * 1.5, -0.44);
+    flame.rotation.z = a - Math.PI / 2;
+    g.add(flame);
+  }
   const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.5, depthWrite: false }));
   gs.scale.set(3.4, 3.4, 1); gs.position.set(0, 2.0, -0.1); g.add(gs);
   return g;
 }
 box(17, 0.5, 3.6, MAT.woodDark, HALL_X, 0.25, -8.4, hallGroup);
 box(13.5, 0.4, 2.6, MAT.woodRed, HALL_X, 0.7, -8.7, hallGroup);
+box(17.1, 0.09, 0.09, goldStatue, HALL_X, 0.52, -6.58, hallGroup);
+box(13.6, 0.09, 0.09, goldStatue, HALL_X, 0.92, -7.38, hallGroup);
+box(2.4, 0.16, 0.55, MAT.woodDark, HALL_X, 0.08, -6.05, hallGroup);
+box(1.7, 0.34, 0.5, MAT.woodDark, HALL_X, 0.17, -6.35, hallGroup);
+for (let i = 0; i < 13; i++) {
+  const p = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), goldStatue);
+  p.scale.set(1, 0.55, 0.7); p.position.set(HALL_X - 6 + i, 0.98, -7.42); hallGroup.add(p);
+}
 buildBuddha(HALL_X - 3.1, 0.9, -8.9);
 buildBuddha(HALL_X + 3.1, 0.9, -8.9);
 cyl(0.52, 0.4, 0.62, MAT.bronze, HALL_X, 1.2, -8.6, hallGroup);
@@ -572,18 +595,34 @@ function textBoard(lines, w, h) {
   return new THREE.Mesh(new THREE.PlaneGeometry(w, h),
     new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 }));
 }
-const merit = textBoard(['BẢNG VÀNG CÔNG ĐỨC', 'Khương Minh — 500', 'Trí Tài — 420', 'Thương Đạo Thọ — 380', 'Vô Ưu Minh — 350', 'Doanh Khoa — 320'], 3.6, 4.4);
-merit.position.set(HALL_X - 9.3, 2.6, -7.6); merit.rotation.y = 0.42; hallGroup.add(merit);
-box(3.9, 4.7, 0.16, MAT.woodDark, HALL_X - 9.38, 2.6, -7.72, hallGroup).rotation.y = 0.42;
-const dharma = textBoard(['PHÁP NGỮ', 'Không làm các điều ác,', 'siêng làm các việc lành,', 'giữ tâm ý trong sạch.'], 3.6, 3.2);
-dharma.position.set(HALL_X + 9.3, 2.4, -7.6); dharma.rotation.y = -0.42; hallGroup.add(dharma);
-box(3.9, 3.5, 0.16, MAT.woodDark, HALL_X + 9.38, 2.4, -7.72, hallGroup).rotation.y = -0.42;
+function framedBoard(lines, w, h, x, y, z, rotY) {
+  const grp = new THREE.Group(); grp.position.set(x, y, z); grp.rotation.y = rotY; hallGroup.add(grp);
+  box(w + 0.35, h + 0.35, 0.14, MAT.woodDark, 0, 0, 0, grp);
+  box(w + 0.52, 0.18, 0.2, MAT.woodRed, 0, h / 2 + 0.21, 0, grp);
+  box(w + 0.52, 0.18, 0.2, MAT.woodRed, 0, -h / 2 - 0.21, 0, grp);
+  box(0.18, h + 0.52, 0.2, MAT.woodRed, -w / 2 - 0.21, 0, 0, grp);
+  box(0.18, h + 0.52, 0.2, MAT.woodRed, w / 2 + 0.21, 0, 0, grp);
+  const face = textBoard(lines, w, h); face.position.z = 0.09; grp.add(face);
+  [-w / 3, w / 3].forEach(dx => {
+    const leg = box(0.16, 2.4, 0.16, MAT.woodDark, dx, -h / 2 - 1.0, -0.4, grp);
+    leg.rotation.x = 0.35;
+  });
+  return grp;
+}
+framedBoard(['BẢNG VÀNG CÔNG ĐỨC', 'Khương Minh — 500', 'Trí Tài — 420', 'Thương Đạo Thọ — 380', 'Vô Ưu Minh — 350', 'Doanh Khoa — 320'], 3.6, 4.4, HALL_X - 9.3, 2.9, -7.6, 0.42);
+framedBoard(['PHÁP NGỮ', 'Không làm các điều ác,', 'siêng làm các việc lành,', 'giữ tâm ý trong sạch.'], 3.6, 3.2, HALL_X + 9.3, 2.6, -7.6, -0.42);
 box(0.6, 9, 20, MAT.woodDark, HALL_X - 14.6, 4.5, 0, hallGroup);
 box(0.6, 9, 20, MAT.woodDark, HALL_X + 14.6, 4.5, 0, hallGroup);
 box(30, 0.6, 20, MAT.woodDark, HALL_X, 9.2, 0, hallGroup);
-[-12.8, -6.4, 6.4, 12.8].forEach(dx => box(0.5, 9, 0.5, MAT.woodDark, HALL_X + dx, 4.5, 6.5, hallGroup));
-[-11.8, 11.8].forEach(dx => cyl(0.42, 0.48, 9.4, MAT.woodRed, HALL_X + dx, 4.7, -8.6, hallGroup));
-[-11.8, 11.8].forEach(dx => cyl(0.42, 0.48, 9.4, MAT.woodRed, HALL_X + dx, 4.7, 9.6, hallGroup));
+function makeColumn(x, z, mat) {
+  box(1.15, 0.35, 1.15, MAT.woodDark, x, 0.18, z, hallGroup);
+  cyl(0.34, 0.4, 8.3, mat, x, 4.5, z, hallGroup);
+  cyl(0.47, 0.47, 0.16, goldStatue, x, 0.95, z, hallGroup);
+  cyl(0.47, 0.47, 0.16, goldStatue, x, 8.05, z, hallGroup);
+  box(1.05, 0.3, 1.05, MAT.woodDark, x, 8.85, z, hallGroup);
+}
+[-12.8, -6.4, 6.4, 12.8].forEach(dx => makeColumn(HALL_X + dx, 6.5, MAT.woodDark));
+[-11.8, 11.8].forEach(dx => { makeColumn(HALL_X + dx, -8.6, MAT.woodRed); makeColumn(HALL_X + dx, 9.6, MAT.woodRed); });
 box(25, 0.7, 0.7, MAT.woodDark, HALL_X, 8.9, 9.6, hallGroup);
 [-7.9, 7.9].forEach(dx => box(2.6, 7.5, 0.25, MAT.wall, HALL_X + dx, 4.6, -9.85, hallGroup));
 for (let i = -2; i <= 2; i++) {
