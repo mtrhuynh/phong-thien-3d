@@ -53,7 +53,7 @@
 
   /* Hint + toast */
   #hint { bottom:96px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); white-space:nowrap; pointer-events:none; }
-  #musicBar { position:fixed; top:64px; right:10px; z-index:30; display:flex; align-items:center; gap:8px;
+  #musicBar { position:fixed; top:108px; right:10px; z-index:30; display:flex; align-items:center; gap:8px;
     padding:6px 10px; border-radius:999px; background:rgba(38,24,10,0.82); border:1px solid rgba(240,199,106,0.45);
     color:#fdf3d8; font-size:13px; backdrop-filter:blur(6px); max-width:72vw; }
   #musicBar button { background:rgba(240,199,106,0.16); border:1px solid rgba(240,199,106,0.4); color:#ffe9a8;
@@ -427,6 +427,17 @@ const stickMat = new THREE.MeshStandardMaterial({ color: 0x9a4a30, roughness: 0.
 const emberMat = new THREE.MeshStandardMaterial({ color: 0xff5a26, emissive: 0xff4400, emissiveIntensity: 2.2 });
 const emberTips = [];
 const emberFx = [];
+const flames = [];
+function addFlame(parent, x, y, z, s) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const outer = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 10), new THREE.MeshBasicMaterial({ color: 0xffa726 }));
+  outer.scale.set(0.62, 1.35, 0.62); g.add(outer);
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
+  core.scale.set(0.6, 1.3, 0.6); core.position.y = -0.02; g.add(core);
+  g.scale.setScalar(s || 1); g.userData.bs = s || 1;
+  flames.push({ g, seed: Math.random() * 10 });
+  return g;
+}
 for (let i = 0; i < 7; i++) {
   const sx = (Math.random() - 0.5) * 0.8, sz = (Math.random() - 0.5) * 0.8;
   cyl(0.016, 0.016, 0.85, stickMat, sx, 1.5, sz, burner, 6);
@@ -452,6 +463,7 @@ const burnerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, tr
 burnerGlow.scale.set(1.55, 1.15, 1); burnerGlow.position.y = 2.02; burner.add(burnerGlow);
 const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.position.y = 2.05; burner.add(burnerLight);
 emberFx.push({ ember: burnerGlow, fl: burnerLight, seed: 3.7 });
+addFlame(burner, 0, 2.04, 0, 1.15);
 
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
 function lotusPond(x, z) {
@@ -669,10 +681,12 @@ const urnGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, trans
 urnGlow.scale.set(1.4, 1.05, 1); urnGlow.position.set(HALL_X, 1.8, -7.15); hallGroup.add(urnGlow);
 const urnLight = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); urnLight.position.set(HALL_X, 1.9, -7.15); hallGroup.add(urnLight);
 emberFx.push({ ember: urnGlow, fl: urnLight, seed: 7.3 });
+addFlame(hallGroup, HALL_X, 1.86, -7.15, 1.25);
 [-2.3, 2.3].forEach(dx => {
   cyl(0.09, 0.13, 1.15, MAT.wall, HALL_X + dx, 1.45, -8.8, hallGroup);
   const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb45e, transparent: true, opacity: 0.95, depthWrite: false }));
   fl.scale.set(0.55, 0.75, 1); fl.position.set(HALL_X + dx, 2.2, -8.8); hallGroup.add(fl);
+  addFlame(hallGroup, HALL_X + dx, 2.14, -8.8, 0.85);
 });
 [-5.6, 5.6].forEach(dx => {
   cyl(0.2, 0.3, 0.75, MAT.bronze, HALL_X + dx, 1.25, -8.8, hallGroup);
@@ -766,6 +780,7 @@ function hallBurner(dx) {
   ember.scale.set(1.5, 1.1, 1); ember.position.y = 1.55; b.add(ember);
   const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
   emberFx.push({ ember, fl, seed: Math.random() * 10 });
+  addFlame(b, 0, 1.82, 0, 1.1);
 }
 hallBurner(-3.4); hallBurner(3.4);
 
@@ -1198,6 +1213,10 @@ function animate() {
     if (!e.ember.userData.bx) { e.ember.userData.bx = e.ember.scale.x; e.ember.userData.by = e.ember.scale.y; }
     const sw = 1 + Math.sin(t * 13 + e.seed * 5) * 0.08;
     e.ember.scale.set(e.ember.userData.bx * sw, e.ember.userData.by * (2 - sw) * 0.5 + e.ember.userData.by * 0.5, 1);
+  });
+  flames.forEach((f) => {
+    const bs = f.g.userData.bs;
+    f.g.scale.set(bs * (1 + Math.sin(t * 17 + f.seed * 9) * 0.07), bs * (1 + Math.sin(t * 15 + f.seed * 7) * 0.13), bs);
   });
 
   /* fortune jar shake */
