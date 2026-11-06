@@ -480,9 +480,9 @@ const woodTex = canvasTexture(512, 512, (g) => {
   }
 });
 woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(5, 4);
-const hallFloor = new THREE.Mesh(new THREE.PlaneGeometry(30, 20),
+const hallFloor = new THREE.Mesh(new THREE.PlaneGeometry(30, 26),
   new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.8 }));
-hallFloor.rotation.x = -Math.PI / 2; hallFloor.position.set(HALL_X, 0, 0);
+hallFloor.rotation.x = -Math.PI / 2; hallFloor.position.set(HALL_X, 0, 3);
 hallFloor.receiveShadow = true; hallGroup.add(hallFloor);
 box(30, 10, 0.4, MAT.woodDark, HALL_X, 5, -10.2, hallGroup);
 /* ============ Modelled 3D altar (replaces the flat painting) ============ */
@@ -510,15 +510,16 @@ function buildBuddha(x, baseY, z) {
   g.add(body);
   limb(new THREE.Vector3(-0.52, 1.44, 0.06), new THREE.Vector3(-0.8, 0.9, 0.3), 0.15, goldStatue, g);
   limb(new THREE.Vector3(0.52, 1.44, 0.06), new THREE.Vector3(0.8, 0.9, 0.3), 0.15, goldStatue, g);
-  limb(new THREE.Vector3(-0.8, 0.9, 0.3), new THREE.Vector3(0.08, 0.84, 0.68), 0.12, goldStatue, g);
-  limb(new THREE.Vector3(0.8, 0.9, 0.3), new THREE.Vector3(-0.08, 0.84, 0.68), 0.12, goldStatue, g);
+  limb(new THREE.Vector3(-0.8, 0.9, 0.3), new THREE.Vector3(0.08, 0.86, 0.8), 0.14, goldStatue, g);
+  limb(new THREE.Vector3(0.8, 0.9, 0.3), new THREE.Vector3(-0.08, 0.86, 0.8), 0.14, goldStatue, g);
   const hands = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), goldStatue);
-  hands.scale.set(1.35, 0.5, 0.95); hands.position.set(0, 0.86, 0.7); g.add(hands);
+  hands.scale.set(1.4, 0.55, 1); hands.position.set(0, 0.88, 0.82); g.add(hands);
+  cyl(0.17, 0.12, 0.09, MAT.bronze, 0, 1.06, 0.82, g);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.335, 18, 16), goldStatue);
   head.position.y = 2.04; head.scale.set(0.94, 1.05, 0.96); g.add(head);
   [-0.33, 0.33].forEach(dx => {
     const ear = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), goldStatue);
-    ear.scale.set(0.55, 1.5, 0.8); ear.position.set(dx, 1.93, 0); g.add(ear);
+    ear.scale.set(0.55, 2.0, 0.8); ear.position.set(dx, 1.87, 0); g.add(ear);
   });
   const bump = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), goldStatue);
   bump.position.y = 2.38; g.add(bump);
@@ -563,7 +564,7 @@ function textBoard(lines, w, h) {
     g.fillStyle = '#241407'; g.fillRect(0, 0, W, H);
     g.strokeStyle = '#e8b64c'; g.lineWidth = 12; g.strokeRect(12, 12, W - 24, H - 24);
     g.fillStyle = '#f5c95e'; g.textAlign = 'center';
-    g.font = 'bold 54px Arial, "Helvetica Neue", sans-serif';
+    g.font = 'bold ' + (lines[0].length > 14 ? 42 : 54) + 'px Arial, "Helvetica Neue", sans-serif';
     g.fillText(lines[0], W / 2, 96);
     g.font = '36px Arial, "Helvetica Neue", sans-serif'; g.fillStyle = '#f0d9a0';
     lines.slice(1).forEach((ln, i) => g.fillText(ln, W / 2, 178 + i * 62));
@@ -582,6 +583,8 @@ box(0.6, 9, 20, MAT.woodDark, HALL_X + 14.6, 4.5, 0, hallGroup);
 box(30, 0.6, 20, MAT.woodDark, HALL_X, 9.2, 0, hallGroup);
 [-12.8, -6.4, 6.4, 12.8].forEach(dx => box(0.5, 9, 0.5, MAT.woodDark, HALL_X + dx, 4.5, 6.5, hallGroup));
 [-11.8, 11.8].forEach(dx => cyl(0.42, 0.48, 9.4, MAT.woodRed, HALL_X + dx, 4.7, -8.6, hallGroup));
+[-11.8, 11.8].forEach(dx => cyl(0.42, 0.48, 9.4, MAT.woodRed, HALL_X + dx, 4.7, 9.6, hallGroup));
+box(25, 0.7, 0.7, MAT.woodDark, HALL_X, 8.9, 9.6, hallGroup);
 [-7.9, 7.9].forEach(dx => box(2.6, 7.5, 0.25, MAT.wall, HALL_X + dx, 4.6, -9.85, hallGroup));
 for (let i = -2; i <= 2; i++) {
   const l = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 12), MAT.lanternRed);
