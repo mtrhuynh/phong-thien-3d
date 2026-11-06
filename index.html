@@ -486,7 +486,8 @@ hallFloor.rotation.x = -Math.PI / 2; hallFloor.position.set(HALL_X, 0, 3);
 hallFloor.receiveShadow = true; hallGroup.add(hallFloor);
 box(30, 10, 0.4, MAT.woodDark, HALL_X, 5, -10.2, hallGroup);
 /* ============ Modelled 3D altar (replaces the flat painting) ============ */
-const goldStatue = new THREE.MeshStandardMaterial({ color: 0xdfa83e, roughness: 0.3, metalness: 0.55, emissive: 0x7a5410, emissiveIntensity: 0.4 });
+const goldStatue = new THREE.MeshStandardMaterial({ color: 0xdfa83e, roughness: 0.42, metalness: 0.35, emissive: 0x7a5410, emissiveIntensity: 0.3 });
+const armGold = new THREE.MeshStandardMaterial({ color: 0xbd862c, roughness: 0.48, metalness: 0.4, emissive: 0x543a0c, emissiveIntensity: 0.3 });
 function limb(a, b, r, mat, parent) {
   const dir = new THREE.Vector3().subVectors(b, a);
   const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, dir.length(), 6, 12), mat);
@@ -504,27 +505,36 @@ function buildBuddha(x, baseY, z) {
     p.position.set(Math.cos(a) * 1.28, 0.34, Math.sin(a) * 1.28);
     p.rotation.y = -a; g.add(p);
   }
-  const prof = [[0.0, 0.3], [0.95, 0.3], [1.14, 0.42], [1.16, 0.58], [1.0, 0.78], [0.8, 0.95], [0.64, 1.12], [0.68, 1.34], [0.62, 1.52], [0.34, 1.64], [0.3, 1.74]];
+  const prof = [[0.0, 0.3], [1.05, 0.3], [1.24, 0.4], [1.26, 0.55], [1.05, 0.75], [0.8, 0.92], [0.6, 1.1], [0.64, 1.32], [0.56, 1.5], [0.3, 1.62], [0.27, 1.72]];
   const body = new THREE.Mesh(
     new THREE.LatheGeometry(prof.map(p => new THREE.Vector2(p[0], p[1])), 28), goldStatue);
   g.add(body);
-  limb(new THREE.Vector3(-0.52, 1.44, 0.06), new THREE.Vector3(-0.8, 0.9, 0.3), 0.15, goldStatue, g);
-  limb(new THREE.Vector3(0.52, 1.44, 0.06), new THREE.Vector3(0.8, 0.9, 0.3), 0.15, goldStatue, g);
-  limb(new THREE.Vector3(-0.8, 0.9, 0.3), new THREE.Vector3(0.08, 0.86, 0.8), 0.14, goldStatue, g);
-  limb(new THREE.Vector3(0.8, 0.9, 0.3), new THREE.Vector3(-0.08, 0.86, 0.8), 0.14, goldStatue, g);
-  const hands = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), goldStatue);
-  hands.scale.set(1.4, 0.55, 1); hands.position.set(0, 0.88, 0.82); g.add(hands);
-  cyl(0.17, 0.12, 0.09, MAT.bronze, 0, 1.06, 0.82, g);
-  const sash = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.7, 0.74, 1.25, 18, 1, true, -0.52, 1.04),
-    new THREE.MeshStandardMaterial({ color: 0xb8862e, roughness: 0.45, metalness: 0.5, side: THREE.DoubleSide }));
-  sash.position.y = 1.14; sash.rotation.z = -0.55; g.add(sash);
-  [-0.27, 0.27].forEach(dx => {
-    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), goldStatue);
-    foot.scale.set(1.15, 0.55, 1.5); foot.position.set(dx, 0.6, 1.02); g.add(foot);
+  [-0.58, 0.58].forEach(dx => {
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 10), goldStatue);
+    knee.scale.set(1.1, 0.75, 1.1); knee.position.set(dx, 0.52, 0.82); g.add(knee);
   });
+  limb(new THREE.Vector3(-0.5, 1.42, 0.05), new THREE.Vector3(-0.72, 0.95, 0.42), 0.15, goldStatue, g);
+  limb(new THREE.Vector3(0.5, 1.42, 0.05), new THREE.Vector3(0.72, 0.95, 0.42), 0.15, goldStatue, g);
+  limb(new THREE.Vector3(-0.72, 0.95, 0.42), new THREE.Vector3(0.05, 0.8, 0.95), 0.125, armGold, g);
+  limb(new THREE.Vector3(0.72, 0.95, 0.42), new THREE.Vector3(-0.05, 0.8, 0.95), 0.125, armGold, g);
+  const hands = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), armGold);
+  hands.scale.set(1.5, 0.5, 1.05); hands.position.set(0, 0.82, 0.97); g.add(hands);
+  cyl(0.16, 0.11, 0.09, MAT.bronze, 0, 0.97, 0.97, g);
+  [[1.42, -0.3, 0.6], [1.26, -0.1, 0.63], [1.1, 0.1, 0.6], [0.94, 0.3, 0.79]].forEach(([sy, sx, sr]) => {
+    const seg = box(0.34, 0.3, 0.045, armGold, sx, sy, Math.sqrt(Math.max(sr * sr - sx * sx, 0.05)) + 0.015, g);
+    seg.rotation.z = -0.62; seg.rotation.x = -0.08;
+  });
+  [-0.3, 0.3].forEach(dx => {
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), goldStatue);
+    foot.scale.set(1.15, 0.5, 1.5); foot.position.set(dx, 0.45, 1.16); g.add(foot);
+  });
+  const neck = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.05, 8, 20), armGold);
+  neck.rotation.x = Math.PI / 2; neck.position.y = 1.74; g.add(neck);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.335, 18, 16), goldStatue);
   head.position.y = 2.04; head.scale.set(0.94, 1.05, 0.96); g.add(head);
+  const urna = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xfff2c8 }));
+  urna.position.set(0, 2.13, 0.3); g.add(urna);
   [-0.33, 0.33].forEach(dx => {
     const ear = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), goldStatue);
     ear.scale.set(0.55, 2.0, 0.8); ear.position.set(dx, 1.87, 0); g.add(ear);
@@ -536,12 +546,13 @@ function buildBuddha(x, baseY, z) {
   halo.scale.set(1, 1.5, 1); halo.position.set(0, 1.62, -0.44); g.add(halo);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.98, 0.05, 8, 30), goldStatue);
   ring.scale.set(1, 1.5, 1); ring.position.set(0, 1.62, -0.44); g.add(ring);
-  for (let i = 0; i < 9; i++) {
-    const a = (15 + i * 18.75) * Math.PI / 180;
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.26, 8), goldStatue);
-    flame.position.set(Math.cos(a) * 1.0, 1.62 + Math.sin(a) * 1.5, -0.44);
-    flame.rotation.z = a - Math.PI / 2;
-    g.add(flame);
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.06, 0.028, 8, 30), goldStatue);
+  ring2.scale.set(1, 1.5, 1); ring2.position.set(0, 1.62, -0.44); g.add(ring2);
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * Math.PI * 2;
+    const bead = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), goldStatue);
+    bead.position.set(Math.cos(a) * 1.03, 1.62 + Math.sin(a) * 1.53, -0.44);
+    g.add(bead);
   }
   const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.5, depthWrite: false }));
   gs.scale.set(3.4, 3.4, 1); gs.position.set(0, 2.0, -0.1); g.add(gs);
@@ -621,7 +632,7 @@ function makeColumn(x, z, mat) {
   cyl(0.47, 0.47, 0.16, goldStatue, x, 8.05, z, hallGroup);
   box(1.05, 0.3, 1.05, MAT.woodDark, x, 8.85, z, hallGroup);
 }
-[-12.8, -6.4, 6.4, 12.8].forEach(dx => makeColumn(HALL_X + dx, 6.5, MAT.woodDark));
+[-12.8, -6.4, 6.4, 12.8].forEach(dx => makeColumn(HALL_X + dx, 6.5, MAT.woodRed));
 [-11.8, 11.8].forEach(dx => { makeColumn(HALL_X + dx, -8.6, MAT.woodRed); makeColumn(HALL_X + dx, 9.6, MAT.woodRed); });
 box(25, 0.7, 0.7, MAT.woodDark, HALL_X, 8.9, 9.6, hallGroup);
 [-7.9, 7.9].forEach(dx => box(2.6, 7.5, 0.25, MAT.wall, HALL_X + dx, 4.6, -9.85, hallGroup));
@@ -640,6 +651,7 @@ const hallCushions = [];
 [-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, -0.2)); });
 [-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, 3.0)); });
 const hallSmokes = [];
+const hallEmbers = [];
 function hallBurner(dx) {
   const b = new THREE.Group(); b.position.set(HALL_X + dx, 0, -6.8); hallGroup.add(b);
   cyl(0.7, 0.55, 0.85, MAT.bronze, 0, 0.55, 0, b);
@@ -648,10 +660,14 @@ function hallBurner(dx) {
     const sx = (Math.random() - 0.5) * 0.6, sz = (Math.random() - 0.5) * 0.6;
     cyl(0.014, 0.014, 0.7, stickMat, sx, 1.35, sz, b, 6);
   }
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 12; i++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false }));
-    sp.userData.ph = i / 8; b.add(sp); hallSmokes.push(sp);
+    sp.userData.ph = i / 12; b.add(sp); hallSmokes.push(sp);
   }
+  const ember = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.85, depthWrite: false }));
+  ember.scale.set(0.9, 0.5, 1); ember.position.y = 1.12; b.add(ember);
+  const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
+  hallEmbers.push({ ember, fl, seed: Math.random() * 10 });
 }
 hallBurner(-3.4); hallBurner(3.4);
 
@@ -877,7 +893,7 @@ function lightIncense() {
 const btnHall = document.getElementById('btnHall');
 const btnLantern = document.getElementById('btnLantern');
 btnLantern.addEventListener('click', () => {
-  window.open('https://mtrhuynh.github.io/dua-den/', '_blank');
+  window.open('https://mtrhuynh.github.io/tha-den/', '_blank');
 });
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
@@ -1001,10 +1017,16 @@ function animate() {
     sp.userData.ph += dt * 0.05;
     if (sp.userData.ph > 1) sp.userData.ph -= 1;
     const ph = sp.userData.ph;
-    sp.position.set(Math.sin(ph * 8 + i * 2.1) * 0.2 * ph, 1.15 + ph * 3.0, Math.cos(ph * 6 + i) * 0.16 * ph);
-    const sc = 0.45 + ph * 1.6;
+    sp.position.set(Math.sin(ph * 8 + i * 2.1) * 0.26 * ph, 1.15 + ph * 3.9, Math.cos(ph * 6 + i) * 0.2 * ph);
+    const sc = 0.5 + ph * 2.3;
     sp.scale.set(sc, sc, 1);
-    sp.material.opacity = Math.sin(ph * Math.PI) * 0.4;
+    sp.material.opacity = Math.sin(ph * Math.PI) * 0.62;
+  });
+
+  hallEmbers.forEach((e) => {
+    const f = 0.82 + Math.sin(t * 11 + e.seed * 7) * 0.12 + Math.sin(t * 23 + e.seed * 3) * 0.07;
+    e.fl.intensity = 2.5 * f;
+    e.ember.material.opacity = 0.78 * f;
   });
 
   /* camera follow */
@@ -1026,8 +1048,8 @@ function animate() {
     setTimeout(() => {
       const rt = document.getElementById('roomTitle');
       rt.style.transition = 'all 1.4s ease';
-      rt.style.opacity = '0.5';
-      rt.style.transform = 'translateX(-50%) scale(0.76)';
+      rt.style.opacity = '0.32';
+      rt.style.transform = 'translateX(-50%) scale(0.62)';
     }, 7000);
   }
 }
