@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phòng Thiền 3D — Demo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; font-family:'Segoe UI', system-ui, sans-serif; background:#1a1410; }
+  #scene { position:fixed; inset:0; }
+  canvas { display:block; }
+
+  .ui { position:fixed; z-index:10; color:#fff; user-select:none; }
+
+  /* Player card */
+  #playerCard { top:12px; left:12px; display:flex; align-items:center; gap:10px;
+    background:rgba(20,16,12,.72); border:1px solid rgba(255,205,120,.35); border-radius:16px; padding:8px 14px 8px 8px; backdrop-filter:blur(6px); }
+  #playerCard .ava { width:40px; height:40px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #ffd9a8, #e8a56b);
+    display:flex; align-items:center; justify-content:center; font-size:20px; border:2px solid #ffcf87; }
+  #playerCard .pname { font-weight:700; font-size:15px; color:#ffe1a8; }
+  #playerCard .psub { font-size:11.5px; color:#d8c9ae; }
+  #playerCard .psub b { color:#ffd76e; }
+
+  /* Online pill */
+  #onlinePill { top:12px; right:12px; background:rgba(20,16,12,.72); border:1px solid rgba(255,205,120,.35);
+    border-radius:999px; padding:7px 13px; font-size:12.5px; color:#ffe1a8; backdrop-filter:blur(6px); }
+  #onlinePill .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#5ee06e; margin-right:6px; box-shadow:0 0 6px #5ee06e; }
+
+  /* Title */
+  #roomTitle { top:64px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; }
+  #roomTitle .t1 { font-size:19px; font-weight:800; letter-spacing:2px; color:#ffdf9e; text-shadow:0 2px 10px rgba(0,0,0,.65); }
+  #roomTitle .t2 { font-size:12px; color:#e8dcc2; text-shadow:0 1px 6px rgba(0,0,0,.7); margin-top:2px; }
+
+  /* Zoom buttons */
+  #zoomBtns { left:12px; top:45%; display:flex; flex-direction:column; gap:10px; }
+  .zbtn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66);
+    color:#ffe1a8; font-size:22px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px); }
+  .zbtn:active { background:rgba(90,64,25,.8); }
+
+  /* Action bar */
+  #actions { bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:9px; }
+  .abtn { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:64px; padding:9px 6px 7px;
+    background:rgba(24,19,14,.78); border:1px solid rgba(255,205,120,.35); border-radius:14px; color:#f3e5c3;
+    font-size:11.5px; cursor:pointer; backdrop-filter:blur(6px); }
+  .abtn .ic { font-size:20px; line-height:1; }
+  .abtn:active, .abtn.on { background:rgba(122,84,26,.85); color:#ffe9b0; }
+  .abtn .cnt { font-size:10px; color:#ffd76e; }
+
+  /* Hint + toast */
+  #hint { bottom:96px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); white-space:nowrap; pointer-events:none; }
+  #toast { top:118px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(30,22,12,.88);
+    border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
+    opacity:0; transition:all .35s ease; pointer-events:none; max-width:88vw; text-align:center; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  #loading { position:fixed; inset:0; z-index:50; background:#1a1410; display:flex; flex-direction:column; gap:14px;
+    align-items:center; justify-content:center; color:#ffdf9e; font-size:15px; transition:opacity .6s; }
+  #loading .spin { font-size:38px; animation:sp 1.6s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div id="loading"><div class="spin">🪷</div><div>Đang dựng sân chùa…</div></div>
+
+<div class="ui" id="playerCard">
+  <div class="ava">🧘</div>
+  <div>
+    <div class="pname" id="pName">Ivy</div>
+    <div class="psub">Hạt sen · bậc 1 · 🪷 <b id="pSen">0</b></div>
+  </div>
+</div>
+
+<div class="ui" id="onlinePill"><span class="dot"></span>Demo · 1 người trong sân</div>
+
+<div class="ui" id="roomTitle">
+  <div class="t1">SÂN CHÙA TỊNH TÂM</div>
+  <div class="t2">Phòng Thiền 3D — bản demo giai đoạn 1</div>
+</div>
+
+<div class="ui" id="zoomBtns">
+  <button class="zbtn" id="zoomIn">+</button>
+  <button class="zbtn" id="zoomOut">−</button>
+</div>
+
+<div class="ui" id="toast"></div>
+<div class="ui" id="hint">Chạm vào sân để đi · Kéo để xoay góc nhìn · Bấm vào đệm trống để ngồi thiền</div>
+
+<div class="ui" id="actions">
+  <button class="abtn" id="btnSit"><span class="ic">🧎</span>Thiền</button>
+  <button class="abtn" id="btnBow"><span class="ic">🙏</span>Lạy Phật</button>
+  <button class="abtn" id="btnMala"><span class="ic">📿</span>Tràng hạt<span class="cnt" id="malaCnt">0/108</span></button>
+  <button class="abtn" id="btnIncense"><span class="ic">🕯️</span>Đốt nhang</button>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ============ Renderer / Scene / Camera ============ */
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfd9e8);
+scene.fog = new THREE.Fog(0xcfe0ea, 42, 95);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 300);
+camera.position.set(0, 5.2, 11.5);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.minDistance = 4;
+controls.maxDistance = 26;
+controls.enablePan = false;
+controls.target.set(0, 1.1, 4);
+
+/* ============ Lights ============ */
+scene.add(new THREE.HemisphereLight(0xdcefff, 0x8a7a5a, 0.95));
+const sun = new THREE.DirectionalLight(0xfff1d6, 1.9);
+sun.position.set(14, 22, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -26; sun.shadow.camera.right = 26;
+sun.shadow.camera.top = 26; sun.shadow.camera.bottom = -26;
+sun.shadow.camera.far = 70;
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+const warm = new THREE.PointLight(0xffb45e, 12, 16, 1.6);
+warm.position.set(0, 3.4, -13.2);
+scene.add(warm);
+
+/* ============ Helpers ============ */
+function canvasTexture(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function nameTag(text, sub) {
+  const t = canvasTexture(512, 160, (g) => {
+    g.fillStyle = 'rgba(12,10,8,0.62)';
+    g.beginPath(); g.roundRect(56, 18, 400, sub ? 108 : 78, 26); g.fill();
+    g.fillStyle = '#ffe9b0'; g.font = 'bold 52px "Segoe UI", sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, 256, sub ? 58 : 57);
+    if (sub) { g.fillStyle = '#ffd76e'; g.font = '36px "Segoe UI", sans-serif'; g.fillText(sub, 256, 106); }
+  });
+  const m = new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false });
+  const s = new THREE.Sprite(m);
+  s.scale.set(1.9, 0.6, 1);
+  return s;
+}
+const MAT = {
+  stone: new THREE.MeshStandardMaterial({ color: 0xcfc8ba, roughness: 0.95 }),
+  woodDark: new THREE.MeshStandardMaterial({ color: 0x6d4a2f, roughness: 0.85 }),
+  woodRed: new THREE.MeshStandardMaterial({ color: 0x8e2f26, roughness: 0.7 }),
+  wall: new THREE.MeshStandardMaterial({ color: 0x7a3b2e, roughness: 0.9 }),
+  roof: new THREE.MeshStandardMaterial({ color: 0x4a4f57, roughness: 0.8 }),
+  roofRidge: new THREE.MeshStandardMaterial({ color: 0x394048, roughness: 0.8 }),
+  gold: new THREE.MeshStandardMaterial({ color: 0xd9a441, roughness: 0.35, metalness: 0.55 }),
+  leaf: new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.95 }),
+  leaf2: new THREE.MeshStandardMaterial({ color: 0x5d8f4e, roughness: 0.95 }),
+  trunk: new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 1 }),
+  bronze: new THREE.MeshStandardMaterial({ color: 0x4f4238, roughness: 0.55, metalness: 0.5 }),
+  cushion: new THREE.MeshStandardMaterial({ color: 0xa67c3f, roughness: 0.9 }),
+  cushionTop: new THREE.MeshStandardMaterial({ color: 0xc49a58, roughness: 0.9 }),
+  skin: new THREE.MeshStandardMaterial({ color: 0xf2c9a4, roughness: 0.65 }),
+  hair: new THREE.MeshStandardMaterial({ color: 0x2e2019, roughness: 0.8 }),
+  robe: new THREE.MeshStandardMaterial({ color: 0x5b7fa6, roughness: 0.85 }),
+  robeGold: new THREE.MeshStandardMaterial({ color: 0xd9a441, roughness: 0.6 }),
+  robeBrown: new THREE.MeshStandardMaterial({ color: 0x9a7b4f, roughness: 0.85 }),
+  lanternRed: new THREE.MeshStandardMaterial({ color: 0xd8402e, roughness: 0.5, emissive: 0x7a1503, emissiveIntensity: 0.7 }),
+};
+function box(w, h, d, mat, x, y, z, parent) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  (parent || scene).add(m); return m;
+}
+function cyl(rt, rb, h, mat, x, y, z, parent, seg = 20) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  (parent || scene).add(m); return m;
+}
+
+/* ============ Ground: stone-tile courtyard ============ */
+const groundTex = canvasTexture(512, 512, (g) => {
+  g.fillStyle = '#b8b0a0'; g.fillRect(0, 0, 512, 512);
+  const n = 4, s = 512 / n;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const v = 178 + Math.floor(Math.random() * 22);
+    g.fillStyle = `rgb(${v},${v - 6},${v - 22})`;
+    g.fillRect(i * s + 3, j * s + 3, s - 6, s - 6);
+    g.fillStyle = 'rgba(255,255,255,0.06)';
+    g.fillRect(i * s + 3, j * s + 3, s - 6, 10);
+  }
+});
+groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
+groundTex.repeat.set(9, 9);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(46, 46),
+  new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+ground.name = 'ground';
+scene.add(ground);
+
+/* grass rim */
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(300, 300),
+  new THREE.MeshStandardMaterial({ color: 0x77a05e, roughness: 1 }));
+grass.rotation.x = -Math.PI / 2; grass.position.y = -0.03;
+scene.add(grass);
+
+/* ============ Temple (chánh điện) at the north end ============ */
+const temple = new THREE.Group();
+temple.position.set(0, 0, -16.5);
+scene.add(temple);
+box(17, 1.0, 8.5, MAT.stone, 0, 0.5, 0, temple);                 // platform
+box(13, 0.34, 2.2, MAT.stone, 0, 0.17, 5.1, temple);             // steps low
+box(11, 0.34, 1.4, MAT.stone, 0, 0.5, 4.6, temple);              // steps high
+box(15.6, 4.6, 0.5, MAT.wall, 0, 3.3, -3.4, temple);             // back wall
+box(0.5, 4.6, 6.4, MAT.wall, -7.55, 3.3, -0.2, temple);          // side walls
+box(0.5, 4.6, 6.4, MAT.wall, 7.55, 3.3, -0.2, temple);
+for (let i = -2; i <= 2; i++) cyl(0.3, 0.34, 4.9, MAT.woodRed, i * 3.1, 3.4, 2.9, temple); // columns
+box(16.6, 0.55, 7.6, MAT.woodDark, 0, 5.95, -0.2, temple);       // beam
+/* two-tier pyramid roofs */
+function roofTier(w, h, d, y) {
+  const r = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4), MAT.roof);
+  r.scale.set(w * 0.74, h, d * 0.74);
+  r.rotation.y = Math.PI / 4;
+  r.position.set(0, y, -0.2);
+  r.castShadow = true;
+  temple.add(r);
+  return r;
+}
+roofTier(19.5, 2.6, 10.5, 7.5);
+roofTier(13.5, 2.1, 7.6, 9.9);
+const finial = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 12), MAT.gold);
+finial.position.set(0, 11.25, -0.2); finial.castShadow = true; temple.add(finial);
+/* Buddha silhouette glow inside the hall */
+const buddhaGlow = new THREE.Mesh(new THREE.SphereGeometry(1.05, 18, 14),
+  new THREE.MeshStandardMaterial({ color: 0xe8b45a, emissive: 0xa8742a, emissiveIntensity: 0.55, roughness: 0.4 }));
+buddhaGlow.scale.set(1, 1.45, 0.8);
+buddhaGlow.position.set(0, 2.6, -3.0); temple.add(buddhaGlow);
+box(3.6, 1.1, 1.1, MAT.woodDark, 0, 1.55, -2.9, temple);         // altar table
+/* hanging lanterns under the beam */
+for (let i = -2; i <= 2; i++) {
+  const l = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 12), MAT.lanternRed);
+  l.scale.y = 0.82; l.position.set(i * 3.1, 5.2, 2.9); temple.add(l);
+}
+
+/* ============ Trees + fence ============ */
+function tree(x, z, s = 1) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
+  cyl(0.16, 0.24, 1.7, MAT.trunk, 0, 0.85, 0, g);
+  const blobs = [[0, 2.6, 0, 1.25], [0.8, 2.1, 0.2, 0.85], [-0.75, 2.2, -0.15, 0.9], [0.1, 3.3, -0.3, 0.9]];
+  blobs.forEach(([bx, by, bz, br], i) => {
+    const b = new THREE.Mesh(new THREE.IcosahedronGeometry(br, 1), i % 2 ? MAT.leaf2 : MAT.leaf);
+    b.position.set(bx, by, bz); b.castShadow = true; g.add(b);
+  });
+  scene.add(g); return g;
+}
+tree(-9.5, -6, 1.15); tree(9.5, -6, 1.05); tree(-10.5, 3.5, 0.95);
+tree(10.5, 3.5, 1.2); tree(-9.8, -13, 0.9); tree(9.8, -13, 1.0);
+function fenceRun(x, z, len, rotY) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rotY;
+  const posts = Math.floor(len / 2.2);
+  for (let i = 0; i <= posts; i++) box(0.16, 1.0, 0.16, MAT.woodDark, -len / 2 + i * 2.2, 0.5, 0, g);
+  box(len, 0.12, 0.1, MAT.woodDark, 0, 0.88, 0, g);
+  box(len, 0.12, 0.1, MAT.woodDark, 0, 0.45, 0, g);
+  scene.add(g);
+}
+fenceRun(-13.5, -2, 26, Math.PI / 2);
+fenceRun(13.5, -2, 26, Math.PI / 2);
+fenceRun(0, 11.5, 27, 0);
+
+/* ============ Lantern poles along the path ============ */
+function lanternPole(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  cyl(0.06, 0.08, 2.6, MAT.woodDark, 0, 1.3, 0, g);
+  const l = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 12), MAT.lanternRed);
+  l.scale.y = 0.85; l.position.y = 2.75; l.castShadow = true; g.add(l);
+  const cap = cyl(0.36, 0.4, 0.1, MAT.roofRidge, 0, 3.05, 0, g); cap.castShadow = true;
+  scene.add(g);
+}
+lanternPole(-3.4, -4); lanternPole(3.4, -4); lanternPole(-3.4, 2.5); lanternPole(3.4, 2.5);
+
+/* ============ Incense burner + smoke ============ */
+const burner = new THREE.Group(); burner.position.set(0, 0, -8.6); scene.add(burner);
+cyl(0.85, 0.65, 1.0, MAT.bronze, 0, 0.62, 0, burner);
+cyl(1.0, 1.0, 0.16, MAT.bronze, 0, 1.16, 0, burner);
+for (let i = 0; i < 3; i++) {
+  const a = (i / 3) * Math.PI * 2;
+  cyl(0.07, 0.09, 0.35, MAT.bronze, Math.cos(a) * 0.62, 0.17, Math.sin(a) * 0.62, burner);
+}
+const stickMat = new THREE.MeshStandardMaterial({ color: 0x9a4a30, roughness: 0.8 });
+const emberMat = new THREE.MeshStandardMaterial({ color: 0xff5a26, emissive: 0xff4400, emissiveIntensity: 2.2 });
+const emberTips = [];
+for (let i = 0; i < 7; i++) {
+  const sx = (Math.random() - 0.5) * 0.8, sz = (Math.random() - 0.5) * 0.8;
+  cyl(0.016, 0.016, 0.85, stickMat, sx, 1.5, sz, burner, 6);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), emberMat);
+  tip.position.set(sx, 1.94, sz); burner.add(tip); emberTips.push(tip);
+}
+const smokeTex = canvasTexture(128, 128, (g) => {
+  const gr = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  gr.addColorStop(0, 'rgba(235,235,240,0.55)');
+  gr.addColorStop(0.6, 'rgba(225,225,232,0.18)');
+  gr.addColorStop(1, 'rgba(220,220,228,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+});
+const smokes = [];
+for (let i = 0; i < 16; i++) {
+  const sm = new THREE.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false });
+  const sp = new THREE.Sprite(sm);
+  sp.userData.ph = i / 16;
+  burner.add(sp); smokes.push(sp);
+}
+let smokeBoost = 0; // >0 right after lighting incense
+
+/* ============ Cushions (đệm) ============ */
+const cushions = [];
+function cushion(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  const base = cyl(0.62, 0.68, 0.22, MAT.cushion, 0, 0.11, 0, g, 24);
+  const top = cyl(0.56, 0.6, 0.08, MAT.cushionTop, 0, 0.25, 0, g, 24);
+  base.userData.isCushion = true; top.userData.isCushion = true;
+  g.userData.isCushionGroup = true;
+  g.traverse(o => { o.userData.cushionGroup = g; });
+  scene.add(g); cushions.push(g); return g;
+}
+const cushionSpots = [];
+[-4.8, -1.6, 1.6, 4.8].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
+[-4.8, -1.6, 1.6, 4.8].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
+
+
+/* ============ Avatar builder ============ */
+function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false }) {
+  const g = new THREE.Group();
+  const bodyG = new THREE.Group(); g.add(bodyG);
+  const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
+  const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
+  const sash = box(0.42, 0.11, 0.38, MAT.robeGold, 0, 0.03, 0, upperG);
+  sash.rotation.z = 0.55;
+  const beads = new THREE.Mesh(new THREE.TorusGeometry(0.135, 0.022, 8, 22),
+    new THREE.MeshStandardMaterial({ color: 0x8a5a28, roughness: 0.6 }));
+  beads.position.y = 0.17; beads.rotation.x = 1.25; beads.castShadow = true; upperG.add(beads);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 22, 18), MAT.skin);
+  head.position.y = 0.4; head.castShadow = true; upperG.add(head);
+  if (!bald) {
+    const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.218, 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.52), MAT.hair);
+    hairCap.position.y = 0.415; hairCap.rotation.x = -0.25; upperG.add(hairCap);
+    const bun = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), MAT.hair);
+    bun.position.set(0, 0.58, -0.09); upperG.add(bun);
+  }
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2a1c14 });
+  [-0.07, 0.07].forEach(ex => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), eyeMat);
+    eye.position.set(ex, 0.42, 0.195); upperG.add(eye);
+  });
+  const tag = nameTag(name, sub); tag.position.y = 1.52; g.add(tag);
+  if (player) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.44, 0.56, 36),
+      new THREE.MeshBasicMaterial({ color: 0xffcf5e, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; g.add(ring);
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.018, 8, 32),
+      new THREE.MeshBasicMaterial({ color: 0xffd76e, transparent: true, opacity: 0.9 }));
+    halo.position.set(0, 1.06, -0.14); g.add(halo);
+    g.userData.halo = halo;
+  }
+  g.userData.bodyG = bodyG;
+  g.userData.upperG = upperG;
+  scene.add(g);
+  return g;
+}
+
+/* NPCs already seated */
+const npcData = [
+  { spot: 1, name: 'Minh Thiện', sub: 'Cấp 4', bald: true, robeMat: MAT.robe },
+  { spot: 2, name: 'Cụ Từ Thanh Sam', sub: '', bald: true, robeMat: MAT.robeBrown },
+  { spot: 6, name: 'Thích Cái Này', sub: 'Cấp 2', bald: false, robeMat: MAT.robe },
+];
+const npcs = [];
+npcData.forEach((d, i) => {
+  const c = cushionSpots[d.spot];
+  c.userData.occupied = true;
+  const a = buildAvatar(d);
+  a.position.copy(c.position).add(new THREE.Vector3(0, 0.24, 0));
+  a.rotation.y = Math.PI;
+  a.userData.bodyG.scale.set(1.15, 0.78, 1.15);
+  a.userData.phase = i * 1.7;
+  npcs.push(a);
+});
+
+/* Player */
+const player = buildAvatar({ name: 'Ivy', sub: 'Bậc 1', bald: false, robeMat: MAT.robe, player: true });
+player.position.set(0, 0, 6.5);
+player.rotation.y = Math.PI;
+
+/* ============ Player state / movement ============ */
+const P = {
+  mode: 'idle',            // idle | walk | seated
+  target: null,            // Vector3
+  sitCushion: null,        // cushion group to sit on when arrived
+  seatedOn: null,
+  bowT: -1,
+  walkCycle: 0,
+  incenseAfterWalk: false,
+};
+const SPEED = 3.4;
+const BOUNDS = { x: 12.4, zMin: -11.6, zMax: 10.6 };
+
+function faceAngle(from, to) { return Math.atan2(to.x - from.x, to.z - from.z); }
+function turnToward(obj, targetAngle, dt) {
+  let d = targetAngle - obj.rotation.y;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  obj.rotation.y += d * Math.min(1, dt * 10);
+}
+function setWalkTarget(v, cushion = null, incense = false) {
+  P.target = v.clone();
+  P.target.x = THREE.MathUtils.clamp(P.target.x, -BOUNDS.x, BOUNDS.x);
+  P.target.z = THREE.MathUtils.clamp(P.target.z, BOUNDS.zMin, BOUNDS.zMax);
+  P.sitCushion = cushion;
+  P.incenseAfterWalk = incense;
+  P.mode = 'walk';
+}
+function sitDown(cushion) {
+  P.mode = 'seated';
+  P.seatedOn = cushion || null;
+  if (cushion) {
+    player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.24, 0));
+    cushion.userData.occupiedByPlayer = true;
+  }
+  player.rotation.y = Math.PI;
+  player.userData.bodyG.scale.set(1.15, 0.78, 1.15);
+  btnSit.classList.add('on');
+  btnSit.lastChild.textContent = 'Đứng dậy';
+  toast(cushion ? 'Đã ngồi thiền. Tâm an, hơi thở đều 🪷' : 'Đã ngồi thiền tại chỗ 🪷');
+}
+function standUp() {
+  if (P.seatedOn) { P.seatedOn.userData.occupiedByPlayer = false; P.seatedOn = null; }
+  P.mode = 'idle';
+  player.userData.bodyG.scale.set(1, 1, 1);
+  player.position.y = 0;
+  btnSit.classList.remove('on');
+  btnSit.lastChild.textContent = 'Thiền';
+}
+
+/* ============ Pointer: tap to walk / sit ============ */
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let downX = 0, downY = 0, downT = 0;
+renderer.domElement.addEventListener('pointerdown', (e) => { downX = e.clientX; downY = e.clientY; downT = performance.now(); });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 7 || performance.now() - downT > 450) return;
+  pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects([ground, ...cushionSpots], true);
+  if (!hits.length) return;
+  let obj = hits[0].object, cushionGroup = null;
+  while (obj) { if (obj.userData && obj.userData.isCushionGroup) { cushionGroup = obj; break; } obj = obj.parent; }
+  if (P.mode === 'seated') standUp();
+  if (cushionGroup) {
+    if (cushionGroup.userData.occupied) { toast('Đệm này có người ngồi rồi, chọn đệm khác nhé'); return; }
+    const p = cushionGroup.position.clone(); p.y = 0;
+    const dist = player.position.distanceTo(p);
+    if (dist < 0.6) sitDown(cushionGroup); else setWalkTarget(p, cushionGroup);
+    return;
+  }
+  const pt = hits[0].point.clone(); pt.y = 0;
+  const bd = Math.hypot(pt.x - burner.position.x, pt.z - burner.position.z);
+  if (bd < 1.5) pt.set(pt.x, 0, burner.position.z + 1.6);
+  setWalkTarget(pt);
+});
+
+/* ============ UI ============ */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg, ms = 2600) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+const btnSit = document.getElementById('btnSit');
+const btnBow = document.getElementById('btnBow');
+const btnMala = document.getElementById('btnMala');
+const btnIncense = document.getElementById('btnIncense');
+const malaCntEl = document.getElementById('malaCnt');
+const senEl = document.getElementById('pSen');
+let mala = 0, sen = 0;
+function addSen(n) { sen += n; senEl.textContent = sen; }
+
+btnSit.addEventListener('click', () => {
+  if (P.mode === 'seated') { standUp(); return; }
+  let best = null, bestD = 3.6;
+  cushionSpots.forEach(c => {
+    if (c.userData.occupied || c.userData.occupiedByPlayer) return;
+    const d = player.position.distanceTo(c.position);
+    if (d < bestD) { bestD = d; best = c; }
+  });
+  if (best) {
+    const p = best.position.clone(); p.y = 0;
+    if (bestD < 0.6) sitDown(best); else setWalkTarget(p, best);
+  } else sitDown(null);
+});
+btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); } });
+btnMala.addEventListener('click', () => {
+  mala++; addSen(1);
+  malaCntEl.textContent = mala + '/108';
+  if (mala >= 108) {
+    toast('🎉 Đã tròn một chuỗi 108 hạt! Công đức viên mãn 🪷', 3600);
+    mala = 0; malaCntEl.textContent = '0/108'; addSen(10);
+  } else if (mala % 27 === 0) toast('Đã lần được ' + mala + ' hạt 📿');
+});
+btnIncense.addEventListener('click', () => {
+  const front = new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9);
+  if (player.position.distanceTo(front) < 0.7) lightIncense();
+  else { if (P.mode === 'seated') standUp(); setWalkTarget(front, null, true); }
+});
+function lightIncense() {
+  smokeBoost = 30;
+  addSen(5);
+  toast('Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏', 3200);
+}
+document.getElementById('zoomIn').addEventListener('click', () => dolly(0.8));
+document.getElementById('zoomOut').addEventListener('click', () => dolly(1.25));
+function dolly(f) {
+  const off = camera.position.clone().sub(controls.target);
+  const len = THREE.MathUtils.clamp(off.length() * f, controls.minDistance, controls.maxDistance);
+  camera.position.copy(controls.target).add(off.setLength(len));
+}
+
+/* ============ Animation loop ============ */
+const clock = new THREE.Clock();
+const camDelta = new THREE.Vector3();
+const desiredTarget = new THREE.Vector3();
+let firstFrame = true;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  /* movement */
+  if (P.mode === 'walk' && P.target) {
+    const pos = player.position;
+    const to = P.target.clone(); to.y = 0;
+    const dist = pos.distanceTo(to);
+    if (dist < 0.08) {
+      P.target = null;
+      if (P.sitCushion) { const c = P.sitCushion; P.sitCushion = null; sitDown(c); }
+      else if (P.incenseAfterWalk) { P.incenseAfterWalk = false; lightIncense(); P.mode = 'idle'; }
+      else P.mode = 'idle';
+    } else {
+      turnToward(player, faceAngle(pos, to), dt);
+      const step = Math.min(dist, SPEED * dt);
+      const dir = to.sub(pos).normalize();
+      pos.addScaledVector(dir, step);
+      P.walkCycle += dt * 9;
+      player.userData.bodyG.position.y = Math.abs(Math.sin(P.walkCycle)) * 0.05;
+      player.userData.bodyG.rotation.z = Math.sin(P.walkCycle) * 0.045;
+    }
+  } else {
+    player.userData.bodyG.position.y = 0;
+    player.userData.bodyG.rotation.z = 0;
+    /* breathing */
+    const br = 1 + Math.sin(t * 1.7) * 0.012;
+    const base = P.mode === 'seated' ? 0.78 : 1;
+    player.userData.bodyG.scale.y = base * br;
+  }
+  /* bow */
+  if (P.bowT >= 0) {
+    P.bowT += dt;
+    const k = P.bowT / 1.3;
+    if (k >= 1) { P.bowT = -1; player.userData.upperG.rotation.x = 0; }
+    else player.userData.upperG.rotation.x = Math.sin(k * Math.PI) * 0.55;
+  }
+  /* NPC breathing */
+  npcs.forEach(n => { n.userData.bodyG.scale.y = 0.78 * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); });
+  /* halo pulse */
+  if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
+  /* smoke */
+  const boost = smokeBoost > 0 ? 1 : 0;
+  if (smokeBoost > 0) smokeBoost -= dt;
+  smokes.forEach((sp, i) => {
+    sp.userData.ph += dt * 0.055 * (boost ? 1.7 : 1);
+    if (sp.userData.ph > 1) sp.userData.ph -= 1;
+    const ph = sp.userData.ph;
+    sp.position.set(Math.sin(ph * 9 + i * 2.4) * 0.22 * ph, 1.95 + ph * 3.4, Math.cos(ph * 7 + i) * 0.18 * ph);
+    const sc = 0.5 + ph * 1.9;
+    sp.scale.set(sc, sc, 1);
+    sp.material.opacity = Math.sin(ph * Math.PI) * (boost ? 0.75 : 0.45);
+  });
+  emberMat.emissiveIntensity = 1.9 + Math.sin(t * 7.3) * 0.45 + (boost ? 0.9 : 0);
+
+  /* camera follow */
+  desiredTarget.set(player.position.x, 1.05, player.position.z);
+  camDelta.copy(desiredTarget).sub(controls.target).multiplyScalar(0.07);
+  controls.target.add(camDelta);
+  camera.position.add(camDelta);
+  controls.update();
+
+  renderer.render(scene, camera);
+  if (firstFrame) {
+    firstFrame = false;
+    const ld = document.getElementById('loading');
+    ld.style.opacity = '0';
+    setTimeout(() => ld.remove(), 700);
+    setTimeout(() => toast('Chào mừng đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo'), 500);
+  }
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+</script>
+</body>
+</html>
