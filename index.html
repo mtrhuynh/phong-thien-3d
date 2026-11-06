@@ -43,8 +43,8 @@
   .zbtn:active { background:rgba(90,64,25,.8); }
 
   /* Action bar */
-  #actions { bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:9px; }
-  .abtn { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:64px; padding:9px 6px 7px;
+  #actions { bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:7px; max-width:97vw; overflow-x:auto; padding-bottom:2px; }
+  .abtn { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:56px; padding:9px 5px 7px;
     background:linear-gradient(160deg, rgba(52,34,16,.9), rgba(26,17,9,.9)); border:1px solid rgba(255,205,120,.5); border-radius:14px; color:#f3e5c3; box-shadow:0 6px 20px rgba(0,0,0,.35);
     font-size:11.5px; cursor:pointer; backdrop-filter:blur(6px); }
   .abtn .ic { font-size:20px; line-height:1; }
@@ -99,6 +99,8 @@
   <button class="abtn" id="btnBow"><span class="ic">🙏</span>Lạy Phật</button>
   <button class="abtn" id="btnMala"><span class="ic">📿</span>Tràng hạt<span class="cnt" id="malaCnt">0/108</span></button>
   <button class="abtn" id="btnIncense"><span class="ic">🕯️</span>Đốt nhang</button>
+  <button class="abtn" id="btnHall"><span class="ic">🏛️</span>Vào chánh điện</button>
+  <button class="abtn" id="btnLantern"><span class="ic">🏮</span>Thả đèn</button>
 </div>
 
 <script type="importmap">
@@ -462,6 +464,70 @@ const cushionSpots = [];
 [-4.8, -1.6, 1.6, 4.8].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
 [-4.8, -1.6, 1.6, 4.8].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
 
+/* ============ Chánh điện (interior) at x=+90, backdrop = 2D room painting ============ */
+const HALL_X = 90;
+const hallGroup = new THREE.Group(); scene.add(hallGroup);
+const woodTex = canvasTexture(512, 512, (g) => {
+  g.fillStyle = '#5d3d22'; g.fillRect(0, 0, 512, 512);
+  for (let r = 0; r < 6; r++) {
+    const y = r * 86, v = 96 + Math.floor(Math.random() * 18);
+    g.fillStyle = `rgb(${v + 22},${v - 10},${v - 46})`;
+    g.fillRect(0, y + 2, 512, 82);
+    g.strokeStyle = 'rgba(40,22,10,0.55)'; g.lineWidth = 3; g.strokeRect(-4, y + 2, 520, 82);
+    g.strokeStyle = 'rgba(60,35,16,0.35)'; g.lineWidth = 1.5;
+    for (let i = 0; i < 5; i++) { const gy = y + 12 + Math.random() * 60; g.beginPath(); g.moveTo(0, gy); g.bezierCurveTo(150, gy + 4, 340, gy - 4, 512, gy + 2); g.stroke(); }
+    g.fillStyle = 'rgba(40,22,10,0.6)'; g.fillRect(Math.random() * 400, y, 4, 86);
+  }
+});
+woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping; woodTex.repeat.set(5, 4);
+const hallFloor = new THREE.Mesh(new THREE.PlaneGeometry(30, 20),
+  new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.8 }));
+hallFloor.rotation.x = -Math.PI / 2; hallFloor.position.set(HALL_X, 0, 0);
+hallFloor.receiveShadow = true; hallGroup.add(hallFloor);
+const sceneTex = new THREE.TextureLoader().load('scene.webp');
+sceneTex.colorSpace = THREE.SRGBColorSpace;
+const backdrop = new THREE.Mesh(
+  new THREE.CylinderGeometry(17.5, 17.5, 11.5, 40, 1, true, -0.78, 1.56),
+  new THREE.MeshBasicMaterial({ map: sceneTex, fog: false }));
+backdrop.position.set(HALL_X, 5.4, -27);
+hallGroup.add(backdrop);
+box(0.6, 9, 20, MAT.woodDark, HALL_X - 14.6, 4.5, 0, hallGroup);
+box(0.6, 9, 20, MAT.woodDark, HALL_X + 14.6, 4.5, 0, hallGroup);
+box(30, 0.6, 20, MAT.woodDark, HALL_X, 9.2, 0, hallGroup);
+for (let i = -2; i <= 2; i++) box(0.5, 9, 0.5, MAT.woodDark, HALL_X + i * 6.4, 4.5, 6.5, hallGroup);
+[-11.8, 11.8].forEach(dx => cyl(0.42, 0.48, 9.4, MAT.woodRed, HALL_X + dx, 4.7, -8.6, hallGroup));
+[-12.6, 12.6].forEach(dx => box(2.2, 10.5, 0.3, MAT.wall, HALL_X + dx, 5.2, -9.4, hallGroup));
+for (let i = -2; i <= 2; i++) {
+  const l = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 12), MAT.lanternRed);
+  l.scale.y = 0.85; l.position.set(HALL_X + i * 5.2, 7.6, 3.5); hallGroup.add(l);
+  const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.55, depthWrite: false }));
+  gs.scale.set(1.6, 1.6, 1); gs.position.copy(l.position); hallGroup.add(gs);
+}
+const hallLight = new THREE.PointLight(0xffc98a, 60, 30, 1.5);
+hallLight.position.set(HALL_X, 6.5, 1); hallGroup.add(hallLight);
+const hallLight2 = new THREE.PointLight(0xff9c5a, 26, 18, 1.6);
+hallLight2.position.set(HALL_X, 3.5, -7); hallGroup.add(hallLight2);
+const hallCushions = [];
+[-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, -3.4)); });
+[-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, -0.2)); });
+[-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, 3.0)); });
+const hallSmokes = [];
+function hallBurner(dx) {
+  const b = new THREE.Group(); b.position.set(HALL_X + dx, 0, -6.8); hallGroup.add(b);
+  cyl(0.7, 0.55, 0.85, MAT.bronze, 0, 0.55, 0, b);
+  cyl(0.84, 0.84, 0.13, MAT.bronze, 0, 1.0, 0, b);
+  for (let i = 0; i < 5; i++) {
+    const sx = (Math.random() - 0.5) * 0.6, sz = (Math.random() - 0.5) * 0.6;
+    cyl(0.014, 0.014, 0.7, stickMat, sx, 1.35, sz, b, 6);
+  }
+  for (let i = 0; i < 8; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false }));
+    sp.userData.ph = i / 8; b.add(sp); hallSmokes.push(sp);
+  }
+}
+hallBurner(-3.4); hallBurner(3.4);
+
+
 
 /* ============ Avatar builder ============ */
 function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false }) {
@@ -521,6 +587,23 @@ npcData.forEach((d, i) => {
   npcs.push(a);
 });
 
+/* NPCs inside the hall */
+[
+  { spot: 1, name: 'Thầy Tâm Từ', sub: 'Cấp 5', bald: true, robeMat: MAT.robeBrown },
+  { spot: 6, name: 'Diệu Tâm', sub: 'Cấp 3', bald: false, robeMat: MAT.robe },
+  { spot: 11, name: 'Khách Hành Hương', sub: '', bald: true, robeMat: MAT.robe },
+].forEach((d, i) => {
+  const c = hallCushions[d.spot];
+  c.userData.occupied = true;
+  const a = buildAvatar(d);
+  a.position.copy(c.position).add(new THREE.Vector3(0, 0.24, 0));
+  a.rotation.y = Math.PI;
+  a.userData.bodyG.scale.set(1.15, 0.78, 1.15);
+  a.userData.phase = i * 2.1 + 0.7;
+  npcs.push(a);
+});
+
+
 /* Player */
 const player = buildAvatar({ name: 'Ivy', sub: 'Bậc 1', bald: false, robeMat: MAT.robe, player: true });
 player.position.set(0, 0, 6.5);
@@ -537,7 +620,13 @@ const P = {
   incenseAfterWalk: false,
 };
 const SPEED = 3.4;
-const BOUNDS = { x: 12.4, zMin: -11.6, zMax: 10.6 };
+let room = 'yard';
+const ROOM_BOUNDS = {
+  yard: { xMin: -12.4, xMax: 12.4, zMin: -11.6, zMax: 10.6 },
+  hall: { xMin: HALL_X - 11.5, xMax: HALL_X + 11.5, zMin: -7.6, zMax: 8.6 },
+};
+function activeCushions() { return room === 'yard' ? cushionSpots : hallCushions; }
+function activeFloor() { return room === 'yard' ? ground : hallFloor; }
 
 function faceAngle(from, to) { return Math.atan2(to.x - from.x, to.z - from.z); }
 function turnToward(obj, targetAngle, dt) {
@@ -548,8 +637,9 @@ function turnToward(obj, targetAngle, dt) {
 }
 function setWalkTarget(v, cushion = null, incense = false) {
   P.target = v.clone();
-  P.target.x = THREE.MathUtils.clamp(P.target.x, -BOUNDS.x, BOUNDS.x);
-  P.target.z = THREE.MathUtils.clamp(P.target.z, BOUNDS.zMin, BOUNDS.zMax);
+  const RB = ROOM_BOUNDS[room];
+  P.target.x = THREE.MathUtils.clamp(P.target.x, RB.xMin, RB.xMax);
+  P.target.z = THREE.MathUtils.clamp(P.target.z, RB.zMin, RB.zMax);
   P.sitCushion = cushion;
   P.incenseAfterWalk = incense;
   P.mode = 'walk';
@@ -585,7 +675,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (Math.hypot(e.clientX - downX, e.clientY - downY) > 7 || performance.now() - downT > 450) return;
   pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObjects([ground, ...cushionSpots], true);
+  const hits = raycaster.intersectObjects([activeFloor(), ...activeCushions()], true);
   if (!hits.length) return;
   let obj = hits[0].object, cushionGroup = null;
   while (obj) { if (obj.userData && obj.userData.isCushionGroup) { cushionGroup = obj; break; } obj = obj.parent; }
@@ -598,8 +688,10 @@ renderer.domElement.addEventListener('pointerup', (e) => {
     return;
   }
   const pt = hits[0].point.clone(); pt.y = 0;
-  const bd = Math.hypot(pt.x - burner.position.x, pt.z - burner.position.z);
-  if (bd < 1.5) pt.set(pt.x, 0, burner.position.z + 1.6);
+  if (room === 'yard') {
+    const bd = Math.hypot(pt.x - burner.position.x, pt.z - burner.position.z);
+    if (bd < 1.5) pt.set(pt.x, 0, burner.position.z + 1.6);
+  }
   setWalkTarget(pt);
 });
 
@@ -624,7 +716,7 @@ function addSen(n) { sen += n; senEl.textContent = sen; }
 btnSit.addEventListener('click', () => {
   if (P.mode === 'seated') { standUp(); return; }
   let best = null, bestD = 3.6;
-  cushionSpots.forEach(c => {
+  activeCushions().forEach(c => {
     if (c.userData.occupied || c.userData.occupiedByPlayer) return;
     const d = player.position.distanceTo(c.position);
     if (d < bestD) { bestD = d; best = c; }
@@ -644,6 +736,7 @@ btnMala.addEventListener('click', () => {
   } else if (mala % 27 === 0) toast('Đã lần được ' + mala + ' hạt 📿');
 });
 btnIncense.addEventListener('click', () => {
+  if (room !== 'yard') { toast('Trong chánh điện đã có hương trầm cháy sẵn rồi 🙏'); return; }
   const front = new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9);
   if (player.position.distanceTo(front) < 0.7) lightIncense();
   else { if (P.mode === 'seated') standUp(); setWalkTarget(front, null, true); }
@@ -653,6 +746,35 @@ function lightIncense() {
   addSen(5);
   toast('Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏', 3200);
 }
+const btnHall = document.getElementById('btnHall');
+const btnLantern = document.getElementById('btnLantern');
+btnLantern.addEventListener('click', () => {
+  window.open('https://mtrhuynh.github.io/phong-thien/', '_blank');
+});
+function goToRoom(next) {
+  if (P.mode === 'seated') standUp();
+  P.target = null; P.sitCushion = null; P.mode = 'idle';
+  room = next;
+  if (next === 'hall') {
+    player.position.set(HALL_X, 0, 7.6);
+    player.rotation.y = Math.PI;
+    camera.position.set(HALL_X, 3.4, 15.5);
+    controls.target.set(HALL_X, 1.05, 7.6);
+    btnHall.lastChild.textContent = 'Ra sân';
+    btnHall.classList.add('on');
+    toast('Đã vào chánh điện — chọn một đệm trống để ngồi thiền 🙏', 3400);
+  } else {
+    player.position.set(0, 0, 6.5);
+    player.rotation.y = Math.PI;
+    camera.position.set(0, 5.2, 14.5);
+    controls.target.set(0, 1.05, 6.5);
+    btnHall.lastChild.textContent = 'Vào chánh điện';
+    btnHall.classList.remove('on');
+    toast('Đã ra sân chùa 🌤️');
+  }
+}
+btnHall.addEventListener('click', () => goToRoom(room === 'yard' ? 'hall' : 'yard'));
+
 document.getElementById('zoomIn').addEventListener('click', () => dolly(0.8));
 document.getElementById('zoomOut').addEventListener('click', () => dolly(1.25));
 function dolly(f) {
@@ -733,6 +855,17 @@ function animate() {
     sp.material.rotation = u.ph * 0.7;
   });
 
+  /* hall incense smoke */
+  hallSmokes.forEach((sp, i) => {
+    sp.userData.ph += dt * 0.05;
+    if (sp.userData.ph > 1) sp.userData.ph -= 1;
+    const ph = sp.userData.ph;
+    sp.position.set(Math.sin(ph * 8 + i * 2.1) * 0.2 * ph, 1.15 + ph * 3.0, Math.cos(ph * 6 + i) * 0.16 * ph);
+    const sc = 0.45 + ph * 1.6;
+    sp.scale.set(sc, sc, 1);
+    sp.material.opacity = Math.sin(ph * Math.PI) * 0.4;
+  });
+
   /* camera follow */
   desiredTarget.set(player.position.x, 1.05, player.position.z);
   camDelta.copy(desiredTarget).sub(controls.target).multiplyScalar(0.07);
@@ -747,6 +880,12 @@ function animate() {
     ld.style.opacity = '0';
     setTimeout(() => ld.remove(), 700);
     setTimeout(() => toast('Chào mừng đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo'), 500);
+    setTimeout(() => {
+      const rt = document.getElementById('roomTitle');
+      rt.style.transition = 'all 1.4s ease';
+      rt.style.opacity = '0.5';
+      rt.style.transform = 'translateX(-50%) scale(0.76)';
+    }, 7000);
   }
 }
 animate();
