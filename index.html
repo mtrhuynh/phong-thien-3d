@@ -53,6 +53,17 @@
 
   /* Hint + toast */
   #hint { bottom:96px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); white-space:nowrap; pointer-events:none; }
+  #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
+  #xamCard.open { display:flex; }
+  .xam-inner { width:min(92vw, 430px); max-height:84vh; overflow-y:auto; padding:22px 24px; border-radius:18px; text-align:center;
+    background:linear-gradient(160deg, rgba(64,42,18,0.97), rgba(38,24,10,0.97)); border:1px solid rgba(240,199,106,0.55);
+    box-shadow:0 18px 50px rgba(0,0,0,0.55); color:#fdf3d8; }
+  .xam-cap { font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#f0c76a; }
+  .xam-name { font-family:'Playfair Display', serif; font-size:26px; font-weight:700; margin:6px 0 12px; color:#ffe9a8; }
+  .xam-tho { font-family:'Playfair Display', serif; font-style:italic; font-size:17px; line-height:1.75; color:#fdf3d8;
+    border-top:1px solid rgba(240,199,106,0.3); border-bottom:1px solid rgba(240,199,106,0.3); padding:12px 4px; }
+  .xam-giai { font-size:14.5px; line-height:1.65; margin:12px 0 16px; color:#f5e6c4; }
+  .xam-btns { display:flex; gap:10px; justify-content:center; }
   #credit { position:fixed; left:10px; bottom:8px; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; }
   #toast { top:146px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(30,22,12,.88);
     border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
@@ -93,6 +104,18 @@
 </div>
 
 <div class="ui" id="toast"></div>
+<div id="xamCard">
+  <div class="xam-inner">
+    <div class="xam-cap" id="xamCap">🎋 Quẻ số 1 · Thượng</div>
+    <div class="xam-name" id="xamName"></div>
+    <div class="xam-tho" id="xamTho"></div>
+    <div class="xam-giai" id="xamGiai"></div>
+    <div class="xam-btns">
+      <button class="abtn" id="xamAgain">🎋 Xin quẻ khác</button>
+      <button class="abtn" id="xamClose">Đóng</button>
+    </div>
+  </div>
+</div>
 <div id="credit">Tượng Phật: “Buddha” của hullo (Sketchfab) — CC-BY-4.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi · Kéo để xoay góc nhìn · Bấm vào đệm trống để ngồi thiền</div>
 
@@ -101,10 +124,12 @@
   <button class="abtn" id="btnBow"><span class="ic">🙏</span>Lạy Phật</button>
   <button class="abtn" id="btnMala"><span class="ic">📿</span>Tràng hạt<span class="cnt" id="malaCnt">0/108</span></button>
   <button class="abtn" id="btnIncense"><span class="ic">🕯️</span>Đốt nhang</button>
+  <button class="abtn" id="btnXam"><span class="ic">🎋</span>Xin xăm</button>
   <button class="abtn" id="btnHall"><span class="ic">🏛️</span>Vào chánh điện</button>
   <button class="abtn" id="btnLantern"><span class="ic">🏮</span>Thả đèn</button>
 </div>
 
+<script src="xam-data.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -381,10 +406,11 @@ for (let i = 0; i < 3; i++) {
 const stickMat = new THREE.MeshStandardMaterial({ color: 0x9a4a30, roughness: 0.8 });
 const emberMat = new THREE.MeshStandardMaterial({ color: 0xff5a26, emissive: 0xff4400, emissiveIntensity: 2.2 });
 const emberTips = [];
+const emberFx = [];
 for (let i = 0; i < 7; i++) {
   const sx = (Math.random() - 0.5) * 0.8, sz = (Math.random() - 0.5) * 0.8;
   cyl(0.016, 0.016, 0.85, stickMat, sx, 1.5, sz, burner, 6);
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), emberMat);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), emberMat);
   tip.position.set(sx, 1.94, sz); burner.add(tip); emberTips.push(tip);
 }
 const smokeTex = canvasTexture(128, 128, (g) => {
@@ -402,6 +428,10 @@ for (let i = 0; i < 16; i++) {
   burner.add(sp); smokes.push(sp);
 }
 let smokeBoost = 0; // >0 right after lighting incense
+const burnerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.9, depthWrite: false }));
+burnerGlow.scale.set(1.25, 0.65, 1); burnerGlow.position.y = 1.97; burner.add(burnerGlow);
+const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.position.y = 2.05; burner.add(burnerLight);
+emberFx.push({ ember: burnerGlow, fl: burnerLight, seed: 3.7 });
 
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
 function lotusPond(x, z) {
@@ -606,6 +636,10 @@ new GLTFLoader().load('models/buddha/scene.gltf', (gltf) => {
 cyl(0.52, 0.4, 0.62, MAT.bronze, HALL_X, 0.81, -7.15, hallGroup);
 cyl(0.62, 0.62, 0.1, MAT.bronze, HALL_X, 1.16, -7.15, hallGroup);
 for (let i = 0; i < 4; i++) cyl(0.016, 0.016, 0.55, stickMat, HALL_X + (Math.random() - 0.5) * 0.5, 1.46, -7.15 + (Math.random() - 0.5) * 0.5, hallGroup, 6);
+const urnGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.9, depthWrite: false }));
+urnGlow.scale.set(0.9, 0.5, 1); urnGlow.position.set(HALL_X, 1.8, -7.15); hallGroup.add(urnGlow);
+const urnLight = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); urnLight.position.set(HALL_X, 1.9, -7.15); hallGroup.add(urnLight);
+emberFx.push({ ember: urnGlow, fl: urnLight, seed: 7.3 });
 [-2.4, 2.4].forEach(dx => {
   cyl(0.09, 0.13, 1.15, MAT.wall, HALL_X + dx, 1.45, -8.8, hallGroup);
   const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb45e, transparent: true, opacity: 0.95, depthWrite: false }));
@@ -684,7 +718,7 @@ const hallCushions = [];
 [-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, -0.2)); });
 [-4.8, -1.6, 1.6, 4.8].forEach(dx => { hallCushions.push(cushion(HALL_X + dx, 3.0)); });
 const hallSmokes = [];
-const hallEmbers = [];
+
 function hallBurner(dx) {
   const b = new THREE.Group(); b.position.set(HALL_X + dx, 0, -6.8); hallGroup.add(b);
   cyl(0.7, 0.55, 0.85, MAT.bronze, 0, 0.55, 0, b);
@@ -700,9 +734,49 @@ function hallBurner(dx) {
   const ember = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff8c3a, transparent: true, opacity: 0.85, depthWrite: false }));
   ember.scale.set(0.9, 0.5, 1); ember.position.y = 1.12; b.add(ember);
   const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
-  hallEmbers.push({ ember, fl, seed: Math.random() * 10 });
+  emberFx.push({ ember, fl, seed: Math.random() * 10 });
 }
 hallBurner(-3.4); hallBurner(3.4);
+
+/* ============ Fortune-stick jar (xin xam) ============ */
+const xamGroup = new THREE.Group(); xamGroup.position.set(HALL_X + 4.9, 0, -6.1); hallGroup.add(xamGroup);
+box(0.74, 0.5, 0.74, MAT.woodDark, 0, 0.25, 0, xamGroup);
+const bambooMat = new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.55 });
+const jar = new THREE.Group(); jar.position.y = 0.5; xamGroup.add(jar);
+cyl(0.30, 0.24, 0.62, bambooMat, 0, 0.31, 0, jar, 18);
+const jarRim = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.028, 8, 22), MAT.woodDark);
+jarRim.rotation.x = Math.PI / 2; jarRim.position.y = 0.62; jar.add(jarRim);
+const jarInner = new THREE.Mesh(new THREE.CircleGeometry(0.28, 18), new THREE.MeshStandardMaterial({ color: 0x2a1c10, roughness: 1 }));
+jarInner.rotation.x = -Math.PI / 2; jarInner.position.y = 0.6; jar.add(jarInner);
+const xamSticks = [];
+for (let i = 0; i < 9; i++) {
+  const st = new THREE.Group();
+  const a = (i / 9) * Math.PI * 2, rr = 0.09 + (i % 3) * 0.05;
+  st.position.set(Math.cos(a) * rr, 0.55, Math.sin(a) * rr);
+  st.rotation.z = (Math.random() - 0.5) * 0.16; st.rotation.x = (Math.random() - 0.5) * 0.16;
+  cyl(0.016, 0.016, 0.6, bambooMat, 0, 0.3, 0, st, 6);
+  cyl(0.0175, 0.0175, 0.09, MAT.lanternRed, 0, 0.56, 0, st, 6);
+  jar.add(st); xamSticks.push(st);
+}
+const chosenStick = xamSticks[4];
+let xamAnimT = -1, xamPending = null;
+const xamCard = document.getElementById('xamCard');
+function drawXam() {
+  if (xamAnimT >= 0) return;
+  if (!window.XAM_DATA || !window.XAM_DATA.length) { toast('Chưa nạp được dữ liệu quẻ, thử lại sau nhé'); return; }
+  xamPending = window.XAM_DATA[Math.floor(Math.random() * window.XAM_DATA.length)];
+  xamAnimT = 0;
+}
+function showXamCard(q) {
+  document.getElementById('xamCap').textContent = '🎋 Quẻ số ' + q[0] + ' · ' + q[2];
+  document.getElementById('xamName').textContent = q[1];
+  document.getElementById('xamTho').innerHTML = q[3].replace(/\n/g, '<br>');
+  document.getElementById('xamGiai').textContent = q[4];
+  xamCard.classList.add('open');
+  addSen(3);
+}
+document.getElementById('xamClose').addEventListener('click', () => xamCard.classList.remove('open'));
+document.getElementById('xamAgain').addEventListener('click', () => { xamCard.classList.remove('open'); drawXam(); });
 
 
 
@@ -852,6 +926,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (Math.hypot(e.clientX - downX, e.clientY - downY) > 7 || performance.now() - downT > 450) return;
   pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointer, camera);
+  if (room === 'hall' && raycaster.intersectObject(xamGroup, true).length) { drawXam(); return; }
   const hits = raycaster.intersectObjects([activeFloor(), ...activeCushions()], true);
   if (!hits.length) return;
   let obj = hits[0].object, cushionGroup = null;
@@ -923,6 +998,9 @@ function lightIncense() {
   addSen(5);
   toast('Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏', 3200);
 }
+document.getElementById('btnXam').addEventListener('click', () => {
+  if (room !== 'hall') { goToRoom('hall'); setTimeout(drawXam, 750); } else drawXam();
+});
 const btnHall = document.getElementById('btnHall');
 const btnLantern = document.getElementById('btnLantern');
 btnLantern.addEventListener('click', () => {
@@ -1059,11 +1137,26 @@ function animate() {
     sp.material.opacity = Math.sin(ph * Math.PI) * 0.62;
   });
 
-  hallEmbers.forEach((e) => {
+  emberFx.forEach((e) => {
     const f = 0.82 + Math.sin(t * 11 + e.seed * 7) * 0.12 + Math.sin(t * 23 + e.seed * 3) * 0.07;
     e.fl.intensity = 2.5 * f;
     e.ember.material.opacity = 0.78 * f;
   });
+
+  /* fortune jar shake */
+  if (xamAnimT >= 0) {
+    xamAnimT += dt / 1.15;
+    const k = xamAnimT;
+    if (k >= 1) {
+      xamAnimT = -1; jar.rotation.z = 0;
+      xamSticks.forEach(s => { s.position.y = 0.55; });
+      if (xamPending) showXamCard(xamPending);
+    } else {
+      jar.rotation.z = Math.sin(k * 34) * 0.13 * (1 - k);
+      xamSticks.forEach((s, i) => { s.position.y = 0.55 + Math.abs(Math.sin(k * 30 + i * 1.7)) * 0.05 * (1 - k); });
+      chosenStick.position.y = 0.55 + Math.max(0, k - 0.55) * 0.75;
+    }
+  }
 
   /* camera follow */
   desiredTarget.set(player.position.x, 1.05, player.position.z);
