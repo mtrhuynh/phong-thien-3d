@@ -1663,10 +1663,15 @@ const remotes = new Map();
 let ptChannel = null, ptLastSent = '', ptLastAt = 0, ptBooted = false;
 let myGid = '';
 try {
-  myGid = localStorage.getItem('pt3d-gid') || '';
-  if (!myGid) { myGid = 'g' + Math.random().toString(36).slice(2, 10); localStorage.setItem('pt3d-gid', myGid); }
+  myGid = sessionStorage.getItem('pt3d-gid') || '';
+  if (!myGid) { myGid = 'g' + Math.random().toString(36).slice(2, 10); sessionStorage.setItem('pt3d-gid', myGid); }
 } catch (e) { myGid = 'g' + Math.random().toString(36).slice(2, 10); }
-if (new URLSearchParams(location.search).has('pttest')) myGid = 't' + Math.random().toString(36).slice(2, 10);
+/* spread arrivals around the spawn point so simultaneous visitors do not stand inside each other */
+{
+  let h = 0; for (let i = 0; i < myGid.length; i++) h = (h * 31 + myGid.charCodeAt(i)) >>> 0;
+  const ang = (h % 360) * Math.PI / 180, rad = 0.7 + (h % 50) / 60;
+  if (P.mode === 'idle' && !P.target) { player.position.x += Math.cos(ang) * rad; player.position.z += Math.sin(ang) * rad * 0.6; }
+}
 
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(2), z: +player.position.z.toFixed(2),
