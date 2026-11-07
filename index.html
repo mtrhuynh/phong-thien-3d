@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.8.1">
+<meta name="pt3d-ver" content="2.9.0">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.8.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.9.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -231,7 +231,7 @@ renderer.toneMappingExposure = 1.12;
 container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf2cf9e);
+scene.background = new THREE.Color(0xd9edf8);
 scene.fog = new THREE.Fog(0xf0d3a2, 46, 100);
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -423,10 +423,11 @@ carpet.receiveShadow = true; scene.add(carpet);
 function tree(x, z, s = 1) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
   cyl(0.16, 0.24, 1.7, MAT.trunk, 0, 0.85, 0, g);
-  const blobs = [[0, 2.6, 0, 1.25], [0.8, 2.1, 0.2, 0.85], [-0.75, 2.2, -0.15, 0.9], [0.1, 3.3, -0.3, 0.9]];
+  const branch = cyl(0.05, 0.08, 1.1, MAT.trunk, 0.45, 1.95, 0.1, g, 7); branch.rotation.z = -0.5;
+  const blobs = [[0, 2.7, 0, 1.3], [0.85, 2.15, 0.25, 0.85], [-0.8, 2.25, -0.2, 0.9], [0.15, 3.35, -0.25, 0.95], [-0.35, 3.0, 0.45, 0.7]];
   blobs.forEach(([bx, by, bz, br], i) => {
     const b = new THREE.Mesh(new THREE.IcosahedronGeometry(br, 1), i % 2 ? MAT.leaf2 : MAT.leaf);
-    b.position.set(bx, by, bz); b.castShadow = true; g.add(b);
+    b.position.set(bx, by, bz); b.scale.y = 0.82; b.castShadow = true; g.add(b);
   });
   scene.add(g); return g;
 }
@@ -443,6 +444,16 @@ function fenceRun(x, z, len, rotY) {
 fenceRun(-13.5, -2, 26, Math.PI / 2);
 fenceRun(13.5, -2, 26, Math.PI / 2);
 fenceRun(0, 11.5, 27, 0);
+
+/* ============ Forest panorama backdrop (2D ring) ============ */
+{
+  const bgTex = new THREE.TextureLoader().load('bg/forest.jpg');
+  bgTex.colorSpace = THREE.SRGBColorSpace;
+  const bgRing = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 30, 40, 1, true),
+    new THREE.MeshBasicMaterial({ map: bgTex, side: THREE.BackSide, fog: false }));
+  bgRing.position.y = 9; bgRing.rotation.y = Math.PI;
+  scene.add(bgRing);
+}
 
 
 /* ============ Lantern poles along the path ============ */
@@ -541,7 +552,7 @@ function lotusPond(x, z) {
     pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.425, pz); g.add(pad);
   });
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xf2a7c3, roughness: 0.6 });
-  function lotus(scale, tilt) {
+  function lotus(scale, tilt, extra) {
     const f = new THREE.Group();
     cyl(0.02, 0.02, 0.3, MAT.leaf, 0, 0.15, 0, f, 6);
     const bl = new THREE.Group(); bl.position.y = 0.32; f.add(bl);
@@ -552,25 +563,35 @@ function lotusPond(x, z) {
     }
     const core = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold);
     core.position.y = 0.05; bl.add(core);
+    if (extra) {
+      const holder = new THREE.Group(); holder.rotation.y = 0.9; bl.add(holder);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.095, 8, 8), petalMat);
+      p.position.set(0.1, 0.0, 0); p.scale.set(0.6, 1.3, 0.24); p.rotation.z = -1.25; holder.add(p);
+    }
     f.scale.setScalar(scale);
     return f;
   }
   const f1 = lotus(1.0, 0.18); f1.position.set(0.1, 0.42, 0.05); g.add(f1);
   const f2 = lotus(0.75, 0.3); f2.position.set(-0.38, 0.42, -0.32); g.add(f2);
-  const f3 = lotus(1.05, 0.55); f3.position.set(0.48, 0.42, -0.12); g.add(f3);
+  const f3 = lotus(1.05, 0.55, true); f3.position.set(0.48, 0.42, -0.12); g.add(f3);
   scene.add(g); return g;
 }
 lotusPond(-6.4, 0.5); lotusPond(6.4, 0.5); lotusPond(-6.4, -10.5); lotusPond(6.4, -10.5);
 function stoneLantern(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
-  box(0.55, 0.18, 0.55, MAT.stone, 0, 0.09, 0, g);
-  cyl(0.09, 0.11, 0.7, MAT.stone, 0, 0.53, 0, g, 10);
-  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffd9a0, emissive: 0xff9c3a, emissiveIntensity: 1.4 });
-  box(0.42, 0.36, 0.42, lampMat, 0, 1.06, 0, g);
-  const rf = new THREE.Mesh(new THREE.ConeGeometry(0.48, 0.3, 4), MAT.roofRidge);
-  rf.rotation.y = Math.PI / 4; rf.position.y = 1.4; rf.castShadow = true; g.add(rf);
+  box(0.66, 0.12, 0.66, MAT.stone, 0, 0.06, 0, g);
+  box(0.5, 0.12, 0.5, MAT.stone, 0, 0.18, 0, g);
+  cyl(0.085, 0.115, 0.62, MAT.stone, 0, 0.55, 0, g, 10);
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.035, 8, 14), MAT.stone);
+  collar.rotation.x = Math.PI / 2; collar.position.y = 0.88; g.add(collar);
+  box(0.48, 0.06, 0.48, MAT.stone, 0, 0.92, 0, g);
+  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffa04a, emissiveIntensity: 1.5 });
+  box(0.4, 0.34, 0.4, lampMat, 0, 1.12, 0, g);
+  box(0.5, 0.06, 0.5, MAT.stone, 0, 1.32, 0, g);
+  const rf = new THREE.Mesh(new THREE.ConeGeometry(0.56, 0.34, 4), MAT.roofRidge);
+  rf.rotation.y = Math.PI / 4; rf.position.y = 1.52; rf.castShadow = true; g.add(rf);
   const jewel = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), MAT.gold);
-  jewel.position.y = 1.62; g.add(jewel);
+  jewel.position.y = 1.76; g.add(jewel);
   scene.add(g);
 }
 stoneLantern(-2.4, -1.2); stoneLantern(2.4, -1.2); stoneLantern(-2.4, 5.2); stoneLantern(2.4, 5.2);
@@ -1022,9 +1043,16 @@ let floatRod = null;
   box(1.5, 0.25, 1.1, MAT.stone, 0, 0.12, 0, clockG);
   [[-0.6, -0.4], [0.6, -0.4], [-0.6, 0.4], [0.6, 0.4]].forEach(([px, pz]) => box(0.09, 1.55, 0.09, MAT.woodDark, px, 0.95, pz, clockG));
   box(1.45, 0.09, 1.0, MAT.woodDark, 0, 1.78, 0, clockG);
-  cyl(0.30, 0.24, 0.40, MAT.bronze, 0, 1.50, 0, clockG);
-  cyl(0.24, 0.19, 0.32, MAT.bronze, 0, 1.02, 0, clockG);
-  cyl(0.42, 0.34, 0.30, MAT.bronze, 0, 0.42, 0, clockG);
+  const potPts = [[0.0, 0.0], [0.62, 0.0], [0.78, 0.18], [0.92, 0.45], [0.85, 0.72], [0.66, 0.9], [0.72, 1.0]].map(p => new THREE.Vector2(p[0], p[1]));
+  function clockPot(r, h, baseY) {
+    const m = new THREE.Mesh(new THREE.LatheGeometry(potPts, 16), MAT.bronze);
+    m.scale.set(r, h, r); m.position.y = baseY; m.castShadow = true; clockG.add(m);
+  }
+  clockPot(0.30, 0.40, 1.30); clockPot(0.24, 0.32, 0.86); clockPot(0.42, 0.30, 0.27);
+  const clockRoof = new THREE.Mesh(new THREE.ConeGeometry(1.02, 0.38, 4), MAT.roofRidge);
+  clockRoof.rotation.y = Math.PI / 4; clockRoof.position.y = 1.99; clockRoof.castShadow = true; clockG.add(clockRoof);
+  const clockFin = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold);
+  clockFin.position.y = 2.22; clockG.add(clockFin);
   const wmat = new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.1 });
   cyl(0.37, 0.37, 0.03, wmat, 0, 0.56, 0, clockG);
   const dmat = new THREE.MeshBasicMaterial({ color: 0xbfe6f5, transparent: true, opacity: 0.85 });
@@ -1034,7 +1062,7 @@ let floatRod = null;
     dm.position.set(0, 0.88, 0); dm.userData.ph = i / 3; clockG.add(dm); waterDrops.push(dm);
   }
   floatRod = box(0.05, 0.62, 0.05, MAT.woodDark, 0.18, 0.80, 0, clockG);
-  const ctag = nameTag('Đồng hồ nước', 'lậu hồ · tính canh giờ'); ctag.position.y = 2.2; clockG.add(ctag);
+  const ctag = nameTag('Đồng hồ nước', 'lậu hồ · tính canh giờ'); ctag.position.y = 2.55; clockG.add(ctag);
 }
 
 /* ============ Cong qua: sweep bodhi leaves + catch sala flowers ============ */
@@ -1079,9 +1107,14 @@ function startSweep(pile) {
   if (!player.userData.broom) {
     const br = new THREE.Group();
     cyl(0.022, 0.022, 1.05, MAT.woodDark, 0, 0, 0, br, 8);
-    const head = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.42, 10),
-      new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.95 }));
-    head.position.y = -0.68; head.rotation.x = Math.PI; head.scale.z = 0.45; br.add(head);
+    cyl(0.035, 0.048, 0.14, MAT.woodDark, 0, -0.56, 0, br, 8);
+    const strawMat = new THREE.MeshStandardMaterial({ color: 0xd8b878, roughness: 0.95 });
+    for (let i = 0; i < 9; i++) {
+      const st = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.44, 0.014), strawMat);
+      st.position.set((i - 4) * 0.042, -0.82, 0);
+      st.rotation.z = (i - 4) * 0.085;
+      br.add(st);
+    }
     br.position.set(0.3, 0.62, 0.38);
     br.rotation.set(0.5, 0, -0.25);
     player.add(br);
@@ -1143,7 +1176,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk.glb?v=281', (gltf) => {
+new GLTFLoader().load('models/monk.glb?v=290', (gltf) => {
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -1802,11 +1835,11 @@ function animate() {
 
   /* cong qua: sweeping + sala in the yard */
   if (sweeping) {
-    sweeping.t += dt / 0.9;
+    sweeping.t += dt / 2.4;
     const pl = sweeping.pile, k = sweeping.t;
-    pl.rotation.y += dt * 9;
+    pl.rotation.y += dt * 4;
     pl.scale.setScalar(Math.max(0.01, 1 - k));
-    if (player.userData.broom) player.userData.broom.rotation.y = Math.sin(k * Math.PI * 4) * 0.45;
+    if (player.userData.broom) player.userData.broom.rotation.y = Math.sin(k * Math.PI * 5) * 0.45;
     if (k >= 1) {
       if (player.userData.broom) player.userData.broom.visible = false;
       scene.remove(pl);
@@ -1819,8 +1852,8 @@ function animate() {
     }
   }
   for (let i = remoteSweeps.length - 1; i >= 0; i--) {
-    const rs = remoteSweeps[i]; rs.t += dt / 0.9;
-    rs.pile.rotation.y += dt * 9;
+    const rs = remoteSweeps[i]; rs.t += dt / 2.4;
+    rs.pile.rotation.y += dt * 4;
     rs.pile.scale.setScalar(Math.max(0.01, 1 - rs.t));
     if (rs.t >= 1) {
       scene.remove(rs.pile);
@@ -2149,7 +2182,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.8.1';
+const PT3D_VER = '2.9.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
