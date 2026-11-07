@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.5.1">
+<meta name="pt3d-ver" content="2.5.2">
 <title>Phòng Thiền 3D — Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -164,7 +164,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.5.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.5.2</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -192,7 +192,6 @@
     <div class="pf-sw" id="pfRobe"></div>
     <div class="pf-sec">Tràng hạt</div>
     <div class="pf-chips" id="pfBeads"></div>
-    <label class="pf-pet"><input type="checkbox" id="pfPet"> 🦌 Linh thú nai con đi theo</label>
     <div class="nm-row">
       <button class="nm-dice" id="pfRename">✏️ Đổi pháp danh</button>
       <button class="nm-go" id="pfPhoto">📷 Lưu ảnh</button>
@@ -1853,7 +1852,7 @@ try {
 
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(0), z: +player.position.z.toFixed(0),
-           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: myC, bd: look.bd, sc: look.sect, pet: look.pet ? 1 : 0,
+           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: myC, bd: look.bd, sc: look.sect,
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -1873,7 +1872,7 @@ let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + m
 const MY_C = ptHash % ROBE_COLORS.length;
 /* personal look: robe colour, bead set, sect, pet — chosen in the profile panel */
 const SECTS = ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'];
-let look = { c: null, bd: 0, sect: 0, pet: 1 };
+let look = { c: null, bd: 0, sect: 0 };
 try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}')); } catch (e) {}
 let myC = look.c != null ? look.c : MY_C;
 function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
@@ -1903,7 +1902,7 @@ function ptSync() {
     if (!r) {
       const g = buildAvatar({ name: p.name || 'Khách', sub: SECTS[p.sc] || '', bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
       g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
-      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, petG: null };
+      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
       remotes.set(key, r);
       if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
     }
@@ -1937,8 +1936,6 @@ function ptSync() {
       const tg2 = r.g.userData.tag;
       if (tg2) { tg2.material.map = nameTag(r.name, SECTS[r.sc] || '').material.map; tg2.material.needsUpdate = true; }
     }
-    if (p.pet && !r.petG) { r.petG = buildPet(); r.petG.position.set(r.tx + 0.6, 0, r.tz + 0.6); }
-    if (!p.pet && r.petG) { scene.remove(r.petG); r.petG = null; }
     const nm = p.name || 'Khách';
     if (r.name !== nm) {
       r.name = nm;
@@ -1992,9 +1989,7 @@ function ptAnim(now) {
       if (bk >= 1) { r.bowT = -1; g.userData.upperG.rotation.x = 0; }
       else g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55;
     }
-    if (r.petG) followPet(r.petG, g, dt, t);
   });
-  if (myPet) followPet(myPet, player, dt, t);
 }
 function ptSend(payload) {
   if (!ptChannel) return;
@@ -2046,7 +2041,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.5.1';
+const PT3D_VER = '2.5.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -2098,65 +2093,9 @@ async function ptCheckUpdate() {
 setInterval(ptCheckUpdate, 120000);
 setTimeout(ptCheckUpdate, 20000);
 
-/* ============ Profile (Hồ sơ tu tập) + linh thú — v2.5.0, modelled on niemphat.online ============ */
+/* ============ Profile (Hồ sơ tu tập) — v2.5.0, modelled on niemphat.online · linh thú removed in v2.5.2 at Anita's request (lag) ============ */
 function bacOf(s) { const T = [30, 80, 150, 250, 400, 600, 850, 1150, 1500]; let b = 1; for (const t of T) if (s >= t) b++; return b; }
 function refreshBac() { const el = document.getElementById('pBac'); if (el) el.textContent = bacOf(sen); }
-function buildPet() {
-  const g = new THREE.Group();
-  const fur = new THREE.MeshStandardMaterial({ color: 0xbb8c58, roughness: 0.8 });
-  const furL = new THREE.MeshStandardMaterial({ color: 0xe8cf9f, roughness: 0.8 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x7a5a34, roughness: 0.8 });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), fur);
-  body.scale.set(1.15, 0.95, 1.35); body.position.y = 0.30; g.add(body);
-  const headG = new THREE.Group(); headG.position.set(0, 0.47, 0.20); g.add(headG);
-  headG.add(new THREE.Mesh(new THREE.SphereGeometry(0.105, 14, 12), fur));
-  const snout = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), furL);
-  snout.position.set(0, -0.03, 0.09); snout.scale.set(0.9, 0.75, 1.1); headG.add(snout);
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), dark);
-  nose.position.set(0, -0.015, 0.145); headG.add(nose);
-  const eyeMatP = new THREE.MeshBasicMaterial({ color: 0x241a10 });
-  [-1, 1].forEach(s => {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.085, 8), fur);
-    ear.position.set(s * 0.085, 0.085, -0.01); ear.rotation.z = -s * 0.5; headG.add(ear);
-    const ant = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.11, 6), dark);
-    ant.position.set(s * 0.05, 0.13, -0.03); ant.rotation.z = -s * 0.35; headG.add(ant);
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 8), eyeMatP);
-    eye.position.set(s * 0.055, 0.02, 0.09); headG.add(eye);
-  });
-  [[-0.085, 0.10], [0.085, 0.10], [-0.085, -0.11], [0.085, -0.11]].forEach(([lx, lz]) => {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.016, 0.24, 8), fur);
-    leg.position.set(lx, 0.12, lz); g.add(leg);
-  });
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.09, 8), furL);
-  tail.position.set(0, 0.36, -0.22); tail.rotation.x = -0.7; g.add(tail);
-  g.userData.headG = headG;
-  scene.add(g);
-  return g;
-}
-function followPet(pet, av, dt, t) {
-  const ry = av.rotation.y;
-  const tx = av.position.x - Math.sin(ry) * 0.55 + Math.cos(ry) * 0.38;
-  const tz = av.position.z - Math.cos(ry) * 0.55 - Math.sin(ry) * 0.38;
-  const dx = tx - pet.position.x, dz = tz - pet.position.z;
-  const d = Math.hypot(dx, dz);
-  if (d > 6) { pet.position.x = tx; pet.position.z = tz; }
-  else if (d > 0.02) {
-    const k = Math.min(1, dt * 3.2);
-    pet.position.x += dx * k; pet.position.z += dz * k;
-    const targetRy = Math.atan2(dx, dz);
-    let da = targetRy - pet.rotation.y;
-    while (da > Math.PI) da -= Math.PI * 2;
-    while (da < -Math.PI) da += Math.PI * 2;
-    pet.rotation.y += da * Math.min(1, dt * 6);
-  }
-  pet.position.y = d > 0.15 ? Math.abs(Math.sin(t * 10)) * 0.03 : 0;
-  if (pet.userData.headG) pet.userData.headG.rotation.x = Math.sin(t * 1.7) * 0.06;
-}
-let myPet = null;
-function applyPetVisibility() {
-  if (look.pet && !myPet) { myPet = buildPet(); myPet.position.set(player.position.x + 0.6, 0, player.position.z + 0.6); }
-  if (!look.pet && myPet) { scene.remove(myPet); myPet = null; }
-}
 const profileModal = document.getElementById('profileModal');
 function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
 const BEAD_NAMES = ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'];
@@ -2164,7 +2103,6 @@ function applyLook() {
   if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC);
   const bm = player.userData.beadMats;
   if (bm) { const bsv = BEAD_SETS[look.bd % BEAD_SETS.length]; bm[0].color.setHex(bsv[0]); bm[1].color.setHex(bsv[1]); }
-  applyPetVisibility();
   ptTrack(true);
 }
 function openProfile() {
@@ -2191,13 +2129,11 @@ function openProfile() {
     b.addEventListener('click', () => { look.bd = i; saveLook(); applyLook(); openProfile(); });
     beadBox.appendChild(b);
   });
-  document.getElementById('pfPet').checked = !!look.pet;
   profileModal.classList.add('show');
 }
 document.getElementById('pfClose').addEventListener('click', () => profileModal.classList.remove('show'));
 profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.remove('show'); });
 document.getElementById('pfRename').addEventListener('click', () => { profileModal.classList.remove('show'); openNameModal(); });
-document.getElementById('pfPet').addEventListener('change', (e) => { look.pet = e.target.checked ? 1 : 0; saveLook(); applyPetVisibility(); ptTrack(true); });
 document.getElementById('pfPhoto').addEventListener('click', () => {
   profileModal.classList.remove('show');
   requestAnimationFrame(() => {
