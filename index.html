@@ -984,9 +984,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   const bodyG = new THREE.Group(); g.add(bodyG);
   const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
   const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
-  const sash = box(0.46, 0.105, 0.055, MAT.robeGold, 0, 0.10, 0.15, upperG);
-  sash.rotation.z = 0.55; sash.rotation.x = -0.1;
-  const neck = cyl(0.075, 0.085, 0.16, MAT.skin, 0, 0.22, 0, upperG);
+  const neck = cyl(0.08, 0.09, 0.24, MAT.skin, 0, 0.09, 0, upperG);
   const beads = new THREE.Group();
   const beadMat = new THREE.MeshStandardMaterial({ color: 0x8a5a28, roughness: 0.55 });
   const beadMat2 = new THREE.MeshStandardMaterial({ color: 0x6f451f, roughness: 0.55 });
