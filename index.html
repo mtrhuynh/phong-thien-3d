@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.13.0">
+<meta name="pt3d-ver" content="2.13.1">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.13.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.13.1</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -229,7 +229,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 /* ============ Renderer / Scene / Camera ============ */
 const container = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+let prLevel = Math.min(devicePixelRatio || 1, 1.5), prAcc = 0, prN = 0;
+renderer.setPixelRatio(prLevel);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -270,7 +271,7 @@ scene.add(new THREE.HemisphereLight(0xffe8c4, 0x8a7a5a, 1.05));
 const sun = new THREE.DirectionalLight(0xffdfae, 2.15);
 sun.position.set(14, 22, 10);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(1024, 1024);
 sun.shadow.camera.left = -26; sun.shadow.camera.right = 26;
 sun.shadow.camera.top = 26; sun.shadow.camera.bottom = -26;
 sun.shadow.camera.far = 70;
@@ -1635,7 +1636,13 @@ scene.traverse((o) => {
 });
 function animate() {
   requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const rawDt = clock.getDelta();
+  const dt = Math.min(rawDt, 0.1);
+  /* adaptive resolution (v2.13.1): a slow machine steps its render scale down until frames
+     stay smooth; and the wider dt clamp keeps game time at real-time speed even at low fps
+     (before, a 10 fps desktop ran the sala blossom in slow motion vs the phone) */
+  prAcc += rawDt; prN++;
+  if (prAcc >= 2.5) { const avgF = prAcc / prN; prAcc = 0; prN = 0; if (avgF > 0.024 && prLevel > 1.0) { prLevel = Math.max(1.0, prLevel - 0.25); renderer.setPixelRatio(prLevel); } }
   const t = clock.elapsedTime;
 
   setZone(zoneOf(player.position.x, player.position.z));
@@ -2245,7 +2252,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.13.0';
+const PT3D_VER = '2.13.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
