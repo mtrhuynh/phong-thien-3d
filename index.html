@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.0">
+<meta name="pt3d-ver" content="2.12.1">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.1</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -450,7 +450,6 @@ carpet.receiveShadow = true; scene.add(carpet);
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
     fl.scale.set(0.38, 0.38, 1); fl.position.set(cx, 2.78, -2.9); T.add(fl);
   });
-  box(3.0, 0.04, 6.2, new THREE.MeshStandardMaterial({ color: 0x8e2f26, roughness: 0.9 }), 0, 1.14, 0.9, T); // runner
   [-2.6, 2.6].forEach(lx => {
     const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), MAT.lanternRed);
     l.position.set(lx, 4.35, 3.55); T.add(l);
@@ -807,15 +806,16 @@ function makeMeritBoard(w, h, x, y, z, rotY) {
   [-w / 3, w / 3].forEach(dx => { const leg = box(0.16, 2.4, 0.16, MAT.woodDark, dx, -h / 2 - 1.0, -0.4, grp); leg.rotation.x = 0.35; });
   return grp;
 }
-makeMeritBoard(3.2, 3.0, -6.05, 2.85, -16.3, 1.5708);
+const mbGrp = makeMeritBoard(2.4, 2.9, -4.75, 2.75, -19.95, 0); mbGrp.rotation.x = -0.05;
 drawMeritBase();
-framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 3.2, 2.4, 6.05, 2.75, -16.3, -1.5708);
+const fbGrp = framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 2.4, 2.2, 4.75, 2.6, -19.95, 0); fbGrp.rotation.x = -0.05;
 const hallCushions = [];
-[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -14.7); c.position.y = 1.12; hallCushions.push(c); });
-[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -17.0); c.position.y = 1.12; hallCushions.push(c); });
+[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -14.2); c.position.y = 1.12; hallCushions.push(c); });
+[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -16.0); c.position.y = 1.12; hallCushions.push(c); });
+[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -17.8); c.position.y = 1.12; hallCushions.push(c); });
 const hallSmokes = [];
 function hallBurner() {
-  const b = new THREE.Group(); b.position.set(-5.3, 1.12, -19.3); scene.add(b);
+  const b = new THREE.Group(); b.position.set(0, 1.12, -18.3); scene.add(b);
   const urnPtsH = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
   const urnH = new THREE.Mesh(new THREE.LatheGeometry(urnPtsH, 22), MAT.bronze);
   urnH.castShadow = true; urnH.receiveShadow = true; b.add(urnH);
@@ -1335,7 +1335,7 @@ btnMala.addEventListener('click', () => {
 btnIncense.addEventListener('click', () => {
   if (room === 'hall') {
     if (hallLit) { toast('Nhang trong chánh điện đang cháy, còn khoảng ' + Math.ceil(hallLeft) + ' giây nữa'); return; }
-    const frontH = new THREE.Vector3(-5.3, 0, -18.15);
+    const frontH = new THREE.Vector3(0, 0, -17.15);
     if (player.position.distanceTo(frontH) < 0.7) lightIncense();
     else { if (P.mode === 'seated') standUp(); setWalkTarget(frontH, null, true); }
     return;
@@ -2144,7 +2144,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.0';
+const PT3D_VER = '2.12.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
