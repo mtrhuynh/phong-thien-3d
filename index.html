@@ -57,7 +57,7 @@
 
   /* Hint + toast */
   #hint { bottom:98px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); width:max-content; max-width:94vw; white-space:normal; text-align:center; line-height:1.45; pointer-events:none; }
-  #musicBar { position:fixed; top:108px; right:10px; z-index:30; display:flex; align-items:center; gap:8px;
+  #musicBar { position:fixed; top:192px; right:10px; z-index:30; display:flex; align-items:center; gap:8px;
     padding:6px 10px; border-radius:999px; background:rgba(38,24,10,0.82); border:1px solid rgba(240,199,106,0.45);
     color:#fdf3d8; font-size:13px; backdrop-filter:blur(6px); max-width:72vw; }
   #musicBar button { background:rgba(240,199,106,0.16); border:1px solid rgba(240,199,106,0.4); color:#ffe9a8;
@@ -819,6 +819,7 @@ const xamGroup = new THREE.Group(); xamGroup.position.set(HALL_X + 4.9, 0, -6.1)
 box(0.74, 0.5, 0.74, MAT.woodDark, 0, 0.25, 0, xamGroup);
 const bambooMat = new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.55 });
 const jar = new THREE.Group(); jar.position.y = 0.5; xamGroup.add(jar);
+const xtag = nameTag('Hũ xin xăm', 'bấm vào hũ để lắc quẻ'); xtag.position.y = 1.62; xamGroup.add(xtag);
 cyl(0.30, 0.24, 0.62, bambooMat, 0, 0.31, 0, jar, 18);
 const jarRim = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.028, 8, 22), MAT.woodDark);
 jarRim.rotation.x = Math.PI / 2; jarRim.position.y = 0.62; jar.add(jarRim);
