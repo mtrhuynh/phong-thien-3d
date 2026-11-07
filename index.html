@@ -79,6 +79,18 @@
     border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
     opacity:0; transition:all .35s ease; pointer-events:none; max-width:88vw; text-align:center; }
   #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #playerCard { cursor:pointer; }
+  #nameModal { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; background:rgba(10,6,3,.55); backdrop-filter:blur(3px); }
+  #nameModal.show { display:flex; }
+  .nm-card { position:relative; width:min(88vw, 340px); background:linear-gradient(160deg, rgba(52,34,16,.97), rgba(26,17,9,.97)); border:1px solid rgba(255,205,120,.6); border-radius:18px; padding:22px 20px 18px; text-align:center; color:#f3e5c3; box-shadow:0 18px 50px rgba(0,0,0,.5); }
+  .nm-title { font-size:17px; font-weight:700; color:#ffe1a8; margin-bottom:8px; }
+  .nm-sub { font-size:12.5px; line-height:1.5; color:#d8c9ae; margin-bottom:14px; }
+  #nameInput { width:100%; box-sizing:border-box; padding:11px 12px; border-radius:12px; border:1px solid rgba(255,205,120,.5); background:rgba(0,0,0,.35); color:#fff7e0; font-size:16px; text-align:center; outline:none; }
+  .nm-row { display:flex; gap:8px; margin-top:12px; }
+  .nm-dice, .nm-go { flex:1; padding:10px 6px; border-radius:12px; border:1px solid rgba(255,205,120,.5); font-size:13.5px; cursor:pointer; font-family:inherit; }
+  .nm-dice { background:rgba(0,0,0,.3); color:#f3e5c3; }
+  .nm-go { background:linear-gradient(160deg, #e9b558, #b57f22); color:#2a1a05; font-weight:700; }
+  .nm-close { position:absolute; top:8px; right:10px; background:none; border:none; color:#d8c9ae; font-size:15px; cursor:pointer; }
 
   #loading { position:fixed; inset:0; z-index:50; background:radial-gradient(circle at 50% 35%, #3a2410, #170f08 75%); display:flex; flex-direction:column; gap:14px;
     align-items:center; justify-content:center; color:#ffdf9e; font-size:15px; transition:opacity .6s; }
@@ -135,6 +147,19 @@
 </div>
 <div id="credit">Tượng Phật: model 3D Tripo</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
+
+<div id="nameModal">
+  <div class="nm-card">
+    <button class="nm-close" id="nameClose">✕</button>
+    <div class="nm-title">🪷 Chào mừng đến Phòng Thiền 3D</div>
+    <div class="nm-sub">Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.</div>
+    <input id="nameInput" type="text" maxlength="14" placeholder="Ví dụ: Ivy" autocomplete="off">
+    <div class="nm-row">
+      <button class="nm-dice" id="nameDice">🎲 Tên ngẫu nhiên</button>
+      <button class="nm-go" id="nameGo">Vào chùa 🙏</button>
+    </div>
+  </div>
+</div>
 
 <div class="ui" id="actions">
   <button class="abtn" id="btnSit"><span class="ic">🧎</span><span class="lb">Thiền</span></button>
@@ -966,6 +991,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
     eye.position.set(ex, 0.42, 0.195); upperG.add(eye);
   });
   const tag = nameTag(name, sub); tag.position.y = 1.52; g.add(tag);
+  g.userData.tag = tag;
   if (player) {
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.44, 0.56, 36),
       new THREE.MeshBasicMaterial({ color: 0xffcf5e, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
@@ -1236,6 +1262,37 @@ document.getElementById('btnSala').addEventListener('click', () => {
   if (sala) catchSala(); else toast('Hoa sala chưa rụng — lâu lâu mới có một bông, để ý nhé 🌼');
 });
 const btnHall = document.getElementById('btnHall');
+/* nickname: chosen once, kept on this device (never IP-based) */
+const NAME_KEY = 'pt3d-name';
+const NAME_IDEAS = ['Tâm An', 'Diệu Hương', 'Minh Tâm', 'Thanh Tịnh', 'Huệ Lan', 'Phúc An', 'Thiện Tâm', 'Ngọc Liên', 'Trí Dũng', 'Từ Tâm'];
+let myName = '';
+try { myName = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
+const nameModal = document.getElementById('nameModal');
+const nameInput = document.getElementById('nameInput');
+function applyName(n) {
+  myName = n;
+  document.getElementById('pName').textContent = n;
+  const tag = player.userData.tag;
+  if (tag) { tag.material.map = nameTag(n, 'Bậc 1').material.map; tag.material.needsUpdate = true; }
+}
+function openNameModal() {
+  nameInput.value = myName || '';
+  nameModal.classList.add('show');
+  setTimeout(() => { try { nameInput.focus(); } catch (e) {} }, 80);
+}
+function closeNameModal() {
+  const v = (nameInput.value || '').trim().slice(0, 14);
+  const n = v || myName || 'Hành giả';
+  try { localStorage.setItem(NAME_KEY, n); } catch (e) {}
+  applyName(n);
+  nameModal.classList.remove('show');
+}
+document.getElementById('nameGo').addEventListener('click', closeNameModal);
+document.getElementById('nameClose').addEventListener('click', closeNameModal);
+document.getElementById('nameDice').addEventListener('click', () => { nameInput.value = NAME_IDEAS[Math.floor(Math.random() * NAME_IDEAS.length)]; });
+nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') closeNameModal(); });
+document.getElementById('playerCard').addEventListener('click', openNameModal);
+if (myName) applyName(myName); else setTimeout(openNameModal, 700);
 let bellCtx = null, bellT = 25 + Math.random() * 20;
 window.addEventListener('pointerdown', () => {
   try {
@@ -1553,7 +1610,7 @@ function animate() {
     setTimeout(() => ld.remove(), 700);
     setTimeout(() => toast(room === 'hall'
       ? 'Chào mừng trở lại chánh điện 🙏 Chọn một đệm trống để ngồi thiền'
-      : 'Chào mừng đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo'), 500);
+      : 'Chào mừng ' + (myName ? myName + ' ' : '') + 'đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo'), 500);
     setTimeout(() => {
       const rt = document.getElementById('roomTitle');
       rt.style.transition = 'all 1.4s ease';
