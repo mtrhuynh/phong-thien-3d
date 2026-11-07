@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.3">
+<meta name="pt3d-ver" content="2.12.4">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.4</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1208,6 +1208,38 @@ function groundY(x, z) {
   return 0;
 }
 function zoneOf(x, z) { return (z < -12.9 && Math.abs(x) < 8.6) ? 'hall' : 'yard'; }
+/* collision (v2.12.4, Anita: walking into the altar / pillars / walls must STOP the avatar,
+   and the platform must be climbed via the steps, never entered from the side) */
+const COLLIDERS = [
+  { x0: -3.1, x1: 3.1, z0: -20.1, z1: -18.65 },   // altar table
+  { x0: -6.15, x1: -3.35, z0: -20.45, z1: -19.6 }, // merit board (back wall)
+  { x0: 3.35, x1: 6.15, z0: -20.45, z1: -19.6 },   // mantra board (back wall)
+  { x0: 4.9, x1: 5.7, z0: -19.7, z1: -18.9 },      // xin xam jar
+  { x0: -4.12, x1: -3.68, z0: -13.17, z1: -12.73 }, // pillars
+  { x0: -1.52, x1: -1.08, z0: -13.17, z1: -12.73 },
+  { x0: 1.08, x1: 1.52, z0: -13.17, z1: -12.73 },
+  { x0: 3.68, x1: 4.12, z0: -13.17, z1: -12.73 },
+  { x0: -6.6, x1: -6.05, z0: -20.6, z1: -12.85 },  // side walls
+  { x0: 6.05, x1: 6.6, z0: -20.6, z1: -12.85 },
+  { x0: -6.6, x1: -3.8, z0: -13.2, z1: -12.7 },    // front stubs
+  { x0: 3.8, x1: 6.6, z0: -13.2, z1: -12.7 },
+  { x0: -6.6, x1: 6.6, z0: -20.65, z1: -20.1 },    // back wall
+  { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
+  { x0: -8.15, x1: -4.65, z0: -1.25, z1: 2.25 },   // lotus ponds
+  { x0: 4.65, x1: 8.15, z0: -1.25, z1: 2.25 },
+  { x0: -8.15, x1: -4.65, z0: -12.25, z1: -8.75 },
+  { x0: 4.65, x1: 8.15, z0: -12.25, z1: -8.75 },
+];
+function collide() {
+  const p = player.position, R = 0.26;
+  for (const c of COLLIDERS) {
+    if (p.x > c.x0 - R && p.x < c.x1 + R && p.z > c.z0 - R && p.z < c.z1 + R) {
+      const dl = p.x - (c.x0 - R), dr = (c.x1 + R) - p.x, dn = p.z - (c.z0 - R), df = (c.z1 + R) - p.z;
+      const m = Math.min(dl, dr, dn, df);
+      if (m === dl) p.x = c.x0 - R; else if (m === dr) p.x = c.x1 + R; else if (m === dn) p.z = c.z0 - R; else p.z = c.z1 + R;
+    }
+  }
+}
 function activeCushions() { return [...cushionSpots, ...hallCushions]; }
 function activeFloor() { return ground; }
 
@@ -1647,7 +1679,15 @@ function animate() {
     } else {
       turnToward(player, faceAngle(pos, P.target), dt);
       const step = Math.min(dist, SPEED * dt);
-      pos.x += (dxw / dist) * step; pos.z += (dzw / dist) * step;
+      const mx = (dxw / dist) * step, mz = (dzw / dist) * step;
+      const canStep = (nx, nz) => groundY(nx, nz) - pos.y <= 0.45;
+      let moved = false;
+      if (canStep(pos.x + mx, pos.z + mz)) { pos.x += mx; pos.z += mz; moved = true; }
+      else if (canStep(pos.x + mx, pos.z)) { pos.x += mx; moved = true; }
+      else if (canStep(pos.x, pos.z + mz)) { pos.z += mz; moved = true; }
+      collide();
+      if (moved) P.stuckT = 0;
+      else { P.stuckT = (P.stuckT || 0) + dt; if (P.stuckT > 0.8) { P.target = null; P.sitCushion = null; P.incenseAfterWalk = false; P.sweepPile = null; P.mode = 'idle'; P.stuckT = 0; } }
       P.walkCycle += dt * 9;
       player.userData.bodyG.position.y = Math.abs(Math.sin(P.walkCycle)) * 0.05;
       player.userData.bodyG.rotation.z = Math.sin(P.walkCycle) * 0.045;
@@ -1827,6 +1867,8 @@ function animate() {
   camDelta.copy(desiredTarget).sub(controls.target).multiplyScalar(0.07);
   controls.target.add(camDelta);
   camera.position.add(camDelta);
+  const keyDriving = keysHeld.size > 0 || turnTarget !== null;
+  if (keyDriving) keyDriveT = 0;
   if (keyDriveT < 0.6) {
     keyDriveT += dt;
     const want = player.rotation.y + Math.PI;
@@ -1835,7 +1877,7 @@ function animate() {
     let dA = want - cur;
     while (dA > Math.PI) dA -= Math.PI * 2;
     while (dA < -Math.PI) dA += Math.PI * 2;
-    const na = cur + dA * Math.min(1, dt * 2.2);
+    const na = cur + dA * Math.min(1, dt * (keyDriving ? 7 : 2.2));
     const rr = Math.hypot(off.x, off.z);
     camera.position.x = controls.target.x + Math.sin(na) * rr;
     camera.position.z = controls.target.z + Math.cos(na) * rr;
@@ -2159,7 +2201,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.3';
+const PT3D_VER = '2.12.4';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
