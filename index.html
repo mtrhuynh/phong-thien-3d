@@ -983,6 +983,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   const g = new THREE.Group();
   const bodyG = new THREE.Group(); g.add(bodyG);
   const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
+  g.userData.robeMesh = robe;
   const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
   const neck = cyl(0.08, 0.09, 0.24, MAT.skin, 0, 0.09, 0, upperG);
   const beads = new THREE.Group();
@@ -1672,23 +1673,26 @@ try {
 }
 
 function ptState() {
-  return { name: myName || 'Hành giả', x: +player.position.x.toFixed(2), z: +player.position.z.toFixed(2),
-           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, at: Date.now() };
+  return { name: myName || 'Hành giả', x: +player.position.x.toFixed(1), z: +player.position.z.toFixed(1),
+           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C, at: Date.now() };
 }
 function ptTrack(force) {
   if (!ptChannel) return;
   const s = ptState();
-  const key = [s.name, s.x, s.z, s.sit, s.room].join('|');
+  const key = [s.name, s.x, s.z, s.sit, s.room, s.c].join('|');
   const now = performance.now();
-  if (!force && key === ptLastSent && now - ptLastAt < 4000) return;
-  if (!force && now - ptLastAt < 160) return;
+  if (!force && (key === ptLastSent || now - ptLastAt < 350)) return;
   ptLastSent = key; ptLastAt = now;
   ptChannel.track(s).catch(() => {});
 }
-function robeFor(key) {
+let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + myGid.charCodeAt(i)) >>> 0;
+const MY_C = ptHash % ROBE_COLORS.length;
+function robeFor(key, c) {
+  if (Number.isInteger(c)) return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[c % ROBE_COLORS.length], roughness: 0.55 });
   let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[h % ROBE_COLORS.length], roughness: 0.55 });
 }
+if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, MY_C);
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
@@ -1700,7 +1704,7 @@ function ptSync() {
     seen.add(key);
     let r = remotes.get(key);
     if (!r) {
-      const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key) });
+      const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key, p.c) });
       g.position.set(p.x || 0, 0, p.z || 0);
       r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now() };
       remotes.set(key, r);
@@ -1762,11 +1766,12 @@ setInterval(() => { ptTrack(false); ptSweep(); }, 200);
 try {
   if (window.supabase) {
     const sb = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
-    ptChannel = sb.channel('pt3d:temple', { config: { presence: { key: myGid } } });
+    ptChannel = sb.channel('pt3d:temple', { config: { presence: { key: myGid }, broadcast: { self: true } } });
     ptChannel.on('presence', { event: 'sync' }, ptSync);
-    ptChannel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') { try { await ptChannel.track(ptState()); } catch (e) {} ptSync(); }
+    ptChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') { ptTrack(true); ptSync(); }
     });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ptTrack(true); });
   } else throw new Error('no supabase');
 } catch (e) {
   const pill = document.getElementById('onlinePill');
