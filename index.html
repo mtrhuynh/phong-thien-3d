@@ -114,7 +114,7 @@
   </div>
 </div>
 
-<div class="ui" id="onlinePill"><span class="dot"></span>Demo · 1 người trong sân</div>
+<div class="ui" id="onlinePill"><span class="dot"></span>Đang nối online…</div>
 
 <div class="ui" id="roomTitle">
   <div class="t1">SÂN CHÙA TỊNH TÂM</div>
@@ -173,6 +173,7 @@
 </div>
 
 <script src="xam-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -907,7 +908,15 @@ let floatRod = null;
 
 /* ============ Cong qua: sweep bodhi leaves + catch sala flowers ============ */
 const leafPiles = [];
-const leafMats = [0xa8763e, 0x8a6d35, 0x6d7a35].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
+const leafMats = [0xd9822b, 0xc25e2e, 0xb5522a, 0xc9a227, 0x8f7a2d, 0x7a7d2a, 0xa8763e]
+  .map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1, side: THREE.DoubleSide }));
+const leafGeo = (() => {
+  const s = new THREE.Shape();
+  s.moveTo(0, -0.15);
+  s.quadraticCurveTo(0.09, -0.05, 0, 0.16);
+  s.quadraticCurveTo(-0.09, -0.05, 0, -0.15);
+  return new THREE.ShapeGeometry(s, 6);
+})();
 function leafSpot() {
   for (let tries = 0; tries < 12; tries++) {
     const x = (Math.random() - 0.5) * 22, z = -11 + Math.random() * 20;
@@ -927,12 +936,18 @@ function updateLeafBtn() {
 function spawnLeafPile() {
   const s = leafSpot();
   const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
-  const base = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 6), leafMats[Math.floor(Math.random() * 3)]);
-  base.scale.set(1, 0.32, 1); base.position.y = 0.05; base.castShadow = true; g.add(base);
-  for (let i = 0; i < 5; i++) {
-    const lf = new THREE.Mesh(new THREE.CircleGeometry(0.13, 6), leafMats[i % 3]);
-    lf.rotation.x = -Math.PI / 2; lf.rotation.z = Math.random() * 3;
-    lf.position.set((Math.random() - 0.5) * 0.7, 0.14 + Math.random() * 0.04, (Math.random() - 0.5) * 0.7); g.add(lf);
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 14),
+    new THREE.MeshBasicMaterial({ color: 0x2e2110, transparent: true, opacity: 0.32 }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.012; g.add(shadow);
+  for (let i = 0; i < 17; i++) {
+    const lf = new THREE.Mesh(leafGeo, leafMats[Math.floor(Math.random() * leafMats.length)]);
+    const mound = i < 12;
+    const r = mound ? Math.random() * 0.3 : 0.42 + Math.random() * 0.3;
+    const a = Math.random() * Math.PI * 2;
+    lf.position.set(Math.cos(a) * r, mound ? 0.04 + (0.3 - r) * 0.3 * Math.random() : 0.02, Math.sin(a) * r);
+    lf.rotation.set(-Math.PI / 2 + (Math.random() - 0.5) * 1.0, 0, Math.random() * Math.PI * 2);
+    const sc = 0.85 + Math.random() * 0.55; lf.scale.set(sc, sc, sc);
+    g.add(lf);
   }
   g.userData.isLeafPile = true; scene.add(g); leafPiles.push(g);
   updateLeafBtn(); return g;
@@ -972,11 +987,25 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   const bodyG = new THREE.Group(); g.add(bodyG);
   const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
   const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
-  const sash = box(0.42, 0.11, 0.38, MAT.robeGold, 0, 0.03, 0, upperG);
-  sash.rotation.z = 0.55;
-  const beads = new THREE.Mesh(new THREE.TorusGeometry(0.135, 0.022, 8, 22),
-    new THREE.MeshStandardMaterial({ color: 0x8a5a28, roughness: 0.6 }));
-  beads.position.y = 0.17; beads.rotation.x = 1.25; beads.castShadow = true; upperG.add(beads);
+  const sash = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.045, 10, 28), MAT.robeGold);
+  sash.rotation.set(Math.PI / 2 - 0.52, 0, 0.18); sash.scale.set(1, 1, 0.82);
+  sash.position.y = 0.07; sash.castShadow = true; upperG.add(sash);
+  const beads = new THREE.Group();
+  const beadMat = new THREE.MeshStandardMaterial({ color: 0x8a5a28, roughness: 0.55 });
+  const beadMat2 = new THREE.MeshStandardMaterial({ color: 0x6f451f, roughness: 0.55 });
+  const beadGeo = new THREE.SphereGeometry(0.0215, 8, 8);
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * Math.PI * 2;
+    const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
+    b.position.set(Math.sin(a) * 0.125, Math.cos(a) * 0.165, 0.115 - Math.cos(a) * 0.055);
+    beads.add(b);
+  }
+  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 10), MAT.robeGold);
+  guru.position.set(0, -0.175, 0.175); beads.add(guru);
+  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 8),
+    new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 }));
+  tassel.position.set(0, -0.225, 0.175); tassel.rotation.x = Math.PI; beads.add(tassel);
+  beads.position.y = 0.17; beads.castShadow = true; upperG.add(beads);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 22, 18), MAT.skin);
   head.position.y = 0.4; head.castShadow = true; upperG.add(head);
   if (!bald) {
@@ -1626,6 +1655,119 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
+
+/* ============ Online presence (Supabase — same project as the 2D room) ============
+   Each visitor appears as a chibi avatar with their phap danh tag. Identity is a
+   random guest id kept on the device (never IP-based). Solo mode if offline. */
+const PT3D_SB_URL = 'https://natylisofhdxklyjvbbb.supabase.co';
+const PT3D_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hdHlsaXNvZmhkeGtseWp2YmJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMDA2NjksImV4cCI6MjA5NDU3NjY2OX0.U0bXBPNvRy3owXYHdbVnwoKl6Tp05WU87NAoUU-UFis';
+const ROBE_COLORS = [0x4f9be0, 0xbd8449, 0x5a8a4f, 0x8a5a7d, 0x3f7f86, 0xa8542f, 0x7d6ac9, 0xc25e7d];
+const remotes = new Map();
+let ptChannel = null, ptLastSent = '', ptLastAt = 0, ptBooted = false;
+let myGid = '';
+try {
+  myGid = localStorage.getItem('pt3d-gid') || '';
+  if (!myGid) { myGid = 'g' + Math.random().toString(36).slice(2, 10); localStorage.setItem('pt3d-gid', myGid); }
+} catch (e) { myGid = 'g' + Math.random().toString(36).slice(2, 10); }
+if (new URLSearchParams(location.search).has('pttest')) myGid = 't' + Math.random().toString(36).slice(2, 10);
+
+function ptState() {
+  return { name: myName || 'Hành giả', x: +player.position.x.toFixed(2), z: +player.position.z.toFixed(2),
+           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, at: Date.now() };
+}
+function ptTrack(force) {
+  if (!ptChannel) return;
+  const s = ptState();
+  const key = [s.name, s.x, s.z, s.sit, s.room].join('|');
+  const now = performance.now();
+  if (!force && key === ptLastSent && now - ptLastAt < 4000) return;
+  if (!force && now - ptLastAt < 160) return;
+  ptLastSent = key; ptLastAt = now;
+  ptChannel.track(s).catch(() => {});
+}
+function robeFor(key) {
+  let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[h % ROBE_COLORS.length], roughness: 0.55 });
+}
+function ptSync() {
+  if (!ptChannel) return;
+  const st = ptChannel.presenceState();
+  const seen = new Set();
+  Object.keys(st).forEach(key => {
+    if (key === myGid) return;
+    const metas = st[key]; if (!metas || !metas.length) return;
+    const p = metas[metas.length - 1];
+    seen.add(key);
+    let r = remotes.get(key);
+    if (!r) {
+      const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key) });
+      g.position.set(p.x || 0, 0, p.z || 0);
+      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6 };
+      remotes.set(key, r);
+      if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
+    }
+    if (typeof p.x === 'number') r.tx = p.x;
+    if (typeof p.z === 'number') r.tz = p.z;
+    if (typeof p.ry === 'number') r.try_ = p.ry;
+    r.sit = !!p.sit;
+    const nm = p.name || 'Khách';
+    if (r.name !== nm) {
+      r.name = nm;
+      const tg = r.g.userData.tag;
+      if (tg) { tg.material.map = nameTag(nm, '').material.map; tg.material.needsUpdate = true; }
+    }
+  });
+  [...remotes.keys()].forEach(key => {
+    if (!seen.has(key)) { scene.remove(remotes.get(key).g); remotes.delete(key); }
+  });
+  const n = Object.keys(st).length;
+  const pill = document.getElementById('onlinePill');
+  if (pill) pill.innerHTML = '<span class="dot"></span>' + (n <= 1 ? 'Online · mình bạn trong chùa' : 'Online · ' + n + ' người trong chùa');
+  ptBooted = true;
+}
+let ptPrev = performance.now();
+function ptAnim(now) {
+  requestAnimationFrame(ptAnim);
+  const dt = Math.min((now - ptPrev) / 1000, 0.05); ptPrev = now;
+  const t = now / 1000;
+  remotes.forEach(r => {
+    const g = r.g;
+    const dx = r.tx - g.position.x, dz = r.tz - g.position.z;
+    const d = Math.hypot(dx, dz);
+    if (d > 7) { g.position.x = r.tx; g.position.z = r.tz; }
+    else if (d > 0.01) { const k = Math.min(1, dt * 7); g.position.x += dx * k; g.position.z += dz * k; }
+    let da = r.try_ - g.rotation.y;
+    while (da > Math.PI) da -= Math.PI * 2;
+    while (da < -Math.PI) da += Math.PI * 2;
+    g.rotation.y += da * Math.min(1, dt * 8);
+    const targetY = r.sit ? 0.24 : 0;
+    g.position.y += (targetY - g.position.y) * Math.min(1, dt * 8);
+    const body = g.userData.bodyG;
+    if (body) {
+      const moving = d > 0.05 && !r.sit;
+      body.scale.y = (r.sit ? 0.78 : 1) * (1 + Math.sin(t * 1.5 + r.ph) * 0.012);
+      body.scale.x = body.scale.z = r.sit ? 1.15 : 1;
+      body.position.y = moving ? Math.abs(Math.sin(t * 9 + r.ph)) * 0.05 : 0;
+    }
+  });
+}
+requestAnimationFrame(ptAnim);
+setInterval(() => ptTrack(false), 200);
+try {
+  if (window.supabase) {
+    const sb = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
+    ptChannel = sb.channel('pt3d:temple', { config: { presence: { key: myGid } } });
+    ptChannel.on('presence', { event: 'sync' }, ptSync);
+    ptChannel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') { try { await ptChannel.track(ptState()); } catch (e) {} ptSync(); }
+    });
+  } else throw new Error('no supabase');
+} catch (e) {
+  const pill = document.getElementById('onlinePill');
+  if (pill) pill.innerHTML = '<span class="dot"></span>Một mình trong chùa (chưa nối được online)';
+}
+const _applyNamePt = applyName;
+applyName = function (n) { _applyNamePt(n); ptTrack(true); };
 
 </script>
 </body>
