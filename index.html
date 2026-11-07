@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.4.1">
+<meta name="pt3d-ver" content="2.5.0">
 <title>Phòng Thiền 3D — Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -95,6 +95,20 @@
   .nm-dice { background:rgba(0,0,0,.3); color:#f3e5c3; }
   .nm-go { background:linear-gradient(160deg, #e9b558, #b57f22); color:#2a1a05; font-weight:700; }
   .nm-close { position:absolute; top:8px; right:10px; background:none; border:none; color:#d8c9ae; font-size:15px; cursor:pointer; }
+  #profileModal { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; background:rgba(10,6,3,.55); backdrop-filter:blur(3px); }
+  #profileModal.show { display:flex; }
+  .pf-card { text-align:left; max-height:86vh; overflow-y:auto; }
+  .pf-name { font-size:19px; font-weight:800; color:#ffe1a8; text-align:center; }
+  .pf-line { font-size:12.5px; color:#d8c9ae; text-align:center; margin:4px 0 6px; line-height:1.55; }
+  .pf-sec { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#c9a86a; margin:12px 0 6px; }
+  .pf-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .pf-chip { padding:7px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(0,0,0,.3); color:#f3e5c3; font-size:13px; cursor:pointer; font-family:inherit; }
+  .pf-chip.on { background:linear-gradient(160deg, #e9b558, #b57f22); color:#2a1a05; font-weight:700; }
+  .pf-sw { display:flex; flex-wrap:wrap; gap:8px; }
+  .pf-swatch { width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.25); cursor:pointer; padding:0; }
+  .pf-swatch.on { border-color:#ffd76e; box-shadow:0 0 0 2px rgba(255,215,110,.5); }
+  .pf-pet { display:flex; align-items:center; gap:8px; font-size:14px; color:#f3e5c3; margin-top:14px; cursor:pointer; }
+  .pf-pet input { width:18px; height:18px; accent-color:#b57f22; }
 
   #loading { position:fixed; inset:0; z-index:50; background:radial-gradient(circle at 50% 35%, #3a2410, #170f08 75%); display:flex; flex-direction:column; gap:14px;
     align-items:center; justify-content:center; color:#ffdf9e; font-size:15px; transition:opacity .6s; }
@@ -114,7 +128,7 @@
   <div class="ava">🧘</div>
   <div>
     <div class="pname" id="pName">Ivy</div>
-    <div class="psub">Hạt sen · bậc 1 · 🪷 <b id="pSen">0</b></div>
+    <div class="psub">Hạt sen · bậc <b id="pBac">1</b> · 🪷 <b id="pSen">0</b></div>
   </div>
 </div>
 
@@ -150,7 +164,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.4.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.5.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -162,6 +176,26 @@
     <div class="nm-row">
       <button class="nm-dice" id="nameDice">🎲 Tên ngẫu nhiên</button>
       <button class="nm-go" id="nameGo">Vào chùa 🙏</button>
+    </div>
+  </div>
+</div>
+
+<div id="profileModal">
+  <div class="nm-card pf-card">
+    <button class="nm-close" id="pfClose">✕</button>
+    <div class="nm-title">🪷 Hồ sơ tu tập</div>
+    <div class="pf-name" id="pfName">—</div>
+    <div class="pf-line" id="pfLine">—</div>
+    <div class="pf-sec">Tông phái</div>
+    <div class="pf-chips" id="pfSect"></div>
+    <div class="pf-sec">Áo tràng</div>
+    <div class="pf-sw" id="pfRobe"></div>
+    <div class="pf-sec">Tràng hạt</div>
+    <div class="pf-chips" id="pfBeads"></div>
+    <label class="pf-pet"><input type="checkbox" id="pfPet"> 🦌 Linh thú nai con đi theo</label>
+    <div class="nm-row">
+      <button class="nm-dice" id="pfRename">✏️ Đổi pháp danh</button>
+      <button class="nm-go" id="pfPhoto">📷 Lưu ảnh</button>
     </div>
   </div>
 </div>
@@ -1074,31 +1108,41 @@ function catchSala() {
 }
 
 /* ============ Avatar builder ============ */
-function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false }) {
+const BEAD_SETS = [[0x8a5a28, 0x6f451f], [0xc89b62, 0xa87c48], [0xd9a441, 0xb97f26]];
+function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false, beadSet = 0 }) {
   const g = new THREE.Group();
   const bodyG = new THREE.Group(); g.add(bodyG);
   const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
   g.userData.robeMesh = robe;
+  const hem = new THREE.Mesh(new THREE.SphereGeometry(0.345, 18, 10), robeMat);
+  hem.scale.set(1, 0.38, 1); hem.position.y = 0.045; bodyG.add(hem);
+  cyl(0.243, 0.258, 0.075, MAT.robeGold, 0, 0.40, 0, bodyG);
   const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
   const neck = cyl(0.08, 0.09, 0.24, MAT.skin, 0, 0.09, 0, upperG);
   const beads = new THREE.Group();
-  const beadMat = new THREE.MeshStandardMaterial({ color: 0x8a5a28, roughness: 0.55 });
-  const beadMat2 = new THREE.MeshStandardMaterial({ color: 0x6f451f, roughness: 0.55 });
-  const beadGeo = new THREE.SphereGeometry(0.0215, 8, 8);
-  for (let i = 0; i < 20; i++) {
-    const a = (i / 20) * Math.PI * 2;
+  const bs = BEAD_SETS[beadSet % BEAD_SETS.length];
+  const beadMat = new THREE.MeshStandardMaterial({ color: bs[0], roughness: 0.5 });
+  const beadMat2 = new THREE.MeshStandardMaterial({ color: bs[1], roughness: 0.5 });
+  g.userData.beadMats = [beadMat, beadMat2];
+  const beadGeo = new THREE.SphereGeometry(0.026, 9, 9);
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
     const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
-    b.position.set(Math.sin(a) * 0.12, Math.cos(a) * 0.15, 0.13 - Math.cos(a) * 0.06);
+    b.position.set(Math.sin(a) * 0.105, 0.14 - Math.cos(a) * 0.088, 0.055 + Math.cos(a) * 0.135);
     beads.add(b);
   }
-  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 10), MAT.robeGold);
-  guru.position.set(0, -0.165, 0.20); beads.add(guru);
+  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.034, 10, 10), MAT.robeGold);
+  guru.position.set(0, 0.038, 0.195); beads.add(guru);
   const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 8),
     new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 }));
-  tassel.position.set(0, -0.215, 0.20); tassel.rotation.x = Math.PI; beads.add(tassel);
-  beads.position.y = 0.13; beads.castShadow = true; upperG.add(beads);
+  tassel.position.set(0, -0.012, 0.195); tassel.rotation.x = Math.PI; beads.add(tassel);
+  beads.castShadow = true; upperG.add(beads);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 22, 18), MAT.skin);
   head.position.y = 0.36; head.castShadow = true; upperG.add(head);
+  [-1, 1].forEach(sgn => {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 8), MAT.skin);
+    ear.position.set(sgn * 0.20, 0.36, 0); ear.scale.set(0.55, 1, 0.8); upperG.add(ear);
+  });
   if (!bald) {
     const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.218, 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.52), MAT.hair);
     hairCap.position.y = 0.375; hairCap.rotation.x = -0.25; upperG.add(hairCap);
@@ -1297,6 +1341,7 @@ function addSen(n) {
     if (!was && xamOpen()) { toast('🎋 Đủ ' + XAM_GATE + ' phước đức hôm nay — hũ xin xăm đã mở!', 4000); updateJarTag(); }
   }
   meritDirty = true;
+  refreshBac();
 }
 
 btnSit.addEventListener('click', () => {
@@ -1422,7 +1467,7 @@ document.getElementById('nameGo').addEventListener('click', closeNameModal);
 document.getElementById('nameClose').addEventListener('click', closeNameModal);
 document.getElementById('nameDice').addEventListener('click', () => { nameInput.value = NAME_IDEAS[Math.floor(Math.random() * NAME_IDEAS.length)]; });
 nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') closeNameModal(); });
-document.getElementById('playerCard').addEventListener('click', openNameModal);
+document.getElementById('playerCard').addEventListener('click', openProfile);
 if (myName) applyName(myName); else setTimeout(openNameModal, 700);
 let bellCtx = null, bellT = 25 + Math.random() * 20;
 window.addEventListener('pointerdown', () => {
@@ -1802,7 +1847,7 @@ try {
 
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(0), z: +player.position.z.toFixed(0),
-           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C,
+           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: myC, bd: look.bd, sc: look.sect, pet: look.pet ? 1 : 0,
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -1820,12 +1865,18 @@ function ptTrack(force) {
 }
 let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + myGid.charCodeAt(i)) >>> 0;
 const MY_C = ptHash % ROBE_COLORS.length;
+/* personal look: robe colour, bead set, sect, pet — chosen in the profile panel */
+const SECTS = ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'];
+let look = { c: null, bd: 0, sect: 0, pet: 1 };
+try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}')); } catch (e) {}
+let myC = look.c != null ? look.c : MY_C;
+function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
 function robeFor(key, c) {
   if (Number.isInteger(c)) return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[c % ROBE_COLORS.length], roughness: 0.55 });
   let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[h % ROBE_COLORS.length], roughness: 0.55 });
 }
-if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, MY_C);
+if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC);
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
@@ -1844,9 +1895,9 @@ function ptSync() {
     const p = metas[metas.length - 1];
     let r = remotes.get(key);
     if (!r) {
-      const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key, p.c) });
+      const g = buildAvatar({ name: p.name || 'Khách', sub: SECTS[p.sc] || '', bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
       g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
-      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false };
+      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, petG: null };
       remotes.set(key, r);
       if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
     }
@@ -1870,11 +1921,23 @@ function ptSync() {
     if (typeof p.z === 'number') r.tz = p.z;
     if (typeof p.ry === 'number') r.try_ = p.ry;
     r.sit = !!p.sit;
+    if ((p.bd || 0) !== r.bd) {
+      r.bd = p.bd || 0;
+      const bm = r.g.userData.beadMats;
+      if (bm) { const bsv = BEAD_SETS[r.bd % BEAD_SETS.length]; bm[0].color.setHex(bsv[0]); bm[1].color.setHex(bsv[1]); }
+    }
+    if ((p.sc || 0) !== r.sc) {
+      r.sc = p.sc || 0;
+      const tg2 = r.g.userData.tag;
+      if (tg2) { tg2.material.map = nameTag(r.name, SECTS[r.sc] || '').material.map; tg2.material.needsUpdate = true; }
+    }
+    if (p.pet && !r.petG) { r.petG = buildPet(); r.petG.position.set(r.tx + 0.6, 0, r.tz + 0.6); }
+    if (!p.pet && r.petG) { scene.remove(r.petG); r.petG = null; }
     const nm = p.name || 'Khách';
     if (r.name !== nm) {
       r.name = nm;
       const tg = r.g.userData.tag;
-      if (tg) { tg.material.map = nameTag(nm, '').material.map; tg.material.needsUpdate = true; }
+      if (tg) { tg.material.map = nameTag(nm, SECTS[r.sc] || '').material.map; tg.material.needsUpdate = true; }
     }
   });
   ptSweep();
@@ -1923,7 +1986,9 @@ function ptAnim(now) {
       if (bk >= 1) { r.bowT = -1; g.userData.upperG.rotation.x = 0; }
       else g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55;
     }
+    if (r.petG) followPet(r.petG, g, dt, t);
   });
+  if (myPet) followPet(myPet, player, dt, t);
 }
 function ptSend(payload) {
   if (!ptChannel) return;
@@ -1975,7 +2040,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.4.1';
+const PT3D_VER = '2.5.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -2026,6 +2091,121 @@ async function ptCheckUpdate() {
 }
 setInterval(ptCheckUpdate, 120000);
 setTimeout(ptCheckUpdate, 20000);
+
+/* ============ Profile (Hồ sơ tu tập) + linh thú — v2.5.0, modelled on niemphat.online ============ */
+function bacOf(s) { const T = [30, 80, 150, 250, 400, 600, 850, 1150, 1500]; let b = 1; for (const t of T) if (s >= t) b++; return b; }
+function refreshBac() { const el = document.getElementById('pBac'); if (el) el.textContent = bacOf(sen); }
+function buildPet() {
+  const g = new THREE.Group();
+  const fur = new THREE.MeshStandardMaterial({ color: 0xbb8c58, roughness: 0.8 });
+  const furL = new THREE.MeshStandardMaterial({ color: 0xe8cf9f, roughness: 0.8 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x7a5a34, roughness: 0.8 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 14, 12), fur);
+  body.scale.set(1.15, 0.95, 1.35); body.position.y = 0.30; g.add(body);
+  const headG = new THREE.Group(); headG.position.set(0, 0.47, 0.20); g.add(headG);
+  headG.add(new THREE.Mesh(new THREE.SphereGeometry(0.105, 14, 12), fur));
+  const snout = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), furL);
+  snout.position.set(0, -0.03, 0.09); snout.scale.set(0.9, 0.75, 1.1); headG.add(snout);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), dark);
+  nose.position.set(0, -0.015, 0.145); headG.add(nose);
+  const eyeMatP = new THREE.MeshBasicMaterial({ color: 0x241a10 });
+  [-1, 1].forEach(s => {
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.085, 8), fur);
+    ear.position.set(s * 0.085, 0.085, -0.01); ear.rotation.z = -s * 0.5; headG.add(ear);
+    const ant = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.11, 6), dark);
+    ant.position.set(s * 0.05, 0.13, -0.03); ant.rotation.z = -s * 0.35; headG.add(ant);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 8), eyeMatP);
+    eye.position.set(s * 0.055, 0.02, 0.09); headG.add(eye);
+  });
+  [[-0.085, 0.10], [0.085, 0.10], [-0.085, -0.11], [0.085, -0.11]].forEach(([lx, lz]) => {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.016, 0.24, 8), fur);
+    leg.position.set(lx, 0.12, lz); g.add(leg);
+  });
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.09, 8), furL);
+  tail.position.set(0, 0.36, -0.22); tail.rotation.x = -0.7; g.add(tail);
+  g.userData.headG = headG;
+  scene.add(g);
+  return g;
+}
+function followPet(pet, av, dt, t) {
+  const ry = av.rotation.y;
+  const tx = av.position.x - Math.sin(ry) * 0.55 + Math.cos(ry) * 0.38;
+  const tz = av.position.z - Math.cos(ry) * 0.55 - Math.sin(ry) * 0.38;
+  const dx = tx - pet.position.x, dz = tz - pet.position.z;
+  const d = Math.hypot(dx, dz);
+  if (d > 6) { pet.position.x = tx; pet.position.z = tz; }
+  else if (d > 0.02) {
+    const k = Math.min(1, dt * 3.2);
+    pet.position.x += dx * k; pet.position.z += dz * k;
+    const targetRy = Math.atan2(dx, dz);
+    let da = targetRy - pet.rotation.y;
+    while (da > Math.PI) da -= Math.PI * 2;
+    while (da < -Math.PI) da += Math.PI * 2;
+    pet.rotation.y += da * Math.min(1, dt * 6);
+  }
+  pet.position.y = d > 0.15 ? Math.abs(Math.sin(t * 10)) * 0.03 : 0;
+  if (pet.userData.headG) pet.userData.headG.rotation.x = Math.sin(t * 1.7) * 0.06;
+}
+let myPet = null;
+function applyPetVisibility() {
+  if (look.pet && !myPet) { myPet = buildPet(); myPet.position.set(player.position.x + 0.6, 0, player.position.z + 0.6); }
+  if (!look.pet && myPet) { scene.remove(myPet); myPet = null; }
+}
+const profileModal = document.getElementById('profileModal');
+function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
+const BEAD_NAMES = ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'];
+function applyLook() {
+  if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC);
+  const bm = player.userData.beadMats;
+  if (bm) { const bsv = BEAD_SETS[look.bd % BEAD_SETS.length]; bm[0].color.setHex(bsv[0]); bm[1].color.setHex(bsv[1]); }
+  applyPetVisibility();
+  ptTrack(true);
+}
+function openProfile() {
+  document.getElementById('pfName').textContent = myName || 'Hành giả';
+  document.getElementById('pfLine').innerHTML = SECTS[look.sect] + ' · Bậc ' + bacOf(sen) + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + daily.pts + ' phước đức' + (xamOpen() ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + XAM_GATE + ' mở xin xăm');
+  const sectBox = document.getElementById('pfSect'); sectBox.innerHTML = '';
+  SECTS.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'pf-chip' + (i === look.sect ? ' on' : ''); b.textContent = s;
+    b.addEventListener('click', () => { look.sect = i; saveLook(); ptTrack(true); openProfile(); });
+    sectBox.appendChild(b);
+  });
+  const robeBox = document.getElementById('pfRobe'); robeBox.innerHTML = '';
+  ROBE_COLORS.forEach((h, i) => {
+    const b = document.createElement('button');
+    b.className = 'pf-swatch' + (i === myC ? ' on' : ''); b.style.background = hexCss(h); b.title = 'Áo ' + (i + 1);
+    b.addEventListener('click', () => { look.c = i; myC = i; saveLook(); applyLook(); openProfile(); });
+    robeBox.appendChild(b);
+  });
+  const beadBox = document.getElementById('pfBeads'); beadBox.innerHTML = '';
+  BEAD_NAMES.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'pf-chip' + (i === look.bd ? ' on' : ''); b.textContent = s;
+    b.addEventListener('click', () => { look.bd = i; saveLook(); applyLook(); openProfile(); });
+    beadBox.appendChild(b);
+  });
+  document.getElementById('pfPet').checked = !!look.pet;
+  profileModal.classList.add('show');
+}
+document.getElementById('pfClose').addEventListener('click', () => profileModal.classList.remove('show'));
+profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.remove('show'); });
+document.getElementById('pfRename').addEventListener('click', () => { profileModal.classList.remove('show'); openNameModal(); });
+document.getElementById('pfPet').addEventListener('change', (e) => { look.pet = e.target.checked ? 1 : 0; saveLook(); applyPetVisibility(); ptTrack(true); });
+document.getElementById('pfPhoto').addEventListener('click', () => {
+  profileModal.classList.remove('show');
+  requestAnimationFrame(() => {
+    try {
+      renderer.render(scene, camera);
+      const a = document.createElement('a');
+      a.href = renderer.domElement.toDataURL('image/png');
+      a.download = 'nhan-vat-phong-thien-3d.png'; a.click();
+      toast('📷 Đã lưu ảnh nhân vật', 2200);
+    } catch (err) { toast('Chưa chụp được ảnh, thử lại nhé', 2200); }
+  });
+});
+applyLook();
+refreshBac();
 
 </script>
 </body>
