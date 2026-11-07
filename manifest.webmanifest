@@ -1,0 +1,33 @@
+{
+  "name": "Phòng Thiền 3D — Chùa Online",
+  "short_name": "Phòng Thiền 3D",
+  "description": "Chùa 3D trực tuyến: ngồi thiền, lạy Phật, đốt nhang, xin xăm, quét lá cùng mọi người.",
+  "lang": "vi",
+  "id": ".",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1e150e",
+  "theme_color": "#2a2019",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
