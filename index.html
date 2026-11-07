@@ -936,10 +936,7 @@ function updateLeafBtn() {
 function spawnLeafPile() {
   const s = leafSpot();
   const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
-  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 14),
-    new THREE.MeshBasicMaterial({ color: 0x2e2110, transparent: true, opacity: 0.32 }));
-  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.012; g.add(shadow);
-  for (let i = 0; i < 17; i++) {
+  for (let i = 0; i < 20; i++) {
     const lf = new THREE.Mesh(leafGeo, leafMats[Math.floor(Math.random() * leafMats.length)]);
     const mound = i < 12;
     const r = mound ? Math.random() * 0.3 : 0.42 + Math.random() * 0.3;
@@ -987,9 +984,10 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   const bodyG = new THREE.Group(); g.add(bodyG);
   const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
   const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
-  const sash = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.045, 10, 28), MAT.robeGold);
-  sash.rotation.set(Math.PI / 2 - 0.52, 0, 0.18); sash.scale.set(1, 1, 0.82);
-  sash.position.y = 0.07; sash.castShadow = true; upperG.add(sash);
+  const sash = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.04, 10, 28), MAT.robeGold);
+  sash.rotation.set(Math.PI / 2 - 0.4, 0, 0.18); sash.scale.set(1, 1, 0.88);
+  sash.position.y = 0.03; sash.castShadow = true; upperG.add(sash);
+  const neck = cyl(0.075, 0.085, 0.16, MAT.skin, 0, 0.22, 0, upperG);
   const beads = new THREE.Group();
   const beadMat = new THREE.MeshStandardMaterial({ color: 0x8a5a28, roughness: 0.55 });
   const beadMat2 = new THREE.MeshStandardMaterial({ color: 0x6f451f, roughness: 0.55 });
@@ -997,27 +995,27 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   for (let i = 0; i < 20; i++) {
     const a = (i / 20) * Math.PI * 2;
     const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
-    b.position.set(Math.sin(a) * 0.125, Math.cos(a) * 0.165, 0.115 - Math.cos(a) * 0.055);
+    b.position.set(Math.sin(a) * 0.12, Math.cos(a) * 0.15, 0.13 - Math.cos(a) * 0.06);
     beads.add(b);
   }
   const guru = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 10), MAT.robeGold);
-  guru.position.set(0, -0.175, 0.175); beads.add(guru);
+  guru.position.set(0, -0.165, 0.20); beads.add(guru);
   const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 8),
     new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 }));
-  tassel.position.set(0, -0.225, 0.175); tassel.rotation.x = Math.PI; beads.add(tassel);
-  beads.position.y = 0.17; beads.castShadow = true; upperG.add(beads);
+  tassel.position.set(0, -0.215, 0.20); tassel.rotation.x = Math.PI; beads.add(tassel);
+  beads.position.y = 0.13; beads.castShadow = true; upperG.add(beads);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 22, 18), MAT.skin);
-  head.position.y = 0.4; head.castShadow = true; upperG.add(head);
+  head.position.y = 0.36; head.castShadow = true; upperG.add(head);
   if (!bald) {
     const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.218, 22, 14, 0, Math.PI * 2, 0, Math.PI * 0.52), MAT.hair);
-    hairCap.position.y = 0.415; hairCap.rotation.x = -0.25; upperG.add(hairCap);
+    hairCap.position.y = 0.375; hairCap.rotation.x = -0.25; upperG.add(hairCap);
     const bun = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), MAT.hair);
-    bun.position.set(0, 0.58, -0.09); upperG.add(bun);
+    bun.position.set(0, 0.54, -0.09); upperG.add(bun);
   }
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2a1c14 });
   [-0.07, 0.07].forEach(ex => {
     const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), eyeMat);
-    eye.position.set(ex, 0.42, 0.195); upperG.add(eye);
+    eye.position.set(ex, 0.38, 0.198); upperG.add(eye);
   });
   const tag = nameTag(name, sub); tag.position.y = 1.52; g.add(tag);
   g.userData.tag = tag;
