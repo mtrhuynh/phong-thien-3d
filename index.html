@@ -1743,7 +1743,8 @@ function ptTrack(force) {
   const s = ptState();
   const key = [s.name, s.x, s.z, s.sit, s.room, s.c, s.st.join(',')].join('|');
   const now = performance.now();
-  if (!force && (key === ptLastSent || now - ptLastAt < 350)) return;
+  if (!force && now - ptLastAt < 350) return;
+  if (!force && key === ptLastSent && now - ptLastAt < 10000) return;
   ptLastSent = key; ptLastAt = now;
   ptChannel.track(s).catch(() => {});
 }
@@ -1758,22 +1759,29 @@ if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid,
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
-  const seen = new Set();
+  const winners = {};
+  Object.keys(st).forEach(k => {
+    const ms = st[k]; if (!ms || !ms.length) return;
+    const pp = ms[ms.length - 1];
+    const nm = pp.name || 'Khách';
+    if (!winners[nm] || (pp.at || 0) > winners[nm].at || k === myGid) winners[nm] = { key: k, at: pp.at || 0 };
+  });
+  const winKeys = new Set(Object.values(winners).map(w => w.key));
+  [...remotes.keys()].forEach(k => { if (!winKeys.has(k)) { scene.remove(remotes.get(k).g); remotes.delete(k); } });
   Object.keys(st).forEach(key => {
-    if (key === myGid) return;
+    if (key === myGid || !winKeys.has(key)) return;
     const metas = st[key]; if (!metas || !metas.length) return;
     const p = metas[metas.length - 1];
-    seen.add(key);
     let r = remotes.get(key);
     if (!r) {
       const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key, p.c) });
       g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
-      g.position.set(p.x || 0, 0, p.z || 0);
-      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null };
+      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now() };
       remotes.set(key, r);
       if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
     }
     r.lastSeen = performance.now();
+    if (p.at && p.at !== r.at) { r.at = p.at; r.atLocal = performance.now(); }
     if (Array.isArray(p.st) && JSON.stringify(p.st) !== JSON.stringify(r.st)) { r.st = p.st; meritDirty = true; }
     if (typeof p.x === 'number') r.tx = p.x;
     if (typeof p.z === 'number') r.tz = p.z;
@@ -1787,7 +1795,7 @@ function ptSync() {
     }
   });
   ptSweep();
-  const n = Object.keys(st).length;
+  const n = winKeys.size;
   const pill = document.getElementById('onlinePill');
   if (pill) pill.innerHTML = '<span class="dot"></span>' + (n <= 1 ? 'Online · mình bạn trong chùa' : 'Online · ' + n + ' người trong chùa');
   ptBooted = true;
@@ -1798,8 +1806,9 @@ function ptSweep() {
   const now = performance.now();
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
-    if (st[key]) r.lastSeen = now;
-    else if (now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
+    const ghost = r.atLocal && now - r.atLocal > 25000;
+    if (st[key] && !ghost) { r.lastSeen = now; return; }
+    if (ghost || now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
   });
 }
 let ptPrev = performance.now();
