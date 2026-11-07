@@ -50,7 +50,9 @@
   .cmode.on { background:rgba(146,96,28,.9); color:#fff; }
 
   /* Action bar */
-  #actions { bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:7px; max-width:97vw; overflow-x:auto; padding-bottom:2px; }
+  #actions { bottom:14px; left:50%; transform:translateX(-50%); display:none; gap:7px; max-width:97vw; overflow-x:auto; padding-bottom:2px; }
+  #actions.open { display:flex; }
+  #btnMenu.on { background:rgba(146,96,28,.9); color:#fff; }
   .abtn { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:56px; padding:9px 5px 7px;
     background:linear-gradient(160deg, rgba(52,34,16,.9), rgba(26,17,9,.9)); border:1px solid rgba(255,205,120,.5); border-radius:14px; color:#f3e5c3; box-shadow:0 6px 20px rgba(0,0,0,.35);
     font-size:11.5px; cursor:pointer; backdrop-filter:blur(6px); }
@@ -122,20 +124,20 @@
 <body>
 <div id="scene"></div>
 
-<div id="loading"><div class="spin">🪷</div><div>Đang dựng sân chùa…</div></div>
+<div id="loading"><div class="spin">🪷</div><div data-i18n="loading">Đang dựng sân chùa…</div></div>
 
-<div class="ui" id="ribbon">🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏</div>
-<a id="gateDen" href="/tha-den/" target="_blank" rel="noopener">🏮 Cổng thả đèn →</a>
+<div class="ui" id="ribbon" data-i18n="ribbon">🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏</div>
+<a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
 
 <div class="ui" id="playerCard">
   <div class="ava">🧘</div>
   <div>
     <div class="pname" id="pName">Ivy</div>
-    <div class="psub">Hạt sen · bậc <b id="pBac">1</b> · 🪷 <b id="pSen">0</b></div>
+    <div class="psub"><span data-i18n="psubA">Hạt sen · bậc </span><b id="pBac">1</b> · 🪷 <b id="pSen">0</b></div>
   </div>
 </div>
 
-<div class="ui" id="onlinePill"><span class="dot"></span>Đang nối online…</div>
+<div class="ui" id="onlinePill"><span class="dot"></span><span data-i18n="onlineWait">Đang nối online…</span></div>
 
 
 <div class="ui" id="zoomBtns">
@@ -143,17 +145,19 @@
   <button class="zbtn" id="zoomOut">−</button>
 </div>
 <div class="ui" id="camModes">
-  <button class="cmode" data-m="cao">📷 Cao</button>
-  <button class="cmode" data-m="mat">👁️ Tầm mắt</button>
+  <button class="cmode" data-m="cao" data-i18n="camHigh">📷 Cao</button>
+  <button class="cmode" data-m="mat" data-i18n="camEye">👁️ Tầm mắt</button>
   <button class="cmode" data-m="top">🗺️ Top</button>
   <button class="cmode" id="btnDN">🌙 Giờ thật</button>
+  <button class="cmode" id="btnLang">🌐 EN</button>
+  <button class="cmode" id="btnMenu">☰ Menu</button>
 </div>
 
 <div class="ui" id="toast"></div>
 <div id="musicBar">
-  <button id="musPlay" title="Mở / tắt nhạc thiền">🎵 ▶</button>
-  <span id="musName">Nhạc thiền</span>
-  <button id="musNext" title="Bài tiếp">⏭</button>
+  <button id="musPlay" data-i18n-title="musPlayT" title="Mở / tắt nhạc thiền">🎵 ▶</button>
+  <span id="musName" data-i18n="musIdle">Nhạc thiền</span>
+  <button id="musNext" data-i18n-title="musNextT" title="Bài tiếp">⏭</button>
 </div>
 <audio id="musAudio" preload="none"></audio>
 <div id="gainFx"></div>
@@ -164,23 +168,23 @@
     <div class="xam-tho" id="xamTho"></div>
     <div class="xam-giai" id="xamGiai"></div>
     <div class="xam-btns">
-      <button class="abtn" id="xamAgain">🎋 Xin quẻ khác</button>
-      <button class="abtn" id="xamClose">Đóng</button>
+      <button class="abtn" id="xamAgain" data-i18n="xamAgain">🎋 Xin quẻ khác</button>
+      <button class="abtn" id="xamClose" data-i18n="xamClose">Đóng</button>
     </div>
   </div>
 </div>
 <div id="credit">Tượng Phật: model 3D Tripo · v2.18.1</div>
-<div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
+<div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
   <div class="nm-card">
     <button class="nm-close" id="nameClose">✕</button>
-    <div class="nm-title">🪷 Chào mừng đến Phòng Thiền 3D</div>
-    <div class="nm-sub">Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.</div>
-    <input id="nameInput" type="text" maxlength="14" placeholder="Ví dụ: Ivy" autocomplete="off">
+    <div class="nm-title" data-i18n="nmTitle">🪷 Chào mừng đến Phòng Thiền 3D</div>
+    <div class="nm-sub" data-i18n="nmSub">Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.</div>
+    <input id="nameInput" type="text" maxlength="14" data-i18n-ph="nmPh" placeholder="Ví dụ: Ivy" autocomplete="off">
     <div class="nm-row">
-      <button class="nm-dice" id="nameDice">🎲 Tên ngẫu nhiên</button>
-      <button class="nm-go" id="nameGo">Vào chùa 🙏</button>
+      <button class="nm-dice" id="nameDice" data-i18n="nmDice">🎲 Tên ngẫu nhiên</button>
+      <button class="nm-go" id="nameGo" data-i18n="nmGo">Vào chùa 🙏</button>
     </div>
   </div>
 </div>
@@ -188,33 +192,33 @@
 <div id="profileModal">
   <div class="nm-card pf-card">
     <button class="nm-close" id="pfClose">✕</button>
-    <div class="nm-title">🪷 Hồ sơ tu tập</div>
+    <div class="nm-title" data-i18n="pfTitle">🪷 Hồ sơ tu tập</div>
     <div class="pf-name" id="pfName">—</div>
     <div class="pf-line" id="pfLine">—</div>
-    <div class="pf-sec">Tông phái</div>
+    <div class="pf-sec" data-i18n="pfSect">Tông phái</div>
     <div class="pf-chips" id="pfSect"></div>
-    <div class="pf-sec">Áo tràng</div>
+    <div class="pf-sec" data-i18n="pfRobe">Áo tràng</div>
     <div class="pf-sw" id="pfRobe"></div>
-    <div class="pf-sec">Tràng hạt</div>
+    <div class="pf-sec" data-i18n="pfBeads">Tràng hạt</div>
     <div class="pf-chips" id="pfBeads"></div>
-    <div class="pf-sec">Linh thú</div>
+    <div class="pf-sec" data-i18n="pfPet">Linh thú</div>
     <div class="pf-chips" id="pfPet"></div>
     <div class="nm-row">
-      <button class="nm-dice" id="pfRename">✏️ Đổi pháp danh</button>
-      <button class="nm-go" id="pfPhoto">📷 Lưu ảnh</button>
+      <button class="nm-dice" id="pfRename" data-i18n="pfRename">✏️ Đổi pháp danh</button>
+      <button class="nm-go" id="pfPhoto" data-i18n="pfPhoto">📷 Lưu ảnh</button>
     </div>
   </div>
 </div>
 
 <div class="ui" id="actions">
-  <button class="abtn" id="btnSit"><span class="ic">🧎</span><span class="lb">Thiền</span></button>
-  <button class="abtn" id="btnBow"><span class="ic">🙏</span><span class="lb">Lạy Phật</span></button>
-  <button class="abtn" id="btnMala"><span class="ic">📿</span><span class="lb">Tràng hạt</span><span class="cnt" id="malaCnt">0/108</span></button>
-  <button class="abtn" id="btnIncense"><span class="ic">🕯️</span><span class="lb">Đốt nhang</span></button>
-  <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb">Xin xăm</span></button>
-  <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb">Quét lá (<span id="leafCnt">11</span>)</span></button>
-  <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb">Hứng hoa</span></button>
-  <button class="abtn" id="btnHall"><span class="ic">🏛️</span><span class="lb">Vào chánh điện</span></button>
+  <button class="abtn" id="btnSit"><span class="ic">🧎</span><span class="lb"></span></button>
+  <button class="abtn" id="btnBow"><span class="ic">🙏</span><span class="lb"></span></button>
+  <button class="abtn" id="btnMala"><span class="ic">📿</span><span class="lb"></span><span class="cnt" id="malaCnt">0/108</span></button>
+  <button class="abtn" id="btnIncense"><span class="ic">🕯️</span><span class="lb"></span></button>
+  <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb"></span></button>
+  <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb"></span></button>
+  <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb"></span></button>
+  <button class="abtn" id="btnHall"><span class="ic">🏛️</span><span class="lb"></span></button>
 </div>
 
 <script src="xam-data.js"></script>
@@ -599,6 +603,90 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
   tree(30.5, -11.5, 1.25); tree(43.5, 1.5, 1.1); tree(30.8, 3.8, 0.9);
 }
 
+/* ============ Language VI/EN (v2.19.0) ============
+   UI chrome only - the fortune texts (xam) and chant texts stay Vietnamese,
+   as agreed: they are the content layer. Strings live in I18N; elements with a
+   data-i18n attribute are re-labelled by applyLang(), and code that stamps
+   text dynamically reads L() at stamp time. */
+let LANG = 'vi';
+try { LANG = localStorage.getItem('pt3d-lang') || 'vi'; } catch (e) {}
+const I18N = {
+  vi: { loading: 'Đang dựng sân chùa…', ribbon: '🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏',
+    gateDen: '🏮 Cổng thả đèn →', psubA: 'Hạt sen · bậc ', onlineWait: 'Đang nối online…', camHigh: '📷 Cao', camEye: '👁️ Tầm mắt',
+    musPlayT: 'Mở / tắt nhạc thiền', musNextT: 'Bài tiếp', musIdle: 'Nhạc thiền', hint: 'Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền',
+    creditA: 'Tượng Phật: model 3D Tripo · v', nmTitle: '🪷 Chào mừng đến Phòng Thiền 3D',
+    nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
+    nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
+    pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
+    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa',
+    aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
+    xamAgain: '🎋 Xin quẻ khác', xamClose: 'Đóng', xamCap: (n, g) => '🎋 Quẻ số ' + n + ' · ' + g,
+    gain: n => '+' + n + ' phước đức 🪷', merit: 'phước đức', phuc: 'phước',
+    tagSub: b => 'Bậc ' + b, guest: 'Khách', pilgrim: 'Hành giả',
+    boardT: 'BẢNG VÀNG CÔNG ĐỨC', boardS: 'Công quả hôm nay — tích phước mở xin xăm', meSuffix: ' (bạn)',
+    boardMala: s => '📿 Tràng hạt ' + Math.min(s.ma, 108) + '/108 · 🙏 Lạy ×' + s.bw,
+    boardLeaf: s => '🧹 Quét lá: còn ' + Math.max(0, 11 - s.swD) + ' cụm · 🕯 Nhang ×' + s.ic,
+    boardSala: s => '🌼 Hứng hoa ×' + s.fl + (s.open ? ' · 🎋 Đã mở xin xăm' : ''),
+    boardEmpty1: 'Bạn bè vào chùa cùng, công quả', boardEmpty2: 'sẽ cùng hiện lên bảng này', boardFoot: 'Số liệu được lưu trên máy của mỗi người',
+    jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
+    clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Thiền Xá', paviSub: 'ngồi thiền ngắm thác',
+    sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', robeTitle: i => 'Áo ' + (i + 1),
+    pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
+    pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
+    pillOffline: 'Một mình trong chùa (chưa nối được online)',
+    tSitCushion: 'Đã ngồi thiền. Tâm an, hơi thở đều 🪷', tSitSpot: 'Đã ngồi thiền tại chỗ 🪷', tOccupied: 'Đệm này có người ngồi rồi, chọn đệm khác nhé',
+    tXamGate: (g, p) => '🎋 Xin xăm cần ' + g + ' phước đức hôm nay — bạn đang có ' + p + '. Quét lá, lần hạt, lạy Phật, đốt nhang để tích phước nhé 🙏',
+    tXamNoData: 'Chưa nạp được dữ liệu quẻ, thử lại sau nhé', tMalaFull: '🎉 Đã tròn một chuỗi 108 hạt! Công đức viên mãn 🪷', tMalaN: n => 'Đã lần được ' + n + ' hạt 📿',
+    tIncenseHallBusy: s => 'Nhang trong chánh điện đang cháy, còn khoảng ' + s + ' giây nữa', tIncenseBusy: s => 'Nhang đang cháy thơm, còn khoảng ' + s + ' giây nữa',
+    tIncenseHall: 'Đã đốt nhang trong chánh điện — khói hương lan tỏa 🙏', tIncenseYard: 'Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏',
+    tIncenseOut: 'Nhang đã tàn — muốn đốt lại thì bấm Đốt nhang nhé 🕯️', tIncenseHallOut: 'Nhang trong chánh điện đã tàn — bấm Đốt nhang để đốt lại nhé 🕯️',
+    tBurnLeft: s => 'Còn ' + s, tYardClean: 'Sân sạch bong rồi 🙏 đợi lá rụng thêm nhé', tNoSala: 'Hoa sala chưa rụng — lâu lâu mới có một bông, để ý nhé 🌼',
+    tDrum: n => '🥁 Trống điểm canh ' + n + '…', drumNames: ['', 'một', 'hai', 'ba', 'bốn', 'năm'], tRooster: '🐓 Gà gáy sáng rồi — canh năm, trời sắp sáng…',
+    tGoHall: 'Đang vào chánh điện — đi bộ qua cửa là vào 🙏', tGoYard: 'Ra sân chùa 🌤️',
+    tSwept: n => '🍂 Quét sạch một đống lá đa (+2 phước đức) — còn ' + n + ' đống', tSalaCaught: '🌼 Hứng được hoa sala! (+3 phước đức)',
+    tWelcomeHall: 'Chào mừng trở lại chánh điện 🙏 Chọn một đệm trống để ngồi thiền', tWelcome: n => 'Chào mừng ' + (n ? n + ' ' : '') + 'đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo',
+    tJoined: n => '🪷 ' + n + ' vừa vào chùa', tGateOpen: g => '🎋 Đủ ' + g + ' phước đức hôm nay — hũ xin xăm đã mở!', tPhoto: '📷 Đã lưu ảnh nhân vật', tPhotoFail: 'Chưa chụp được ảnh, thử lại nhé' },
+  en: { loading: 'Building the temple yard…', ribbon: '🪷 A self-play meditation room — sit still, breathe softly, smile. If you can, a real temple is still better 🙏',
+    gateDen: '🏮 Lantern gate →', psubA: 'Lotus seeds · rank ', onlineWait: 'Connecting…', camHigh: '📷 High', camEye: '👁️ Eye level',
+    musPlayT: 'Toggle meditation music', musNextT: 'Next track', musIdle: 'Meditation music', hint: 'Tap the ground to walk<br>Drag to look around<br>Tap an empty cushion to sit',
+    creditA: 'Buddha statue: Tripo 3D model · v', nmTitle: '🪷 Welcome to the 3D Meditation Room',
+    nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
+    nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
+    pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
+    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom',
+    aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
+    xamAgain: '🎋 Draw again', xamClose: 'Close', xamCap: (n, g) => '🎋 Fortune ' + n + ' · ' + g,
+    gain: n => '+' + n + ' merit 🪷', merit: 'merit', phuc: 'merit',
+    tagSub: b => 'Rank ' + b, guest: 'Guest', pilgrim: 'Practitioner',
+    boardT: 'GOLDEN MERIT BOARD', boardS: "Today's practice — earn merit to unlock fortune sticks", meSuffix: ' (you)',
+    boardMala: s => '📿 Mala ' + Math.min(s.ma, 108) + '/108 · 🙏 Bows ×' + s.bw,
+    boardLeaf: s => '🧹 Leaves left: ' + Math.max(0, 11 - s.swD) + ' piles · 🕯 Incense ×' + s.ic,
+    boardSala: s => '🌼 Blooms caught ×' + s.fl + (s.open ? ' · 🎋 Fortune unlocked' : ''),
+    boardEmpty1: 'Friends who visit the temple', boardEmpty2: 'will appear on this board', boardFoot: 'Stats are stored on each visitor’s own device',
+    jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
+    clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Zen Shelter', paviSub: 'meditate facing the falls',
+    sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
+    petNone: 'None', petDragon: '🐉 Little Dragon', robeTitle: i => 'Robe ' + (i + 1),
+    pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
+    pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
+    pillOffline: 'Alone in the temple (online unavailable)',
+    tSitCushion: 'Seated. Mind calm, breath even 🪷', tSitSpot: 'Seated here 🪷', tOccupied: 'That cushion is taken — pick another one',
+    tXamGate: (g, p) => '🎋 Fortune sticks need ' + g + ' merit today — you have ' + p + '. Sweep leaves, count the mala, bow and light incense to earn merit 🙏',
+    tXamNoData: 'Fortune data not loaded yet — try again in a bit', tMalaFull: '🎉 A full round of 108 beads! Merit complete 🪷', tMalaN: n => n + ' beads counted 📿',
+    tIncenseHallBusy: s => 'The hall incense is still burning — about ' + s + 's left', tIncenseBusy: s => 'Incense is burning — about ' + s + 's left',
+    tIncenseHall: 'Incense lit in the main hall — fragrant smoke drifts 🙏', tIncenseYard: 'Incense lit — smoke drifts across the yard 🙏',
+    tIncenseOut: 'The incense has burned out — tap Incense to light more 🕯️', tIncenseHallOut: 'The hall incense has burned out — tap Incense to relight 🕯️',
+    tBurnLeft: s => s + ' left', tYardClean: 'The yard is spotless 🙏 wait for more leaves to fall', tNoSala: 'No sala bloom yet — one falls now and then, keep an eye out 🌼',
+    tDrum: n => '🥁 The night watch drum — watch ' + n + '…', drumNames: ['', 'one', 'two', 'three', 'four', 'five'], tRooster: '🐓 The rooster crows — fifth watch, dawn is near…',
+    tGoHall: 'Entering the main hall — walk through the gate 🙏', tGoYard: 'Back to the yard 🌤️',
+    tSwept: n => '🍂 Pile swept (+2 merit) — ' + n + ' piles left', tSalaCaught: '🌼 You caught a sala bloom! (+3 merit)',
+    tWelcomeHall: 'Welcome back to the main hall 🙏 Pick an empty cushion to meditate', tWelcome: n => 'Welcome ' + (n ? n + ' ' : '') + 'to the Tinh Tam temple yard 🙏 Tap the ground to stroll',
+    tJoined: n => '🪷 ' + n + ' just arrived', tGateOpen: g => '🎋 ' + g + ' merit today — the fortune jar is open!', tPhoto: '📷 Character photo saved', tPhotoFail: 'Could not take the photo — try again' }
+};
+function L() { return I18N[LANG] || I18N.vi; }
+function bacSub(b) { return L().tagSub(b); }
+
 /* ============ Day / night (v2.17.0) ============
    One blend factor drives everything: sky + fog colour, sun -> moonlight,
    backdrop dimming, lantern glows, stars, moon, fireflies. All cheap tricks -
@@ -676,11 +764,45 @@ function dnTick(dt) {
   }
 }
 const btnDN = document.getElementById('btnDN');
-function dnLabel() { btnDN.textContent = dnMode === 'auto' ? '🌙 Giờ thật' : dnMode === 'night' ? '🌙 Đêm' : '☀️ Ngày'; btnDN.classList.toggle('on', dnMode !== 'auto'); }
+function dnLabel() { btnDN.textContent = dnMode === 'auto' ? L().dnAuto : dnMode === 'night' ? L().dnNight : L().dnDay; btnDN.classList.toggle('on', dnMode !== 'auto'); }
 btnDN.addEventListener('click', () => {
   dnMode = dnMode === 'auto' ? 'night' : dnMode === 'night' ? 'day' : 'auto';
   try { localStorage.setItem('pt3d-daynight', dnMode); } catch (e) {}
   dnLabel();
+const btnMenu = document.getElementById('btnMenu');
+btnMenu.addEventListener('click', () => {
+  const open = document.getElementById('actions').classList.toggle('open');
+  btnMenu.classList.toggle('on', open);
+});
+function setActionLabels() {
+  const d = L();
+  const set = (id, txt) => { const b = document.getElementById(id); if (b && b.querySelector('.lb')) b.querySelector('.lb').textContent = txt; };
+  set('btnSit', sitting ? d.aStand : d.aSit); set('btnBow', d.aBow); set('btnMala', d.aMala); set('btnXam', d.aXam); set('btnSala', d.aSala);
+  set('btnHall', room === 'hall' ? d.aHallOut : d.aHallIn);
+  set('btnIncense', incenseCounting() ? d.tBurnLeft(fmtBurn()) : d.aInc);
+  set('btnSweep', d.aSweep + ' (' + leafPiles.length + ')');
+}
+function applyLang() {
+  const d = L();
+  document.querySelectorAll('[data-i18n]').forEach(el => { const v = d[el.dataset.i18n]; if (typeof v === 'string') el.innerHTML = v; });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { const v = d[el.dataset.i18nTitle]; if (typeof v === 'string') el.title = v; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { const v = d[el.dataset.i18nPh]; if (typeof v === 'string') el.placeholder = v; });
+  document.title = LANG === 'vi' ? 'Phòng Thiền 3D' : '3D Meditation Room';
+  dnLabel(); setActionLabels(); ptSetPill(); drawMerit();
+  const cr = document.getElementById('credit'); if (cr) cr.textContent = d.creditA + PT3D_VER;
+  const tg = player.userData.tag; if (tg && myName) { tg.material.map = nameTag(myName, bacSub(bacOf(sen))).material.map; tg.material.needsUpdate = true; }
+  updateJarTag(); refreshTags();
+  if (document.getElementById('profileModal').classList.contains('show')) openProfile();
+  try { localStorage.setItem('pt3d-lang', LANG); } catch (e) {}
+}
+const btnLang = document.getElementById('btnLang');
+function langBtnLabel() { btnLang.textContent = LANG === 'vi' ? '🌐 EN' : '🌐 VI'; }
+btnLang.addEventListener('click', () => {
+  LANG = LANG === 'vi' ? 'en' : 'vi';
+  try { localStorage.setItem('pt3d-lang', LANG); } catch (e) {}
+  langBtnLabel(); applyLang();
+});
+langBtnLabel();
 });
 dnLabel();
 
@@ -905,7 +1027,7 @@ const cushionSpots = [];
   scene.add(makeFlame(11.85, 0.66, pz - 0.12, 0.45));
   cyl(0.09, 0.05, 0.07, MAT.bronze, 11.55, 0.52, pz + 0.1, scene);
   [-0.14, 0, 0.14].forEach(tilt => { const st = cyl(0.006, 0.006, 0.24, MAT.woodDark, 11.55, 0.62, pz + 0.1, scene); st.rotation.z = tilt; });
-  const ptag = nameTag('Thiền Xá', 'ngồi thiền ngắm thác'); ptag.position.set(px, 3.85, pz); scene.add(ptag);
+  const ptag = nameTag(L().paviName, L().paviSub); ptag.position.set(px, 3.85, pz); scene.add(ptag);
   new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
     const m = gltf.scene;
     const bb = new THREE.Box3().setFromObject(m);
@@ -967,7 +1089,7 @@ function gainFx(n) {
   const box = document.getElementById('gainFx'); if (!box) return;
   gainAcc += n;
   if (!gainEl) { gainEl = document.createElement('span'); box.appendChild(gainEl); }
-  gainEl.textContent = '+' + gainAcc + ' phước đức 🪷';
+  gainEl.textContent = L().gain(gainAcc);
   gainEl.style.animation = 'none';
   void gainEl.offsetWidth;
   gainEl.style.animation = '';
@@ -992,15 +1114,15 @@ function drawMeritBase() {
   c.strokeStyle = '#b8860b'; c.lineWidth = 3; c.strokeRect(40, 40, W - 80, H - 80);
   c.textAlign = 'center';
   c.fillStyle = '#8a2b12'; c.font = '900 56px "Segoe UI", sans-serif';
-  c.fillText('BẢNG VÀNG CÔNG ĐỨC', W / 2, 118);
+  c.fillText(L().boardT, W / 2, 118);
   c.fillStyle = '#6b4a12'; c.font = '600 29px "Segoe UI", sans-serif';
-  c.fillText('Công quả hôm nay — tích phước mở xin xăm', W / 2, 168);
+  c.fillText(L().boardS, W / 2, 168);
   meritTex.needsUpdate = true;
 }
 function drawMerit() {
   drawMeritBase();
   const c = meritCtx, W = 768;
-  const people = [{ name: (typeof myName !== 'undefined' && myName) || 'Hành giả', me: true, d: { pts: daily.pts, ma: daily.ma, bw: daily.bw, ic: daily.ic, swD: daily.swPids.length, fl: daily.fl, open: xamOpen() } }];
+  const people = [{ name: (typeof myName !== 'undefined' && myName) || L().pilgrim, me: true, d: { pts: daily.pts, ma: daily.ma, bw: daily.bw, ic: daily.ic, swD: daily.swPids.length, fl: daily.fl, open: xamOpen() } }];
   if (typeof remotes !== 'undefined') remotes.forEach(r => {
     if (Array.isArray(r.st)) people.push({ name: r.name, me: false, d: { pts: r.st[0] || 0, ma: r.st[1] || 0, bw: r.st[2] || 0, ic: r.st[3] || 0, swD: r.st[4] || 0, fl: r.st[5] || 0, open: !!r.st[6] } });
   });
@@ -1009,21 +1131,21 @@ function drawMerit() {
     const s = p.d;
     c.textAlign = 'left';
     c.fillStyle = '#5a3410'; c.font = '900 37px "Segoe UI", sans-serif';
-    c.fillText('🪷 ' + p.name + (p.me ? ' (bạn)' : ''), 56, y);
+    c.fillText('🪷 ' + p.name + (p.me ? L().meSuffix : ''), 56, y);
     c.fillStyle = '#8a2b12'; c.font = '900 33px "Segoe UI", sans-serif';
     c.textAlign = 'right';
-    c.fillText(s.pts + ' phước', 712, y);
+    c.fillText(s.pts + ' ' + L().phuc, 712, y);
     c.textAlign = 'left';
     c.fillStyle = '#4a2f0d'; c.font = '600 30px "Segoe UI", sans-serif';
-    c.fillText('📿 Tràng hạt ' + Math.min(s.ma, 108) + '/108 · 🙏 Lạy ×' + s.bw, 56, y + 46);
-    c.fillText('🧹 Quét lá: còn ' + Math.max(0, 11 - s.swD) + ' cụm · 🕯 Nhang ×' + s.ic, 56, y + 88);
-    c.fillText('🌼 Hứng hoa ×' + s.fl + (s.open ? ' · 🎋 Đã mở xin xăm' : ''), 56, y + 130);
+    c.fillText(L().boardMala(s), 56, y + 46);
+    c.fillText(L().boardLeaf(s), 56, y + 88);
+    c.fillText(L().boardSala(s), 56, y + 130);
     y += 172;
   });
   c.textAlign = 'center';
-  if (people.length === 1) { c.fillStyle = '#7a5a1a'; c.font = 'italic 600 28px "Segoe UI", sans-serif'; c.fillText('Bạn bè vào chùa cùng, công quả', W / 2, y + 6); c.fillText('sẽ cùng hiện lên bảng này', W / 2, y + 44); }
+  if (people.length === 1) { c.fillStyle = '#7a5a1a'; c.font = 'italic 600 28px "Segoe UI", sans-serif'; c.fillText(L().boardEmpty1, W / 2, y + 6); c.fillText(L().boardEmpty2, W / 2, y + 44); }
   c.fillStyle = '#8a6a2a'; c.font = '600 24px "Segoe UI", sans-serif';
-  c.fillText('Số liệu được lưu trên máy của mỗi người', W / 2, 892);
+  c.fillText(L().boardFoot, W / 2, 892);
   meritTex.needsUpdate = true; meritLastDraw = performance.now(); meritDirty = false;
 }
 function makeMeritBoard(w, h, x, y, z, rotY) {
@@ -1040,7 +1162,7 @@ function makeMeritBoard(w, h, x, y, z, rotY) {
 }
 const mbGrp = makeMeritBoard(2.4, 2.9, -6.1, 2.75, -23.95, 0); mbGrp.rotation.x = -0.05;
 drawMeritBase();
-const fbGrp = framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 2.4, 2.2, 6.1, 2.6, -23.95, 0); fbGrp.rotation.x = -0.05;
+const fbGrp = framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 2.4, 2.2, 6.1, 2.6, -23.95, 0); fbGrp.rotation.x = -0.05; /* chant text stays Vietnamese in both languages */
 const hallCushions = [];
 [-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -15.0); c.position.y = 1.12; hallCushions.push(c); });
 [-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -17.4); c.position.y = 1.12; hallCushions.push(c); });
@@ -1124,13 +1246,13 @@ let xamAnimT = -1, xamPending = null;
 const xamCard = document.getElementById('xamCard');
 function drawXam() {
   if (xamAnimT >= 0) return;
-  if (!xamOpen()) { toast('🎋 Xin xăm cần ' + XAM_GATE + ' phước đức hôm nay — bạn đang có ' + daily.pts + '. Quét lá, lần hạt, lạy Phật, đốt nhang để tích phước nhé 🙏', 4200); return; }
-  if (!window.XAM_DATA || !window.XAM_DATA.length) { toast('Chưa nạp được dữ liệu quẻ, thử lại sau nhé'); return; }
+  if (!xamOpen()) { toast(L().tXamGate(XAM_GATE, daily.pts), 4200); return; }
+  if (!window.XAM_DATA || !window.XAM_DATA.length) { toast(L().tXamNoData); return; }
   xamPending = window.XAM_DATA[Math.floor(Math.random() * window.XAM_DATA.length)];
   xamAnimT = 0;
 }
 function showXamCard(q) {
-  document.getElementById('xamCap').textContent = '🎋 Quẻ số ' + q[0] + ' · ' + q[2];
+  document.getElementById('xamCap').textContent = L().xamCap(q[0], q[2]);
   document.getElementById('xamName').textContent = q[1];
   document.getElementById('xamTho').innerHTML = q[3].replace(/\n/g, '<br>');
   document.getElementById('xamGiai').textContent = q[4];
@@ -1188,8 +1310,8 @@ const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-13.5, -1.5], [13.5, -1.5], [-11.8
 const leafGoneAt = new Map();
 let remoteSweeps = [];
 function updateLeafBtn() {
-  const el = document.getElementById('leafCnt');
-  if (el) el.textContent = leafPiles.length;
+  const b = document.getElementById('btnSweep');
+  if (b && b.querySelector('.lb')) b.querySelector('.lb').textContent = L().aSweep + ' (' + leafPiles.length + ')';
 }
 function spawnLeafPile(pid) {
   if (leafPiles.some(p => p.userData.pid === pid)) return;
@@ -1542,8 +1664,8 @@ function sitDown(cushion) {
   player.rotation.y = Math.PI;
   player.userData.bodyG.scale.set(1.15, 0.78, 1.15);
   btnSit.classList.add('on');
-  btnSit.lastChild.textContent = 'Đứng dậy';
-  toast(cushion ? 'Đã ngồi thiền. Tâm an, hơi thở đều 🪷' : 'Đã ngồi thiền tại chỗ 🪷');
+  btnSit.querySelector('.lb').textContent = L().aStand; sitting = true;
+  toast(cushion ? L().tSitCushion : L().tSitSpot);
 }
 function standUp() {
   if (P.seatedOn) { P.seatedOn.userData.occupiedByPlayer = false; P.seatedOn = null; }
@@ -1551,7 +1673,7 @@ function standUp() {
   player.userData.bodyG.scale.set(1, 1, 1);
   player.position.y = groundY(player.position.x, player.position.z);
   btnSit.classList.remove('on');
-  btnSit.lastChild.textContent = 'Thiền';
+  btnSit.querySelector('.lb').textContent = L().aSit; sitting = false;
 }
 
 /* ============ Pointer: tap to walk / sit ============ */
@@ -1585,7 +1707,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   while (obj) { if (obj.userData && obj.userData.isCushionGroup) { cushionGroup = obj; break; } obj = obj.parent; }
   if (P.mode === 'seated') standUp();
   if (cushionGroup) {
-    if (cushionGroup.userData.occupied) { toast('Đệm này có người ngồi rồi, chọn đệm khác nhé'); return; }
+    if (cushionGroup.userData.occupied) { toast(L().tOccupied); return; }
     const p = cushionGroup.position.clone();
     const dist = player.position.distanceTo(p);
     if (dist < 0.6) sitDown(cushionGroup); else setWalkTarget(p, cushionGroup);
@@ -1621,7 +1743,7 @@ function addSen(n) {
   if (n > 0) {
     const was = xamOpen();
     daily.pts += n; saveDaily(); gainFx(n);
-    if (!was && xamOpen()) { toast('🎋 Đủ ' + XAM_GATE + ' phước đức hôm nay — hũ xin xăm đã mở!', 4000); updateJarTag(); }
+    if (!was && xamOpen()) { toast(L().tGateOpen(XAM_GATE), 4000); updateJarTag(); }
   }
   meritDirty = true;
   refreshBac();
@@ -1646,19 +1768,19 @@ btnMala.addEventListener('click', () => {
   mala++; addSen(1); bumpDaily('ma');
   malaCntEl.textContent = mala + '/108';
   if (mala >= 108) {
-    toast('🎉 Đã tròn một chuỗi 108 hạt! Công đức viên mãn 🪷', 3600);
+    toast(L().tMalaFull, 3600);
     mala = 0; malaCntEl.textContent = '0/108'; addSen(10);
-  } else if (mala % 27 === 0) toast('Đã lần được ' + mala + ' hạt 📿');
+  } else if (mala % 27 === 0) toast(L().tMalaN(mala));
 });
 btnIncense.addEventListener('click', () => {
   if (room === 'hall') {
-    if (hallLit) { toast('Nhang trong chánh điện đang cháy, còn khoảng ' + Math.ceil(hallLeft) + ' giây nữa'); return; }
+    if (hallLit) { toast(L().tIncenseHallBusy(Math.ceil(hallLeft))); return; }
     const frontH = new THREE.Vector3(0, 0, -21.15);
     if (player.position.distanceTo(frontH) < 0.7) lightIncense();
     else { if (P.mode === 'seated') standUp(); setWalkTarget(frontH, null, true); }
     return;
   }
-  if (incenseLit) { toast('Nhang đang cháy thơm, còn khoảng ' + Math.ceil(incenseLeft) + ' giây nữa'); return; }
+  if (incenseLit) { toast(L().tIncenseBusy(Math.ceil(incenseLeft))); return; }
   const front = new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9);
   if (player.position.distanceTo(front) < 0.7) lightIncense();
   else { if (P.mode === 'seated') standUp(); setWalkTarget(front, null, true); }
@@ -1671,13 +1793,13 @@ function lightIncense() {
   if (room === 'hall') {
     setHallLit(true); hallLeft = 180;
     addSen(5);
-    toast('Đã đốt nhang trong chánh điện — khói hương lan tỏa 🙏', 3200);
+    toast(L().tIncenseHall, 3200);
     return;
   }
   setIncenseLit(true); incenseLeft = 180;
   smokeBoost = 30;
   addSen(5);
-  toast('Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏', 3200);
+  toast(L().tIncenseYard, 3200);
 }
 const MUS_TRACKS = [
   ['thien.mp3', '🎵 Nhạc thiền không lời'], ['mua.mp3', '🌧️ Mưa & sấm xa'],
@@ -1707,7 +1829,7 @@ document.getElementById('btnXam').addEventListener('click', () => {
 });
 document.getElementById('btnSweep').addEventListener('click', () => {
   if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => document.getElementById('btnSweep').click() }; return; }
-  if (!leafPiles.length) { toast('Sân sạch bong rồi 🙏 đợi lá rụng thêm nhé'); return; }
+  if (!leafPiles.length) { toast(L().tYardClean); return; }
   let best = null, bd = 1e9;
   leafPiles.forEach(p => { const d = player.position.distanceTo(p.position); if (d < bd) { bd = d; best = p; } });
   if (best) {
@@ -1718,7 +1840,7 @@ document.getElementById('btnSweep').addEventListener('click', () => {
 });
 document.getElementById('btnSala').addEventListener('click', () => {
   if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => document.getElementById('btnSala').click() }; return; }
-  if (sala) catchSala(); else toast('Hoa sala chưa rụng — lâu lâu mới có một bông, để ý nhé 🌼');
+  if (sala) catchSala(); else toast(L().tNoSala);
 });
 const btnHall = document.getElementById('btnHall');
 /* nickname: chosen once, kept on this device (never IP-based) */
@@ -1814,19 +1936,19 @@ setInterval(() => {
     const canhMap = { 19: 1, 21: 2, 23: 3, 1: 4, 3: 5 };
     if (canhMap[h] && lastCanhHour !== h) {
       lastCanhHour = h;
-      const names = ['', 'một', 'hai', 'ba', 'bốn', 'năm'];
-      setTimeout(() => { ringDrum(canhMap[h]); toast('🥁 Trống điểm canh ' + names[canhMap[h]] + '…', 3600); }, 6000);
+      const names = L().drumNames;
+      setTimeout(() => { ringDrum(canhMap[h]); toast(L().tDrum(names[canhMap[h]]), 3600); }, 6000);
     }
     if (h === 5 && lastRoosterDay !== now.toDateString()) {
       lastRoosterDay = now.toDateString();
-      setTimeout(() => { playRooster(); toast('🐓 Gà gáy sáng rồi — canh năm, trời sắp sáng…', 4000); }, 3000);
+      setTimeout(() => { playRooster(); toast(L().tRooster, 4000); }, 3000);
     }
   }
 }, 4000);
 let pendingAfterZone = null;
 function applyZoneUI() {
   syncCongQuaBtns();
-  btnHall.lastChild.textContent = room === 'hall' ? 'Ra sân' : 'Vào chánh điện';
+  btnHall.querySelector('.lb').textContent = room === 'hall' ? L().aHallOut : L().aHallIn;
   btnHall.classList.toggle('on', room === 'hall');
   controls.maxDistance = room === 'hall' ? 16 : 30;
   roofParts.forEach(m => { if (m) m.visible = room === 'yard'; });
@@ -1844,8 +1966,8 @@ function goToRoom(next) {
   if (P.mode === 'seated') standUp();
   P.sitCushion = null;
   zoneDeadline = { zone: next, by: Date.now() + 9000 };
-  if (next === 'hall') { setWalkTarget(new THREE.Vector3(0, 0, -15.2)); toast('Đang vào chánh điện — đi bộ qua cửa là vào 🙏', 2400); }
-  else { setWalkTarget(new THREE.Vector3(0, 0, -6.0)); toast('Ra sân chùa 🌤️', 1800); }
+  if (next === 'hall') { setWalkTarget(new THREE.Vector3(0, 0, -15.2)); toast(L().tGoHall, 2400); }
+  else { setWalkTarget(new THREE.Vector3(0, 0, -6.0)); toast(L().tGoYard, 1800); }
 }
 btnHall.addEventListener('click', () => goToRoom(room === 'yard' ? 'hall' : 'yard'));
 /* restore the room after a refresh */
@@ -2003,8 +2125,8 @@ function animate() {
   npcs.forEach(n => { n.userData.bodyG.scale.y = 0.78 * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); });
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
-  if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn đốt lại thì bấm Đốt nhang nhé 🕯️'); } }
-  if (hallLeft > 0) { hallLeft -= dt; if (hallLeft <= 0) { setHallLit(false); toast('Nhang trong chánh điện đã tàn — bấm Đốt nhang để đốt lại nhé 🕯️'); } }
+  if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast(L().tIncenseOut); } }
+  if (hallLeft > 0) { hallLeft -= dt; if (hallLeft <= 0) { setHallLit(false); toast(L().tIncenseHallOut); } }
   if (incenseLb) {
     const burnLeft = room === 'hall' ? (hallLit ? hallLeft : -1) : (incenseLit ? incenseLeft : -1);
     const s = burnLeft >= 0 ? 'Còn ' + Math.floor(Math.max(0, burnLeft) / 60) + ':' + String(Math.floor(Math.max(0, burnLeft) % 60)).padStart(2, '0') : 'Đốt nhang';
@@ -2097,7 +2219,7 @@ function animate() {
       if (!daily.swPids.includes(pl.userData.pid)) { daily.swPids.push(pl.userData.pid); saveDaily(); meritDirty = true; }
       leafGoneAt.set(pl.userData.pid, performance.now());
       ptSend({ k: 'leaf', id: pl.userData.pid });
-      toast('🍂 Quét sạch một đống lá đa (+2 phước đức) — còn ' + leafPiles.length + ' đống', 2200);
+      toast(L().tSwept(leafPiles.length), 2200);
     }
   }
   for (let i = remoteSweeps.length - 1; i >= 0; i--) {
@@ -2141,7 +2263,7 @@ function animate() {
       u.t += dt / 0.45;
       const dest = player.position.clone(); dest.y = 1.25;
       sala.position.lerpVectors(sala.userData.from, dest, Math.min(1, u.t));
-      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); bumpDaily('fl'); toast('🌼 Hứng được hoa sala! (+3 phước đức)', 2400); }
+      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); bumpDaily('fl'); toast(L().tSalaCaught, 2400); }
     }
   }
 
@@ -2181,9 +2303,7 @@ function animate() {
     const ld = document.getElementById('loading');
     ld.style.opacity = '0';
     setTimeout(() => ld.remove(), 700);
-    setTimeout(() => toast(room === 'hall'
-      ? 'Chào mừng trở lại chánh điện 🙏 Chọn một đệm trống để ngồi thiền'
-      : 'Chào mừng ' + (myName ? myName + ' ' : '') + 'đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo'), 500);
+    setTimeout(() => toast(room === 'hall' ? L().tWelcomeHall : L().tWelcome(myName)), 500);
   }
 }
 /* arrow keys: walk on desktop (mouse / touch keep working as before) */
@@ -2268,7 +2388,7 @@ function ptMove(force) {
 let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + myGid.charCodeAt(i)) >>> 0;
 const MY_C = ptHash % ROBE_COLORS.length;
 /* personal look: robe colour, bead set, sect, pet — chosen in the profile panel */
-const SECTS = ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'];
+const SECTS = I18N.vi.sects;
 let look = { c: null, bd: 0, sect: 0, pet: 1 };
 try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}')); } catch (e) {}
 let myC = look.c != null ? look.c : MY_C;
@@ -2326,7 +2446,7 @@ function ptSync() {
   Object.keys(st).forEach(k => {
     const ms = st[k]; if (!ms || !ms.length) return;
     const pp = ms[ms.length - 1];
-    if (k !== myGid && (pp.name || 'Khách') === myNm) return;
+    if (k !== myGid && (pp.name || L().guest) === myNm) return;
     winKeys.add(k);
   });
   [...remotes.keys()].forEach(k => { if (!winKeys.has(k)) { scene.remove(remotes.get(k).g); remotes.delete(k); } });
@@ -2339,11 +2459,11 @@ function ptSync() {
       const pm = pendingMv.get(key); if (pm) pendingMv.delete(key);
       const sx = pm ? pm.x : (typeof p.x === 'number' ? p.x : 0), sz = pm ? pm.z : (typeof p.z === 'number' ? p.z : 9.5);
       const sry = pm ? (pm.ry || 0) : (p.ry || 0), ssit = pm ? !!pm.sit : !!p.sit;
-      const g = buildAvatar({ name: p.name || 'Khách', sub: [SECTS[p.sc] || '', 'Bậc ' + (p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
+      const g = buildAvatar({ name: p.name || L().guest, sub: [L().sects[p.sc] || '', bacSub(p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
       g.position.set(sx, ssit ? 0.24 : 0, sz);
-      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
+      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: p.name || L().guest, ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
       remotes.set(key, r);
-      if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
+      if (ptBooted) toast(L().tJoined(r.name), 2000);
     }
     r.lastSeen = performance.now();
     if (p.at && p.at !== r.at) { r.at = p.at; r.atLocal = performance.now(); }
@@ -2375,18 +2495,18 @@ function ptSync() {
     if ((p.sc || 0) !== r.sc) {
       r.sc = p.sc || 0;
       const tg2 = r.g.userData.tag;
-      if (tg2) { tg2.material.map = nameTag(r.name, [SECTS[r.sc] || '', 'Bậc ' + (r.bc || 1)].filter(Boolean).join(' · ')).material.map; tg2.material.needsUpdate = true; }
+      if (tg2) { tg2.material.map = nameTag(r.name, [L().sects[r.sc] || '', bacSub(r.bc || 1)].filter(Boolean).join(' · ')).material.map; tg2.material.needsUpdate = true; }
     }
     if ((p.bc || 1) !== r.bc) {
       r.bc = p.bc || 1;
       const tg3 = r.g.userData.tag;
-      if (tg3) { tg3.material.map = nameTag(r.name || p.name || 'Khách', [SECTS[r.sc] || '', 'Bậc ' + r.bc].filter(Boolean).join(' · ')).material.map; tg3.material.needsUpdate = true; }
+      if (tg3) { tg3.material.map = nameTag(r.name || p.name || L().guest, [L().sects[r.sc] || '', bacSub(r.bc)].filter(Boolean).join(' · ')).material.map; tg3.material.needsUpdate = true; }
     }
-    const nm = p.name || 'Khách';
+    const nm = p.name || L().guest;
     if (r.name !== nm) {
       r.name = nm;
       const tg = r.g.userData.tag;
-      if (tg) { tg.material.map = nameTag(nm, [SECTS[r.sc] || '', 'Bậc ' + (r.bc || 1)].filter(Boolean).join(' · ')).material.map; tg.material.needsUpdate = true; }
+      if (tg) { tg.material.map = nameTag(nm, [L().sects[r.sc] || '', bacSub(r.bc || 1)].filter(Boolean).join(' · ')).material.map; tg.material.needsUpdate = true; }
     }
   });
   ptSweep();
@@ -2482,9 +2602,9 @@ let sbClient = null, ptConnOk = false, ptReconnectAt = 0;
 function ptSetPill() {
   const pill = document.getElementById('onlinePill');
   if (!pill) return;
-  if (!ptConnOk) { pill.innerHTML = '<span class="dot" style="background:#e0a75e;box-shadow:0 0 6px #e0a75e"></span>Đang nối lại…'; return; }
+  if (!ptConnOk) { pill.innerHTML = '<span class="dot" style="background:#e0a75e;box-shadow:0 0 6px #e0a75e"></span>' + L().pillRetry; return; }
   const n = ptChannel ? Object.keys(ptChannel.presenceState()).length : 0;
-  pill.innerHTML = '<span class="dot"></span>' + (n <= 1 ? 'Online · mình bạn trong chùa' : 'Online · ' + n + ' người trong chùa');
+  pill.innerHTML = '<span class="dot"></span>' + (n <= 1 ? L().pillAlone(n) : L().pillMany(n));
 }
 function ptConnect() {
   if (!sbClient) return;
@@ -2515,7 +2635,7 @@ try {
   } else throw new Error('no supabase');
 } catch (e) {
   const pill = document.getElementById('onlinePill');
-  if (pill) pill.innerHTML = '<span class="dot"></span>Một mình trong chùa (chưa nối được online)';
+  if (pill) pill.innerHTML = '<span class="dot"></span>' + L().pillOffline;
 }
 const _applyNamePt = applyName;
 applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
@@ -2589,13 +2709,13 @@ function refreshBac() {
   if (b !== myTagBac) {
     myTagBac = b;
     const tg = player.userData.tag;
-    if (tg && myName) { tg.material.map = nameTag(myName, 'Bậc ' + b).material.map; tg.material.needsUpdate = true; }
+    if (tg && myName) { tg.material.map = nameTag(myName, bacSub(b)).material.map; tg.material.needsUpdate = true; }
     if (typeof ptTrack === 'function') ptTrack(true);
   }
 }
 const profileModal = document.getElementById('profileModal');
 function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
-const BEAD_NAMES = ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'];
+const BEAD_NAMES = I18N.vi.beadNames;
 function applyLook() {
   syncPet();
   if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
@@ -2604,31 +2724,31 @@ function applyLook() {
   ptTrack(true);
 }
 function openProfile() {
-  document.getElementById('pfName').textContent = myName || 'Hành giả';
-  document.getElementById('pfLine').innerHTML = SECTS[look.sect] + ' · Bậc ' + bacOf(sen) + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + daily.pts + ' phước đức' + (xamOpen() ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + XAM_GATE + ' mở xin xăm');
+  document.getElementById('pfName').textContent = myName || L().pilgrim;
+  document.getElementById('pfLine').innerHTML = L().pfLine(L().sects[look.sect], bacOf(sen), sen, daily.pts, xamOpen(), XAM_GATE);
   const sectBox = document.getElementById('pfSect'); sectBox.innerHTML = '';
-  SECTS.forEach((s, i) => {
+  I18N.vi.sects.forEach((s, i) => {
     const b = document.createElement('button');
-    b.className = 'pf-chip' + (i === look.sect ? ' on' : ''); b.textContent = s;
+    b.className = 'pf-chip' + (i === look.sect ? ' on' : ''); b.textContent = L().sects[i];
     b.addEventListener('click', () => { look.sect = i; saveLook(); ptTrack(true); openProfile(); });
     sectBox.appendChild(b);
   });
   const robeBox = document.getElementById('pfRobe'); robeBox.innerHTML = '';
   ROBE_COLORS.forEach((h, i) => {
     const b = document.createElement('button');
-    b.className = 'pf-swatch' + (i === myC ? ' on' : ''); b.style.background = hexCss(h); b.title = 'Áo ' + (i + 1);
+    b.className = 'pf-swatch' + (i === myC ? ' on' : ''); b.style.background = hexCss(h); b.title = L().robeTitle(i);
     b.addEventListener('click', () => { look.c = i; myC = i; saveLook(); applyLook(); openProfile(); });
     robeBox.appendChild(b);
   });
   const beadBox = document.getElementById('pfBeads'); beadBox.innerHTML = '';
-  BEAD_NAMES.forEach((s, i) => {
+  I18N.vi.beadNames.forEach((s, i) => {
     const b = document.createElement('button');
-    b.className = 'pf-chip' + (i === look.bd ? ' on' : ''); b.textContent = s;
+    b.className = 'pf-chip' + (i === look.bd ? ' on' : ''); b.textContent = L().beadNames[i];
     b.addEventListener('click', () => { look.bd = i; saveLook(); applyLook(); openProfile(); });
     beadBox.appendChild(b);
   });
   const petBox = document.getElementById('pfPet'); petBox.innerHTML = '';
-  [['Không có', 0], ['🐉 Tiểu Long', 1]].forEach(([label, v]) => {
+  [[L().petNone, 0], [L().petDragon, 1]].forEach(([label, v]) => {
     const b = document.createElement('button');
     b.className = 'pf-chip' + ((look.pet ? 1 : 0) === v ? ' on' : ''); b.textContent = label;
     b.addEventListener('click', () => { look.pet = v; saveLook(); syncPet(); ptTrack(true); openProfile(); });
@@ -2647,8 +2767,8 @@ document.getElementById('pfPhoto').addEventListener('click', () => {
       const a = document.createElement('a');
       a.href = renderer.domElement.toDataURL('image/png');
       a.download = 'nhan-vat-phong-thien-3d.png'; a.click();
-      toast('📷 Đã lưu ảnh nhân vật', 2200);
-    } catch (err) { toast('Chưa chụp được ảnh, thử lại nhé', 2200); }
+      toast(L().tPhoto, 2200);
+    } catch (err) { toast(L().tPhotoFail, 2200); }
   });
 });
 applyLook();
