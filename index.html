@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.13.1">
+<meta name="pt3d-ver" content="2.14.0">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.13.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.14.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -234,6 +234,8 @@ renderer.setPixelRatio(prLevel);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.92;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
@@ -352,10 +354,11 @@ const groundTex = canvasTexture(512, 512, (g) => {
   }
 });
 groundTex.wrapS = groundTex.wrapT = THREE.RepeatWrapping;
-groundTex.repeat.set(9, 9);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(46, 46),
+groundTex.repeat.set(11, 11);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(58, 58),
   new THREE.MeshStandardMaterial({ map: groundTex, roughness: 1 }));
 ground.rotation.x = -Math.PI / 2;
+ground.position.z = -4;
 ground.receiveShadow = true;
 ground.name = 'ground';
 scene.add(ground);
@@ -372,9 +375,9 @@ const roofParts = [];
 const temple = new THREE.Group();
 temple.position.set(0, 0, -16.5);
 scene.add(temple);
-platMesh = box(17, 1.0, 8.5, MAT.stone, 0, 0.5, 0, temple);      // platform
-box(13, 0.34, 2.2, MAT.stone, 0, 0.17, 5.1, temple);             // steps low
-box(11, 0.34, 1.4, MAT.stone, 0, 0.5, 4.6, temple);              // steps high
+platMesh = box(21, 1.0, 12.5, MAT.stone, 0, 0.5, -2.0, temple);   // platform (widened + deepened v2.14.0)
+box(17, 0.34, 2.2, MAT.stone, 0, 0.17, 5.1, temple);             // steps low
+box(15, 0.34, 1.4, MAT.stone, 0, 0.5, 4.6, temple);              // steps high
 
 const flameTex = canvasTexture(128, 128, (g) => {
   const gr = g.createRadialGradient(64, 58, 2, 64, 64, 62);
@@ -397,10 +400,10 @@ const carpetTex = canvasTexture(256, 256, (g) => {
   g.fillStyle = 'rgba(217,164,65,0.35)';
   g.beginPath(); g.arc(128, 128, 34, 0, Math.PI * 2); g.fill();
 });
-carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping; carpetTex.repeat.set(1, 7);
-const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 21),
+carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping; carpetTex.repeat.set(1, 8);
+const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 24),
   new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.9 }));
-carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 0.2);
+carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 1.7);
 carpet.receiveShadow = true; scene.add(carpet);
 /* ============ Chánh điện: open hall like the reference (white walls, red pillars, see the altar from the yard) ============ */
 {
@@ -418,40 +421,48 @@ carpet.receiveShadow = true; scene.add(carpet);
     g.strokeStyle = '#8a7358'; g.lineWidth = 9;
     g.strokeRect(0, 0, 512, 512); g.beginPath(); g.moveTo(256, 0); g.lineTo(256, 512); g.moveTo(0, 256); g.lineTo(512, 256); g.stroke();
   });
-  tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(4, 3);
-  inFloorMesh = box(13, 0.12, 7.6, new THREE.MeshStandardMaterial({ map: tileTex, roughness: 0.9 }), 0, 1.06, -0.2, T); // floor
-  box(13, 3.6, 0.35, creamWall, 0, 2.92, -3.85, T);                      // back wall
-  box(0.35, 3.6, 7.6, creamWall, -6.32, 2.92, -0.2, T);                  // side walls
-  box(0.35, 3.6, 7.6, creamWall, 6.32, 2.92, -0.2, T);
-  box(2.6, 3.6, 0.35, creamWall, -5.2, 2.92, 3.55, T);                   // front stubs
-  box(2.6, 3.6, 0.35, creamWall, 5.2, 2.92, 3.55, T);
-  [-3.9, -1.3, 1.3, 3.9].forEach(px => { const p = cyl(0.16, 0.18, 3.6, pillarRed, px, 2.92, 3.55, T, 12); p.castShadow = true; });
-  box(13.2, 0.4, 0.5, MAT.woodDark, 0, 4.85, 3.55, T);                   // front beam
-  const ceilMesh = box(12.9, 0.12, 7.5, MAT.woodDark, 0, 4.68, -0.2, T); // ceiling
-  [-4, 0, 4].forEach(bx => box(0.25, 0.22, 7.5, MAT.woodDark, bx, 4.48, -0.2, T)); // beams
-  const eaveSlab = box(13.6, 0.16, 8.8, MAT.lanternRed, 0, 5.12, -0.2, T); // red eave line
-  const fascia1 = box(13.9, 0.26, 9.3, MAT.roofRidge, 0, 5.3, -0.2, T);
-  const fascia2 = box(8.8, 0.24, 6.2, MAT.roofRidge, 0, 6.9, -0.2, T);
-  const roof1 = new THREE.Mesh(new THREE.ConeGeometry(10.6, 2.0, 4), MAT.roof);
-  roof1.rotation.y = Math.PI / 4; roof1.scale.set(1.25, 1, 0.78); roof1.position.set(0, 6.2, -0.2); roof1.castShadow = true; T.add(roof1);
-  const roof2 = new THREE.Mesh(new THREE.ConeGeometry(6.4, 1.5, 4), MAT.roof);
-  roof2.rotation.y = Math.PI / 4; roof2.scale.set(1.25, 1, 0.78); roof2.position.set(0, 7.55, -0.2); roof2.castShadow = true; T.add(roof2);
-  const fin = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), MAT.gold);
-  fin.position.set(0, 8.45, -0.2); T.add(fin);
+  tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(5, 5);
+  inFloorMesh = box(17, 0.12, 11.6, new THREE.MeshStandardMaterial({ map: tileTex, roughness: 0.9 }), 0, 1.06, -2.2, T); // floor
+  box(17, 3.6, 0.35, creamWall, 0, 2.92, -7.85, T);                      // back wall
+  box(0.35, 3.6, 11.6, creamWall, -8.32, 2.92, -2.2, T);                 // side walls
+  box(0.35, 3.6, 11.6, creamWall, 8.32, 2.92, -2.2, T);
+  box(2.6, 3.6, 0.35, creamWall, -7.2, 2.92, 3.55, T);                   // front stubs
+  box(2.6, 3.6, 0.35, creamWall, 7.2, 2.92, 3.55, T);
+  [-6.0, -3.9, -1.3, 1.3, 3.9, 6.0].forEach(px => { const p = cyl(0.16, 0.18, 3.6, pillarRed, px, 2.92, 3.55, T, 12); p.castShadow = true; });
+  box(17.2, 0.4, 0.5, MAT.woodDark, 0, 4.85, 3.55, T);                   // front beam
+  const ceilMesh = box(16.9, 0.12, 11.5, MAT.woodDark, 0, 4.68, -2.2, T); // ceiling
+  [-5.5, 0, 5.5].forEach(bx => box(0.25, 0.22, 11.5, MAT.woodDark, bx, 4.48, -2.2, T)); // beams
+  const eaveSlab = box(17.6, 0.16, 12.8, MAT.lanternRed, 0, 5.12, -2.2, T); // red eave line
+  const fascia1 = box(17.9, 0.26, 13.3, MAT.roofRidge, 0, 5.3, -2.2, T);
+  const fascia2 = box(11.8, 0.24, 9.2, MAT.roofRidge, 0, 7.05, -2.2, T);
+  /* curved pagoda tiers (v2.14.0): a 4-sided lathe whose profile sags in the middle
+     and curls up at the lip - the classic temple-roof silhouette */
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x51606e, roughness: 0.8, flatShading: true });
+  function pagodaTier(R, H) {
+    const pts = [[R * 1.04, -0.12], [R, 0.05], [R * 0.87, H * 0.30], [R * 0.69, H * 0.55], [R * 0.48, H * 0.78], [R * 0.27, H * 0.93], [R * 0.10, H]].map(p => new THREE.Vector2(p[0], p[1]));
+    const m = new THREE.Mesh(new THREE.LatheGeometry(pts, 4), roofMat);
+    m.rotation.y = Math.PI / 4; m.castShadow = true; return m;
+  }
+  const roof1 = pagodaTier(10.4, 2.4); roof1.scale.set(1.3, 1, 0.98); roof1.position.set(0, 5.22, -2.2); T.add(roof1);
+  const roof2 = pagodaTier(6.8, 1.9); roof2.scale.set(1.3, 1, 0.98); roof2.position.set(0, 7.15, -2.2); T.add(roof2);
+  const fin = new THREE.Group(); fin.position.set(0, 8.95, -2.2); T.add(fin);
+  const finBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.44, 0.22, 10), MAT.gold); finBase.position.y = 0.05; fin.add(finBase);
+  const finBall = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), MAT.gold); finBall.position.y = 0.36; fin.add(finBall);
+  const finTip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.42, 10), MAT.gold); finTip.position.y = 0.72; fin.add(finTip);
   roofParts.push(ceilMesh, eaveSlab, fascia1, fascia2, roof1, roof2, fin);
   /* interior, visible from the yard through the colonnade */
-  box(7, 3.0, 0.1, MAT.woodDark, 0, 2.7, -3.62, T);                      // altar backdrop
-  box(6.4, 0.95, 1.75, MAT.woodDark, 0, 1.6, -2.72, T);                  // altar table (deepened v2.12.5: room for the burner in front of the statue)
-  box(6.5, 0.09, 1.85, MAT.gold, 0, 2.1, -2.72, T);
+  box(9, 3.0, 0.1, MAT.woodDark, 0, 2.7, -7.62, T);                      // altar backdrop
+  box(6.4, 0.95, 1.75, MAT.woodDark, 0, 1.6, -6.72, T);                  // altar table
+  box(6.5, 0.09, 1.85, MAT.gold, 0, 2.1, -6.72, T);
   const halo = new THREE.Mesh(new THREE.CircleGeometry(1.45, 26), new THREE.MeshBasicMaterial({ color: 0xffb45e }));
-  halo.position.set(0, 3.3, -3.5); T.add(halo);
+  halo.position.set(0, 3.3, -7.5); T.add(halo);
   { /* offerings on the widened altar: fruit plate (left), lotus vase (right), burner centre */
-    const fruitG = new THREE.Group(); fruitG.position.set(-1.35, 2.15, -2.25); T.add(fruitG);
+    const fruitG = new THREE.Group(); fruitG.position.set(-1.35, 2.15, -6.25); T.add(fruitG);
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.2, 0.08, 18), MAT.bronze); plate.position.y = 0.04; plate.castShadow = true; fruitG.add(plate);
     const fruitMat = new THREE.MeshStandardMaterial({ color: 0xe8912d, roughness: 0.6 });
     [[-0.13, -0.1], [0.13, -0.1], [-0.13, 0.12], [0.13, 0.12]].forEach(p => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 10), fruitMat); f.position.set(p[0], 0.17, p[1]); f.castShadow = true; fruitG.add(f); });
     const fTop = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 10), fruitMat); fTop.position.set(0, 0.36, 0); fruitG.add(fTop);
-    const vaseG = new THREE.Group(); vaseG.position.set(1.35, 2.15, -2.25); T.add(vaseG);
+    const vaseG = new THREE.Group(); vaseG.position.set(1.35, 2.15, -6.25); T.add(vaseG);
     const vase = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.14, 0.32, 12), new THREE.MeshStandardMaterial({ color: 0x7d9b8a, roughness: 0.5 })); vase.position.y = 0.16; vase.castShadow = true; vaseG.add(vase);
     [[-0.16, 0.62, 0.15], [0, 0.74, 0], [0.16, 0.62, -0.12]].forEach(p => {
       const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.45, 6), MAT.leaf); stem.position.set(p[0] * 0.4, 0.42, p[2] * 0.4); stem.rotation.z = -p[0] * 0.5; vaseG.add(stem);
@@ -461,25 +472,25 @@ carpet.receiveShadow = true; scene.add(carpet);
     });
   }
   [-2.2, 2.2].forEach(cx => {
-    cyl(0.05, 0.07, 0.5, MAT.bronze, cx, 2.36, -2.9, T, 10);
+    cyl(0.05, 0.07, 0.5, MAT.bronze, cx, 2.36, -6.9, T, 10);
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
-    fl.scale.set(0.38, 0.38, 1); fl.position.set(cx, 2.78, -2.9); T.add(fl);
+    fl.scale.set(0.38, 0.38, 1); fl.position.set(cx, 2.78, -6.9); T.add(fl);
   });
-  [-2.6, 2.6].forEach(lx => {
+  [-3.4, 3.4].forEach(lx => {
     const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), MAT.lanternRed);
     l.position.set(lx, 4.35, 3.55); T.add(l);
   });
   const hallLight = new THREE.PointLight(0xffc37a, 12, 11, 1.8);
-  hallLight.position.set(0, 3.0, -14.9); scene.add(hallLight);
+  hallLight.position.set(0, 3.2, -19.5); scene.add(hallLight);
   const hg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.85, depthWrite: false }));
-  hg.scale.set(3.4, 3.4, 1); hg.position.set(0, 3.35, -19.9); scene.add(hg);
+  hg.scale.set(3.4, 3.4, 1); hg.position.set(0, 3.35, -23.9); scene.add(hg);
   new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
     const m = gltf.scene;
     const bb = new THREE.Box3().setFromObject(m);
     m.scale.setScalar(2.1 / bb.getSize(new THREE.Vector3()).y);
     const bb2 = new THREE.Box3().setFromObject(m);
     const c2 = bb2.getCenter(new THREE.Vector3());
-    m.position.set(-c2.x, 2.07 - bb2.min.y, -19.45 - c2.z);
+    m.position.set(-c2.x, 2.07 - bb2.min.y, -23.45 - c2.z);
     m.traverse(o => { if (o.isMesh) o.castShadow = true; });
     scene.add(m);
   }, undefined, () => {});
@@ -498,8 +509,8 @@ function tree(x, z, s = 1) {
   });
   scene.add(g); return g;
 }
-tree(-9.5, -6, 1.15); tree(9.5, -6, 1.05); tree(-10.5, 3.5, 0.95);
-tree(10.5, 3.5, 1.2); tree(-9.8, -13, 0.9); tree(9.8, -13, 1.0);
+tree(-12.5, -6.5, 1.15); tree(12.5, -6.5, 1.05); tree(-13.5, 4.5, 0.95);
+tree(13.5, 4.5, 1.2); tree(-13, -14, 0.9); tree(13, -14, 1.0); tree(-15.5, 9.5, 1.1); tree(15.5, 9.5, 0.95);
 function fenceRun(x, z, len, rotY) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rotY;
   const posts = Math.floor(len / 2.2);
@@ -508,9 +519,9 @@ function fenceRun(x, z, len, rotY) {
   box(len, 0.12, 0.1, MAT.woodDark, 0, 0.45, 0, g);
   scene.add(g);
 }
-fenceRun(-13.5, -2, 26, Math.PI / 2);
-fenceRun(13.5, -2, 26, Math.PI / 2);
-fenceRun(0, 11.5, 27, 0);
+fenceRun(-17.5, -0.5, 31, Math.PI / 2);
+fenceRun(17.5, -0.5, 31, Math.PI / 2);
+fenceRun(0, 14.5, 35, 0);
 
 /* ============ Forest panorama backdrop (2D ring) ============ */
 {
@@ -647,7 +658,7 @@ function lotusPond(x, z) {
   const f3 = lotus(1.05, 0.55, true); f3.position.set(0.48, 0.48, -0.12); g.add(f3);
   scene.add(g); return g;
 }
-lotusPond(-6.4, 0.5); lotusPond(6.4, 0.5); lotusPond(-6.4, -10.5); lotusPond(6.4, -10.5);
+lotusPond(-9.2, 0.5); lotusPond(9.2, 0.5); lotusPond(-9.2, -10.5); lotusPond(9.2, -10.5);
 function stoneLantern(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
   box(0.66, 0.12, 0.66, MAT.stone, 0, 0.06, 0, g);
@@ -701,8 +712,8 @@ function cushion(x, z) {
   scene.add(g); cushions.push(g); return g;
 }
 const cushionSpots = [];
-[-5.9, -3.6, 3.6, 5.9].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
-[-5.9, -3.6, 3.6, 5.9].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
+[-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
+[-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
 
 /* ============ v2.11 MERGE: the hall now stands IN the yard — real interior fittings are in the temple block above + the boards/cushions/burner/jar sections below ============ */
 function textBoard(lines, w, h) {
@@ -821,15 +832,16 @@ function makeMeritBoard(w, h, x, y, z, rotY) {
   [-w / 3, w / 3].forEach(dx => { const leg = box(0.16, 2.4, 0.16, MAT.woodDark, dx, -h / 2 - 1.0, -0.4, grp); leg.rotation.x = 0.35; });
   return grp;
 }
-const mbGrp = makeMeritBoard(2.4, 2.9, -4.75, 2.75, -19.95, 0); mbGrp.rotation.x = -0.05;
+const mbGrp = makeMeritBoard(2.4, 2.9, -6.1, 2.75, -23.95, 0); mbGrp.rotation.x = -0.05;
 drawMeritBase();
-const fbGrp = framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 2.4, 2.2, 4.75, 2.6, -19.95, 0); fbGrp.rotation.x = -0.05;
+const fbGrp = framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 2.4, 2.2, 6.1, 2.6, -23.95, 0); fbGrp.rotation.x = -0.05;
 const hallCushions = [];
-[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -14.2); c.position.y = 1.12; hallCushions.push(c); });
-[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -16.1); c.position.y = 1.12; hallCushions.push(c); });
+[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -15.0); c.position.y = 1.12; hallCushions.push(c); });
+[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -17.4); c.position.y = 1.12; hallCushions.push(c); });
+[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -19.8); c.position.y = 1.12; hallCushions.push(c); });
 const hallSmokes = [];
 function hallBurner() {
-  const b = new THREE.Group(); b.position.set(0, 2.15, -18.72); b.scale.setScalar(0.34); scene.add(b);
+  const b = new THREE.Group(); b.position.set(0, 2.15, -22.72); b.scale.setScalar(0.34); scene.add(b);
   const urnPtsH = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
   const urnH = new THREE.Mesh(new THREE.LatheGeometry(urnPtsH, 22), MAT.bronze);
   urnH.castShadow = true; urnH.receiveShadow = true; b.add(urnH);
@@ -875,7 +887,7 @@ function setHallLit(on) {
 setHallLit(false);
 
 /* ============ Fortune-stick jar (xin xam) ============ */
-const xamGroup = new THREE.Group(); xamGroup.position.set(5.3, 1.12, -19.3); scene.add(xamGroup);
+const xamGroup = new THREE.Group(); xamGroup.position.set(5.3, 1.12, -23.3); scene.add(xamGroup);
 box(0.74, 0.5, 0.74, MAT.woodDark, 0, 0.25, 0, xamGroup);
 const bambooMat = new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.55 });
 const jar = new THREE.Group(); jar.position.y = 0.5; xamGroup.add(jar);
@@ -928,7 +940,7 @@ document.getElementById('xamAgain').addEventListener('click', () => { xamCard.cl
 const waterDrops = [];
 let floatRod = null;
 {
-  const clockG = new THREE.Group(); clockG.position.set(-9.6, 0, -4.2); clockG.rotation.y = 0.55; scene.add(clockG);
+  const clockG = new THREE.Group(); clockG.position.set(-12.8, 0, -4.6); clockG.rotation.y = 0.55; scene.add(clockG);
   box(1.5, 0.25, 1.1, MAT.stone, 0, 0.12, 0, clockG);
   [[-0.6, -0.4], [0.6, -0.4], [-0.6, 0.4], [0.6, 0.4]].forEach(([px, pz]) => box(0.09, 1.55, 0.09, MAT.woodDark, px, 0.95, pz, clockG));
   box(1.45, 0.09, 1.0, MAT.woodDark, 0, 1.78, 0, clockG);
@@ -966,7 +978,7 @@ const leafGeo = (() => {
   return new THREE.ShapeGeometry(s, 6);
 })();
 /* leaf piles live at FIXED spots with ids, so every visitor's yard holds the same 11 piles and sweeping can be shared */
-const LEAF_SPOTS = [[-8.6, -7.5], [8.6, -7.5], [-10.2, -1.5], [10.2, -1.5], [-8.8, 3.4], [8.8, 3.4], [-3.4, 6.8], [3.4, 6.8], [-10.5, 8], [10.5, 8], [-4.2, -1.8]];
+const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-13.5, -1.5], [13.5, -1.5], [-11.8, 3.6], [11.8, 3.6], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [13.5, 10.5], [-5.5, -2.2]];
 const leafGoneAt = new Map();
 let remoteSweeps = [];
 function updateLeafBtn() {
@@ -1030,7 +1042,7 @@ function spawnSala(shared) {
     g.userData.salaId = shared.id;
     g.userData.salaTs = shared.ts || 0;
   } else {
-    g.position.set((Math.random() - 0.5) * 16, 6.8, -6 + Math.random() * 10);
+    g.position.set((Math.random() - 0.5) * 22, 6.8, -7 + Math.random() * 13);
     g.userData.salaId = myGid + '-' + Date.now();
     g.userData.salaTs = Date.now();
     ptSend({ k: 'sala', id: g.userData.salaId, x: +g.position.x.toFixed(2), z: +g.position.z.toFixed(2), ts: g.userData.salaTs });
@@ -1202,36 +1214,38 @@ const SPEED = 3.4;
 let room = 'yard';
 /* v2.11: ONE space. groundY = the height under a point (yard 0, steps, platform, hall floor) */
 function groundY(x, z) {
-  if (Math.abs(x) < 8.6 && z < -10.3 && z > -20.9) {
-    if (z < -12.95 && Math.abs(x) < 6.6) return 1.12;
+  if (Math.abs(x) < 10.6 && z < -10.3 && z > -24.9) {
+    if (z < -12.95 && Math.abs(x) < 8.6) return 1.12;
     if (z < -12.25) return 1.0;
     if (z < -11.2) return 0.67;
     return 0.34;
   }
   return 0;
 }
-function zoneOf(x, z) { return (z < -12.9 && Math.abs(x) < 8.6) ? 'hall' : 'yard'; }
+function zoneOf(x, z) { return (z < -12.9 && Math.abs(x) < 10.6) ? 'hall' : 'yard'; }
 /* collision (v2.12.4, Anita: walking into the altar / pillars / walls must STOP the avatar,
    and the platform must be climbed via the steps, never entered from the side) */
 const COLLIDERS = [
-  { x0: -3.3, x1: 3.3, z0: -20.15, z1: -18.2 },   // altar table
-  { x0: -6.15, x1: -3.35, z0: -20.45, z1: -19.6 }, // merit board (back wall)
-  { x0: 3.35, x1: 6.15, z0: -20.45, z1: -19.6 },   // mantra board (back wall)
-  { x0: 4.9, x1: 5.7, z0: -19.7, z1: -18.9 },      // xin xam jar
-  { x0: -4.12, x1: -3.68, z0: -13.17, z1: -12.73 }, // pillars
+  { x0: -3.3, x1: 3.3, z0: -24.15, z1: -22.2 },   // altar table
+  { x0: -7.55, x1: -4.65, z0: -24.45, z1: -23.6 }, // merit board (back wall)
+  { x0: 4.65, x1: 7.55, z0: -24.45, z1: -23.6 },   // mantra board (back wall)
+  { x0: 4.9, x1: 5.7, z0: -23.7, z1: -22.9 },      // xin xam jar
+  { x0: -6.22, x1: -5.78, z0: -13.17, z1: -12.73 }, // pillars
+  { x0: -4.12, x1: -3.68, z0: -13.17, z1: -12.73 },
   { x0: -1.52, x1: -1.08, z0: -13.17, z1: -12.73 },
   { x0: 1.08, x1: 1.52, z0: -13.17, z1: -12.73 },
   { x0: 3.68, x1: 4.12, z0: -13.17, z1: -12.73 },
-  { x0: -6.6, x1: -6.05, z0: -20.6, z1: -12.85 },  // side walls
-  { x0: 6.05, x1: 6.6, z0: -20.6, z1: -12.85 },
-  { x0: -6.6, x1: -3.8, z0: -13.2, z1: -12.7 },    // front stubs
-  { x0: 3.8, x1: 6.6, z0: -13.2, z1: -12.7 },
-  { x0: -6.6, x1: 6.6, z0: -20.65, z1: -20.1 },    // back wall
+  { x0: 5.78, x1: 6.22, z0: -13.17, z1: -12.73 },
+  { x0: -8.6, x1: -8.05, z0: -24.6, z1: -12.85 },  // side walls
+  { x0: 8.05, x1: 8.6, z0: -24.6, z1: -12.85 },
+  { x0: -8.6, x1: -5.8, z0: -13.2, z1: -12.7 },    // front stubs
+  { x0: 5.8, x1: 8.6, z0: -13.2, z1: -12.7 },
+  { x0: -8.6, x1: 8.6, z0: -24.65, z1: -24.1 },    // back wall
   { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
-  { x0: -8.15, x1: -4.65, z0: -1.25, z1: 2.25 },   // lotus ponds
-  { x0: 4.65, x1: 8.15, z0: -1.25, z1: 2.25 },
-  { x0: -8.15, x1: -4.65, z0: -12.25, z1: -8.75 },
-  { x0: 4.65, x1: 8.15, z0: -12.25, z1: -8.75 },
+  { x0: -10.95, x1: -7.45, z0: -1.25, z1: 2.25 },   // lotus ponds
+  { x0: 7.45, x1: 10.95, z0: -1.25, z1: 2.25 },
+  { x0: -10.95, x1: -7.45, z0: -12.25, z1: -8.75 },
+  { x0: 7.45, x1: 10.95, z0: -12.25, z1: -8.75 },
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -1255,9 +1269,9 @@ function turnToward(obj, targetAngle, dt) {
 }
 function setWalkTarget(v, cushion = null, incense = false) {
   P.target = v.clone();
-  P.target.x = THREE.MathUtils.clamp(P.target.x, -13.2, 13.2);
-  P.target.z = THREE.MathUtils.clamp(P.target.z, -20.3, 10.6);
-  if (P.target.z < -10.3) P.target.x = THREE.MathUtils.clamp(P.target.x, -8.2, 8.2);
+  P.target.x = THREE.MathUtils.clamp(P.target.x, -17.0, 17.0);
+  P.target.z = THREE.MathUtils.clamp(P.target.z, -24.3, 13.8);
+  if (P.target.z < -10.3) P.target.x = THREE.MathUtils.clamp(P.target.x, -10.2, 10.2);
   P.sitCushion = cushion;
   P.incenseAfterWalk = incense;
   P.sweepPile = null;
@@ -1384,7 +1398,7 @@ btnMala.addEventListener('click', () => {
 btnIncense.addEventListener('click', () => {
   if (room === 'hall') {
     if (hallLit) { toast('Nhang trong chánh điện đang cháy, còn khoảng ' + Math.ceil(hallLeft) + ' giây nữa'); return; }
-    const frontH = new THREE.Vector3(0, 0, -17.15);
+    const frontH = new THREE.Vector3(0, 0, -21.15);
     if (player.position.distanceTo(frontH) < 0.7) lightIncense();
     else { if (P.mode === 'seated') standUp(); setWalkTarget(frontH, null, true); }
     return;
@@ -1559,7 +1573,7 @@ function applyZoneUI() {
   syncCongQuaBtns();
   btnHall.lastChild.textContent = room === 'hall' ? 'Ra sân' : 'Vào chánh điện';
   btnHall.classList.toggle('on', room === 'hall');
-  controls.maxDistance = room === 'hall' ? 13 : 26;
+  controls.maxDistance = room === 'hall' ? 16 : 30;
   roofParts.forEach(m => { if (m) m.visible = room === 'yard'; });
   try { localStorage.setItem('pt3d-room', room); } catch (e) {}
 }
@@ -1898,8 +1912,8 @@ function animate() {
   const cgy = groundY(camera.position.x, camera.position.z) + 0.5;
   if (camera.position.y < cgy) camera.position.y = cgy;
   if (room === 'hall') {
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -6.3, 6.3);
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -20.3, -12.3);
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -8.3, 8.3);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -24.3, -12.3);
     if (camera.position.y > 4.5) camera.position.y = 4.5;
   }
 
@@ -2252,7 +2266,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.13.1';
+const PT3D_VER = '2.14.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
