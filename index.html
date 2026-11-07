@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.4">
+<meta name="pt3d-ver" content="2.12.5">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.4</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.5</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -440,17 +440,17 @@ carpet.receiveShadow = true; scene.add(carpet);
   roofParts.push(ceilMesh, eaveSlab, fascia1, fascia2, roof1, roof2, fin);
   /* interior, visible from the yard through the colonnade */
   box(7, 3.0, 0.1, MAT.woodDark, 0, 2.7, -3.62, T);                      // altar backdrop
-  box(6.0, 0.95, 1.3, MAT.woodDark, 0, 1.6, -2.9, T);                    // altar table (widened v2.12.3 per Anita)
-  box(6.1, 0.09, 1.4, MAT.gold, 0, 2.1, -2.9, T);
+  box(6.4, 0.95, 1.75, MAT.woodDark, 0, 1.6, -2.72, T);                  // altar table (deepened v2.12.5: room for the burner in front of the statue)
+  box(6.5, 0.09, 1.85, MAT.gold, 0, 2.1, -2.72, T);
   const halo = new THREE.Mesh(new THREE.CircleGeometry(1.45, 26), new THREE.MeshBasicMaterial({ color: 0xffb45e }));
   halo.position.set(0, 3.3, -3.5); T.add(halo);
   { /* offerings on the widened altar: fruit plate (left), lotus vase (right), burner centre */
-    const fruitG = new THREE.Group(); fruitG.position.set(-1.35, 2.15, -2.55); T.add(fruitG);
+    const fruitG = new THREE.Group(); fruitG.position.set(-1.35, 2.15, -2.25); T.add(fruitG);
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.2, 0.08, 18), MAT.bronze); plate.position.y = 0.04; plate.castShadow = true; fruitG.add(plate);
     const fruitMat = new THREE.MeshStandardMaterial({ color: 0xe8912d, roughness: 0.6 });
     [[-0.13, -0.1], [0.13, -0.1], [-0.13, 0.12], [0.13, 0.12]].forEach(p => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 10), fruitMat); f.position.set(p[0], 0.17, p[1]); f.castShadow = true; fruitG.add(f); });
     const fTop = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 10), fruitMat); fTop.position.set(0, 0.36, 0); fruitG.add(fTop);
-    const vaseG = new THREE.Group(); vaseG.position.set(1.35, 2.15, -2.55); T.add(vaseG);
+    const vaseG = new THREE.Group(); vaseG.position.set(1.35, 2.15, -2.25); T.add(vaseG);
     const vase = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.14, 0.32, 12), new THREE.MeshStandardMaterial({ color: 0x7d9b8a, roughness: 0.5 })); vase.position.y = 0.16; vase.castShadow = true; vaseG.add(vase);
     [[-0.16, 0.62, 0.15], [0, 0.74, 0], [0.16, 0.62, -0.12]].forEach(p => {
       const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.45, 6), MAT.leaf); stem.position.set(p[0] * 0.4, 0.42, p[2] * 0.4); stem.rotation.z = -p[0] * 0.5; vaseG.add(stem);
@@ -824,12 +824,11 @@ const mbGrp = makeMeritBoard(2.4, 2.9, -4.75, 2.75, -19.95, 0); mbGrp.rotation.x
 drawMeritBase();
 const fbGrp = framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 2.4, 2.2, 4.75, 2.6, -19.95, 0); fbGrp.rotation.x = -0.05;
 const hallCushions = [];
-[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -14.2); c.position.y = 1.12; hallCushions.push(c); });
-[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -16.0); c.position.y = 1.12; hallCushions.push(c); });
-[-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -17.8); c.position.y = 1.12; hallCushions.push(c); });
+[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -14.2); c.position.y = 1.12; hallCushions.push(c); });
+[-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -16.1); c.position.y = 1.12; hallCushions.push(c); });
 const hallSmokes = [];
 function hallBurner() {
-  const b = new THREE.Group(); b.position.set(0, 2.15, -19.0); b.scale.setScalar(0.38); scene.add(b);
+  const b = new THREE.Group(); b.position.set(0, 2.15, -18.72); b.scale.setScalar(0.34); scene.add(b);
   const urnPtsH = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
   const urnH = new THREE.Mesh(new THREE.LatheGeometry(urnPtsH, 22), MAT.bronze);
   urnH.castShadow = true; urnH.receiveShadow = true; b.add(urnH);
@@ -1211,7 +1210,7 @@ function zoneOf(x, z) { return (z < -12.9 && Math.abs(x) < 8.6) ? 'hall' : 'yard
 /* collision (v2.12.4, Anita: walking into the altar / pillars / walls must STOP the avatar,
    and the platform must be climbed via the steps, never entered from the side) */
 const COLLIDERS = [
-  { x0: -3.1, x1: 3.1, z0: -20.1, z1: -18.65 },   // altar table
+  { x0: -3.3, x1: 3.3, z0: -20.15, z1: -18.2 },   // altar table
   { x0: -6.15, x1: -3.35, z0: -20.45, z1: -19.6 }, // merit board (back wall)
   { x0: 3.35, x1: 6.15, z0: -20.45, z1: -19.6 },   // mantra board (back wall)
   { x0: 4.9, x1: 5.7, z0: -19.7, z1: -18.9 },      // xin xam jar
@@ -2201,7 +2200,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.4';
+const PT3D_VER = '2.12.5';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
