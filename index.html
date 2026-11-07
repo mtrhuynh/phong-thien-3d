@@ -1767,6 +1767,7 @@ function ptSync() {
     let r = remotes.get(key);
     if (!r) {
       const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key, p.c) });
+      g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
       g.position.set(p.x || 0, 0, p.z || 0);
       r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null };
       remotes.set(key, r);
@@ -1792,10 +1793,13 @@ function ptSync() {
   ptBooted = true;
 }
 function ptSweep() {
+  if (!ptChannel) return;
+  const st = ptChannel.presenceState();
   const now = performance.now();
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
-    if (now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
+    if (st[key]) r.lastSeen = now;
+    else if (now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
   });
 }
 let ptPrev = performance.now();
