@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.8">
+<meta name="pt3d-ver" content="2.12.9">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.8</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.9</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1954,7 +1954,7 @@ function ptState() {
      why visitors kept vanishing for each other. Movement now travels by broadcast (ptMove). */
   return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, bc: bacOf(sen),
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
-           inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
+           inc: [incenseLit ? Math.ceil(incenseLeft / 30) : 0, hallLit ? Math.ceil(hallLeft / 30) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
            at: Date.now() };
 }
@@ -1963,7 +1963,7 @@ function ptTrack(force) {
   const s = ptState();
   const key = [s.name, s.c, s.bd, s.sc, s.bc, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
   const now = performance.now();
-  if (now - ptLastAt < (force ? 600 : 2000)) return;
+  if (now - ptLastAt < (force ? 1500 : 5000)) return;
   if (!force && key === ptLastSent) return;
   ptLastSent = key; ptLastAt = now;
   ptChannel.track(s).catch(() => {});
@@ -2064,8 +2064,8 @@ function ptSync() {
     if (p.at && p.at !== r.at) { r.at = p.at; r.atLocal = performance.now(); }
     if (Array.isArray(p.st) && JSON.stringify(p.st) !== JSON.stringify(r.st)) { r.st = p.st; meritDirty = true; }
     if (Array.isArray(p.inc)) {
-      if (p.inc[0] > 0 && !incenseLit) { setIncenseLit(true); incenseLeft = p.inc[0]; smokeBoost = Math.max(smokeBoost, 10); }
-      if (p.inc[1] > 0 && !hallLit) { setHallLit(true); hallLeft = p.inc[1]; }
+      if (p.inc[0] > 0 && !incenseLit) { setIncenseLit(true); incenseLeft = p.inc[0] * 30; smokeBoost = Math.max(smokeBoost, 10); }
+      if (p.inc[1] > 0 && !hallLit) { setHallLit(true); hallLeft = p.inc[1] * 30; }
     }
     if (Array.isArray(p.lf) && !r.lfApplied) {
       r.lfApplied = true;
@@ -2194,7 +2194,7 @@ function ptConnect() {
   ptChannel.on('presence', { event: 'sync' }, () => { ptSync(); ptSetPill(); });
   ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
   ptChannel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); }
+    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); }
     else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { ptConnOk = false; ptSetPill(); ptScheduleReconnect(); }
   });
 }
@@ -2228,7 +2228,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.8';
+const PT3D_VER = '2.12.9';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
