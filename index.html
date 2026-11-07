@@ -976,25 +976,17 @@ const leafGeo = (() => {
   s.quadraticCurveTo(-0.09, -0.05, 0, -0.15);
   return new THREE.ShapeGeometry(s, 6);
 })();
-function leafSpot() {
-  for (let tries = 0; tries < 12; tries++) {
-    const x = (Math.random() - 0.5) * 22, z = -11 + Math.random() * 20;
-    if (Math.abs(x) < 5.5 && z < -5) continue;
-    if (Math.hypot(x, z + 3.4) < 2.1) continue;
-    let ok = true;
-    [[-6.4, 0.5], [6.4, 0.5], [-6.4, -10.5], [6.4, -10.5]].forEach(([px, pz]) => { if (Math.hypot(x - px, z - pz) < 2.1) ok = false; });
-    leafPiles.forEach(p => { if (Math.hypot(x - p.position.x, z - p.position.z) < 1.6) ok = false; });
-    if (ok) return { x, z };
-  }
-  return { x: 9, z: 6 };
-}
+/* leaf piles live at FIXED spots with ids, so every visitor's yard holds the same 11 piles and sweeping can be shared */
+const LEAF_SPOTS = [[-8.6, -7.5], [8.6, -7.5], [-10.2, -1.5], [10.2, -1.5], [-8.8, 3.4], [8.8, 3.4], [-3.4, 6.8], [3.4, 6.8], [-10.5, 8], [10.5, 8], [-4.2, -1.8]];
+const leafGoneAt = new Map();
+let remoteSweeps = [];
 function updateLeafBtn() {
   const el = document.getElementById('leafCnt');
   if (el) el.textContent = leafPiles.length;
 }
-function spawnLeafPile() {
-  const s = leafSpot();
-  const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
+function spawnLeafPile(pid) {
+  if (leafPiles.some(p => p.userData.pid === pid)) return;
+  const g = new THREE.Group(); g.position.set(LEAF_SPOTS[pid][0], 0, LEAF_SPOTS[pid][1]);
   for (let i = 0; i < 20; i++) {
     const lf = new THREE.Mesh(leafGeo, leafMats[Math.floor(Math.random() * leafMats.length)]);
     const mound = i < 12;
@@ -1005,7 +997,7 @@ function spawnLeafPile() {
     const sc = 0.85 + Math.random() * 0.55; lf.scale.set(sc, sc, sc);
     g.add(lf);
   }
-  g.userData.isLeafPile = true; scene.add(g); leafPiles.push(g);
+  g.userData.isLeafPile = true; g.userData.pid = pid; scene.add(g); leafPiles.push(g);
   updateLeafBtn(); return g;
 }
 let sweeping = null;
@@ -1013,10 +1005,9 @@ function startSweep(pile) {
   if (sweeping || !leafPiles.includes(pile)) return;
   sweeping = { pile, t: 0 };
 }
-for (let i = 0; i < 11; i++) spawnLeafPile();
-let leafTimer = 40;
+for (let i = 0; i < 11; i++) spawnLeafPile(i);
 let sala = null, salaTimer = 10;
-function spawnSala() {
+function spawnSala(shared) {
   const g = new THREE.Group();
   const cm = new THREE.MeshStandardMaterial({ color: 0xf7ead2, roughness: 0.5 });
   for (let i = 0; i < 6; i++) {
@@ -1027,7 +1018,14 @@ function spawnSala() {
   const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), MAT.gold); core.position.y = 0.03; g.add(core);
   const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffe9a8, transparent: true, opacity: 0.85, depthWrite: false }));
   gl.scale.set(1.0, 1.0, 1); g.add(gl);
-  g.position.set((Math.random() - 0.5) * 16, 6.8, -6 + Math.random() * 10);
+  if (shared) {
+    g.position.set(shared.x, 6.8, shared.z);
+    g.userData.salaId = shared.id;
+  } else {
+    g.position.set((Math.random() - 0.5) * 16, 6.8, -6 + Math.random() * 10);
+    g.userData.salaId = myGid + '-' + Date.now();
+    ptSend({ k: 'sala', id: g.userData.salaId, x: +g.position.x.toFixed(2), z: +g.position.z.toFixed(2) });
+  }
   g.userData.sala = { vy: 0.5 + Math.random() * 0.2, sway: Math.random() * 10, state: 'fall', t: 0 };
   scene.add(g); sala = g;
 }
@@ -1035,6 +1033,7 @@ function catchSala() {
   if (!sala || sala.userData.sala.state === 'fly') return;
   sala.userData.sala.state = 'fly'; sala.userData.sala.t = 0;
   sala.userData.from = sala.position.clone();
+  ptSend({ k: 'salaCatch', id: sala.userData.salaId });
 }
 
 /* ============ Avatar builder ============ */
@@ -1268,7 +1267,7 @@ btnSit.addEventListener('click', () => {
     if (bestD < 0.6) sitDown(best); else setWalkTarget(p, best);
   } else sitDown(null);
 });
-btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpStat('bw'); } });
+btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpStat('bw'); ptSend({ k: 'bow' }); } });
 btnMala.addEventListener('click', () => {
   malaPulse = 0.35;
   mala++; addSen(1); bumpStat('ma');
@@ -1295,6 +1294,7 @@ const incenseLb = document.querySelector('#btnIncense .lb');
 let incenseShown = '';
 function lightIncense() {
   bumpStat('ic');
+  ptSend({ k: 'inc', r: room }); ptTrack(true);
   if (room === 'hall') {
     setHallLit(true); hallLeft = 180;
     addSen(5);
@@ -1566,8 +1566,8 @@ function animate() {
   npcs.forEach(n => { n.userData.bodyG.scale.y = 0.78 * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); });
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
-  if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn thắp lại thì bấm Đốt nhang nhé 🕯️'); } }
-  if (hallLeft > 0) { hallLeft -= dt; if (hallLeft <= 0) { setHallLit(false); toast('Nhang trong chánh điện đã tàn — bấm Đốt nhang để thắp lại nhé 🕯️'); } }
+  if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn đốt lại thì bấm Đốt nhang nhé 🕯️'); } }
+  if (hallLeft > 0) { hallLeft -= dt; if (hallLeft <= 0) { setHallLit(false); toast('Nhang trong chánh điện đã tàn — bấm Đốt nhang để đốt lại nhé 🕯️'); } }
   if (incenseLb) {
     const burnLeft = room === 'hall' ? (hallLit ? hallLeft : -1) : (incenseLit ? incenseLeft : -1);
     const s = burnLeft >= 0 ? 'Còn ' + Math.floor(Math.max(0, burnLeft) / 60) + ':' + String(Math.floor(Math.max(0, burnLeft) % 60)).padStart(2, '0') : 'Đốt nhang';
@@ -1655,11 +1655,28 @@ function animate() {
       scene.remove(pl);
       leafPiles.splice(leafPiles.indexOf(pl), 1);
       sweeping = null; addSen(2); bumpStat('sw'); updateLeafBtn();
+      leafGoneAt.set(pl.userData.pid, performance.now());
+      ptSend({ k: 'leaf', id: pl.userData.pid });
       toast('🍂 Quét sạch một đống lá đa (+2 🪷) — còn ' + leafPiles.length + ' đống', 2200);
     }
   }
-  leafTimer -= dt;
-  if (leafTimer <= 0) { leafTimer = 40; if (leafPiles.length < 11 && room === 'yard') spawnLeafPile(); }
+  for (let i = remoteSweeps.length - 1; i >= 0; i--) {
+    const rs = remoteSweeps[i]; rs.t += dt / 0.9;
+    rs.pile.rotation.y += dt * 9;
+    rs.pile.scale.setScalar(Math.max(0.01, 1 - rs.t));
+    if (rs.t >= 1) {
+      scene.remove(rs.pile);
+      const ix = leafPiles.indexOf(rs.pile); if (ix >= 0) leafPiles.splice(ix, 1);
+      remoteSweeps.splice(i, 1); updateLeafBtn();
+    }
+  }
+  leafGoneAt.forEach((goneAt, pid) => {
+    if (performance.now() - goneAt > 40000) {
+      leafGoneAt.delete(pid);
+      spawnLeafPile(pid);
+      ptSend({ k: 'leafBack', id: pid }); ptTrack(false);
+    }
+  });
   if (!sala) {
     salaTimer -= dt;
     if (salaTimer <= 0) { if (room === 'yard') spawnSala(); salaTimer = 18 + Math.random() * 12; }
@@ -1673,6 +1690,10 @@ function animate() {
     } else if (u.state === 'rest') {
       u.t += dt;
       if (u.t > 5) { scene.remove(sala); sala = null; }
+    } else if (u.state === 'gone') {
+      u.t += dt / 0.3;
+      sala.scale.setScalar(Math.max(0.01, 1 - u.t));
+      if (u.t >= 1) { scene.remove(sala); sala = null; }
     } else if (u.state === 'fly') {
       u.t += dt / 0.45;
       const dest = player.position.clone(); dest.y = 1.25;
@@ -1736,12 +1757,15 @@ try {
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(1), z: +player.position.z.toFixed(1),
            ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C,
-           st: [stats.sw, stats.ma, stats.bw, stats.ic, stats.fl, stats.sen], at: Date.now() };
+           st: [stats.sw, stats.ma, stats.bw, stats.ic, stats.fl, stats.sen],
+           inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
+           lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
+           at: Date.now() };
 }
 function ptTrack(force) {
   if (!ptChannel) return;
   const s = ptState();
-  const key = [s.name, s.x, s.z, s.sit, s.room, s.c, s.st.join(',')].join('|');
+  const key = [s.name, s.x, s.z, s.sit, s.room, s.c, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
   const now = performance.now();
   if (!force && now - ptLastAt < 350) return;
   if (!force && key === ptLastSent && now - ptLastAt < 10000) return;
@@ -1776,13 +1800,26 @@ function ptSync() {
     if (!r) {
       const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key, p.c) });
       g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
-      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now() };
+      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false };
       remotes.set(key, r);
       if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
     }
     r.lastSeen = performance.now();
     if (p.at && p.at !== r.at) { r.at = p.at; r.atLocal = performance.now(); }
     if (Array.isArray(p.st) && JSON.stringify(p.st) !== JSON.stringify(r.st)) { r.st = p.st; meritDirty = true; }
+    if (Array.isArray(p.inc)) {
+      if (p.inc[0] > 0 && !incenseLit) { setIncenseLit(true); incenseLeft = p.inc[0]; smokeBoost = Math.max(smokeBoost, 10); }
+      if (p.inc[1] > 0 && !hallLit) { setHallLit(true); hallLeft = p.inc[1]; }
+    }
+    if (Array.isArray(p.lf) && !r.lfApplied) {
+      r.lfApplied = true;
+      p.lf.forEach(([pid, ago]) => {
+        const pl = leafPiles.find(q => q.userData.pid === pid);
+        if (pl) { scene.remove(pl); leafPiles.splice(leafPiles.indexOf(pl), 1); }
+        if (!leafGoneAt.has(pid)) leafGoneAt.set(pid, performance.now() - (ago || 0) * 1000);
+      });
+      updateLeafBtn();
+    }
     if (typeof p.x === 'number') r.tx = p.x;
     if (typeof p.z === 'number') r.tz = p.z;
     if (typeof p.ry === 'number') r.try_ = p.ry;
@@ -1835,7 +1872,36 @@ function ptAnim(now) {
       body.scale.x = body.scale.z = r.sit ? 1.15 : 1;
       body.position.y = moving ? Math.abs(Math.sin(t * 9 + r.ph)) * 0.05 : 0;
     }
+    if (r.bowT !== undefined && r.bowT >= 0) {
+      r.bowT += dt;
+      const bk = r.bowT / 1.3;
+      if (bk >= 1) { r.bowT = -1; g.userData.upperG.rotation.x = 0; }
+      else g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55;
+    }
   });
+}
+function ptSend(payload) {
+  if (!ptChannel) return;
+  try { ptChannel.send({ type: 'broadcast', event: 'world', payload: Object.assign({ from: myGid }, payload) }); } catch (e) {}
+}
+function ptWorld(pl) {
+  if (!pl || pl.from === myGid) return;
+  if (pl.k === 'inc') {
+    if (pl.r === 'hall') { if (!hallLit) { setHallLit(true); hallLeft = 180; } else hallLeft = Math.max(hallLeft, 170); }
+    else { if (!incenseLit) { setIncenseLit(true); incenseLeft = 180; smokeBoost = 30; } else incenseLeft = Math.max(incenseLeft, 170); }
+  } else if (pl.k === 'leaf') {
+    leafGoneAt.set(pl.id, performance.now());
+    const pile = leafPiles.find(q => q.userData.pid === pl.id);
+    if (pile && !(sweeping && sweeping.pile === pile)) remoteSweeps.push({ pile, t: 0 });
+  } else if (pl.k === 'leafBack') {
+    if (leafGoneAt.has(pl.id)) { leafGoneAt.delete(pl.id); spawnLeafPile(pl.id); }
+  } else if (pl.k === 'sala') {
+    if (!sala) spawnSala({ id: pl.id, x: pl.x, z: pl.z });
+  } else if (pl.k === 'salaCatch') {
+    if (sala && sala.userData.salaId === pl.id && sala.userData.sala.state !== 'fly') { sala.userData.sala.state = 'gone'; sala.userData.sala.t = 0; }
+  } else if (pl.k === 'bow') {
+    const r = remotes.get(pl.from); if (r) r.bowT = 0;
+  }
 }
 requestAnimationFrame(ptAnim);
 setInterval(() => { ptTrack(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
@@ -1844,6 +1910,7 @@ try {
     const sb = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
     ptChannel = sb.channel('pt3d:temple', { config: { presence: { key: myGid }, broadcast: { self: true } } });
     ptChannel.on('presence', { event: 'sync' }, ptSync);
+    ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
     ptChannel.subscribe((status) => {
       if (status === 'SUBSCRIBED') { ptTrack(true); ptSync(); }
     });
