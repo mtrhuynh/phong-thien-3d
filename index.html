@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.6">
+<meta name="pt3d-ver" content="2.12.7">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.6</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.7</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2033,14 +2033,17 @@ if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid,
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
-  const winners = {};
+  /* v2.12.7: dedup by name hid REAL visitors who share a phap danh (two guests both
+     named e.g. Dieu Tam made each other invisible). Only MY OWN name-twins are zombies
+     of my other tabs - everyone else stays, names may repeat. */
+  const myNm = myName || 'Hành giả';
+  const winKeys = new Set();
   Object.keys(st).forEach(k => {
     const ms = st[k]; if (!ms || !ms.length) return;
     const pp = ms[ms.length - 1];
-    const nm = pp.name || 'Khách';
-    if (!winners[nm] || (pp.at || 0) > winners[nm].at || k === myGid) winners[nm] = { key: k, at: pp.at || 0 };
+    if (k !== myGid && (pp.name || 'Khách') === myNm) return;
+    winKeys.add(k);
   });
-  const winKeys = new Set(Object.values(winners).map(w => w.key));
   [...remotes.keys()].forEach(k => { if (!winKeys.has(k)) { scene.remove(remotes.get(k).g); remotes.delete(k); } });
   Object.keys(st).forEach(key => {
     if (key === myGid || !winKeys.has(key)) return;
@@ -2203,7 +2206,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.6';
+const PT3D_VER = '2.12.7';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
