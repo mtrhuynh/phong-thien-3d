@@ -1208,10 +1208,18 @@ function ringBell() {
     });
   } catch (e) {}
 }
+function syncCongQuaBtns() {
+  const d = room === 'yard' ? '' : 'none';
+  const bs = document.getElementById('btnSweep');
+  const ba = document.getElementById('btnSala');
+  if (bs) bs.style.display = d;
+  if (ba) ba.style.display = d;
+}
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
   P.target = null; P.sitCushion = null; P.mode = 'idle';
   room = next;
+  syncCongQuaBtns();
   try { localStorage.setItem('pt3d-room', next); } catch (e) {}
   if (next === 'hall') {
     player.position.set(HALL_X, 0, 7.6);
@@ -1248,6 +1256,7 @@ try {
     btnHall.classList.add('on');
   }
 } catch (e) {}
+syncCongQuaBtns();
 
 document.getElementById('zoomIn').addEventListener('click', () => dolly(0.8));
 document.getElementById('zoomOut').addEventListener('click', () => dolly(1.25));
