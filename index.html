@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.7.1">
+<meta name="pt3d-ver" content="2.7.2">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.2</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1095,26 +1095,8 @@ function swapToModel(g) {
   bodyG.position.copy(old.position);
   const pivot = new THREE.Group(); pivot.position.y = 0.45; bodyG.add(pivot);
   const inst = monkProto.clone(true);
-  g.userData.tintMats = [];
-  inst.traverse(o => {
-    if (!o.isMesh || !o.material) return;
-    o.material = o.material.clone();
-    o.material.vertexColors = true;
-    const u = { value: new THREE.Color(g.userData.robeTint != null ? g.userData.robeTint : 0x74a9d8) };
-    o.material.userData.tintU = u;
-    o.material.onBeforeCompile = (sh) => {
-      sh.uniforms.uRobe = u;
-      sh.vertexShader = sh.vertexShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vTintColor;')
-        .replace('#include <color_vertex>', '#include <color_vertex>\n vTintColor = color;');
-      sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform vec3 uRobe; varying vec3 vTintColor;')
-        .replace('#include <color_fragment>', `#include <color_fragment>
-          { float tm = smoothstep(0.06, 0.14, vTintColor.b - vTintColor.r) * smoothstep(0.02, 0.08, vTintColor.b - vTintColor.g);
-            diffuseColor.rgb = mix(diffuseColor.rgb, uRobe * (0.32 + 0.78 * vTintColor.b), tm); }`);
-    };
-    g.userData.tintMats.push(o.material);
-  });
+  g.userData.modelInst = inst;
+  applyRobeTint(inst, g.userData.robeTint != null ? g.userData.robeTint : 0x74a9d8);
   inst.position.y = -0.45;
   pivot.add(inst);
   g.remove(old); g.add(bodyG);
@@ -1922,11 +1904,34 @@ try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}'))
 let myC = look.c != null ? look.c : MY_C;
 function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
 
-/* per-person robe colour on the monk MODEL: tints only robe-coloured vertices (skin, belt, beads untouched) */
+/* per-person robe colour on the monk MODEL: rewrites robe-blue vertex colours on cloned geometry (no custom shaders) */
+function applyRobeTint(inst, hex) {
+  const tint = new THREE.Color(hex);
+  inst.traverse(o => {
+    if (!o.isMesh || !o.geometry) return;
+    if (!o.geometry.userData.origColor) {
+      o.geometry = o.geometry.clone();
+      const c0 = o.geometry.getAttribute('color');
+      if (!c0) return;
+      o.geometry.userData.origColor = c0.array.slice();
+    }
+    const orig = o.geometry.userData.origColor;
+    const col = o.geometry.getAttribute('color');
+    if (!col) return;
+    for (let i = 0; i < col.count; i++) {
+      const r = orig[i * 3], gg = orig[i * 3 + 1], b = orig[i * 3 + 2];
+      if (b - r > 0.06 && b - gg > 0.02) {
+        const k = b / 0.885;
+        col.setXYZ(i, tint.r * k, tint.g * k, tint.b * k);
+      }
+    }
+    col.needsUpdate = true;
+  });
+}
 function tintAvatar(g, hex) {
   if (!g || !g.userData) return;
   g.userData.robeTint = hex;
-  (g.userData.tintMats || []).forEach(m => { if (m.userData.tintU) m.userData.tintU.value.setHex(hex); });
+  if (g.userData.modelInst) applyRobeTint(g.userData.modelInst, hex);
 }
 function robeFor(key, c) {
   if (Number.isInteger(c)) return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[c % ROBE_COLORS.length], roughness: 0.55 });
@@ -2093,7 +2098,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.7.1';
+const PT3D_VER = '2.7.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
