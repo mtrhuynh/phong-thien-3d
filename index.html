@@ -137,6 +137,8 @@
   <button class="abtn" id="btnMala"><span class="ic">📿</span>Tràng hạt<span class="cnt" id="malaCnt">0/108</span></button>
   <button class="abtn" id="btnIncense"><span class="ic">🕯️</span>Đốt nhang</button>
   <button class="abtn" id="btnXam"><span class="ic">🎋</span>Xin xăm</button>
+  <button class="abtn" id="btnSweep"><span class="ic">🍂</span>Quét lá (<span id="leafCnt">11</span>)</button>
+  <button class="abtn" id="btnSala"><span class="ic">🌼</span>Hứng hoa</button>
   <button class="abtn" id="btnHall"><span class="ic">🏛️</span>Vào chánh điện</button>
   <button class="abtn" id="btnLantern"><span class="ic">🏮</span>Thả đèn</button>
 </div>
@@ -462,8 +464,19 @@ let smokeBoost = 0; // >0 right after lighting incense
 const burnerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
 burnerGlow.scale.set(1.55, 1.15, 1); burnerGlow.position.y = 2.02; burner.add(burnerGlow);
 const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.position.y = 2.05; burner.add(burnerLight);
-emberFx.push({ ember: burnerGlow, fl: burnerLight, seed: 3.7 });
-addFlame(burner, 0, 2.06, 0, 1.7);
+const yardFx = { ember: burnerGlow, fl: burnerLight, seed: 3.7 };
+emberFx.push(yardFx);
+const yardFlameG = addFlame(burner, 0, 2.06, 0, 0.8);
+let incenseLit = false, incenseLeft = 0;
+function setIncenseLit(on) {
+  incenseLit = on;
+  burnerGlow.visible = on;
+  yardFlameG.visible = on;
+  yardFx.off = !on;
+  emberTips.forEach(tip => { tip.visible = on; });
+  if (!on) burnerLight.intensity = 0;
+}
+setIncenseLit(false);
 
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
 function lotusPond(x, z) {
@@ -681,7 +694,7 @@ const urnGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, trans
 urnGlow.scale.set(1.4, 1.05, 1); urnGlow.position.set(HALL_X, 1.8, -7.15); hallGroup.add(urnGlow);
 const urnLight = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); urnLight.position.set(HALL_X, 1.9, -7.15); hallGroup.add(urnLight);
 emberFx.push({ ember: urnGlow, fl: urnLight, seed: 7.3 });
-addFlame(hallGroup, HALL_X, 1.9, -7.15, 1.85);
+addFlame(hallGroup, HALL_X, 1.92, -7.15, 0.85);
 [-2.3, 2.3].forEach(dx => {
   cyl(0.09, 0.13, 1.15, MAT.wall, HALL_X + dx, 1.45, -8.8, hallGroup);
   const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb45e, transparent: true, opacity: 0.95, depthWrite: false }));
@@ -780,7 +793,7 @@ function hallBurner(dx) {
   ember.scale.set(1.5, 1.1, 1); ember.position.y = 1.55; b.add(ember);
   const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
   emberFx.push({ ember, fl, seed: Math.random() * 10 });
-  addFlame(b, 0, 1.86, 0, 1.65);
+  addFlame(b, 0, 1.88, 0, 0.78);
 }
 hallBurner(-3.4); hallBurner(3.4);
 
@@ -826,6 +839,67 @@ document.getElementById('xamAgain').addEventListener('click', () => { xamCard.cl
 
 
 
+/* ============ Cong qua: sweep bodhi leaves + catch sala flowers ============ */
+const leafPiles = [];
+const leafMats = [0xa8763e, 0x8a6d35, 0x6d7a35].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
+function leafSpot() {
+  for (let tries = 0; tries < 12; tries++) {
+    const x = (Math.random() - 0.5) * 22, z = -11 + Math.random() * 20;
+    if (Math.abs(x) < 5.5 && z < -5) continue;
+    if (Math.hypot(x, z + 3.4) < 2.1) continue;
+    let ok = true;
+    [[-6.4, 0.5], [6.4, 0.5], [-6.4, -10.5], [6.4, -10.5]].forEach(([px, pz]) => { if (Math.hypot(x - px, z - pz) < 2.1) ok = false; });
+    leafPiles.forEach(p => { if (Math.hypot(x - p.position.x, z - p.position.z) < 1.6) ok = false; });
+    if (ok) return { x, z };
+  }
+  return { x: 9, z: 6 };
+}
+function updateLeafBtn() {
+  const el = document.getElementById('leafCnt');
+  if (el) el.textContent = leafPiles.length;
+}
+function spawnLeafPile() {
+  const s = leafSpot();
+  const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
+  const base = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 6), leafMats[Math.floor(Math.random() * 3)]);
+  base.scale.set(1, 0.32, 1); base.position.y = 0.05; base.castShadow = true; g.add(base);
+  for (let i = 0; i < 5; i++) {
+    const lf = new THREE.Mesh(new THREE.CircleGeometry(0.13, 6), leafMats[i % 3]);
+    lf.rotation.x = -Math.PI / 2; lf.rotation.z = Math.random() * 3;
+    lf.position.set((Math.random() - 0.5) * 0.7, 0.14 + Math.random() * 0.04, (Math.random() - 0.5) * 0.7); g.add(lf);
+  }
+  g.userData.isLeafPile = true; scene.add(g); leafPiles.push(g);
+  updateLeafBtn(); return g;
+}
+let sweeping = null;
+function startSweep(pile) {
+  if (sweeping || !leafPiles.includes(pile)) return;
+  sweeping = { pile, t: 0 };
+}
+for (let i = 0; i < 11; i++) spawnLeafPile();
+let leafTimer = 40;
+let sala = null, salaTimer = 10;
+function spawnSala() {
+  const g = new THREE.Group();
+  const cm = new THREE.MeshStandardMaterial({ color: 0xf7ead2, roughness: 0.5 });
+  for (let i = 0; i < 6; i++) {
+    const p = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), cm);
+    const a = (i / 6) * Math.PI * 2;
+    p.position.set(Math.cos(a) * 0.1, 0, Math.sin(a) * 0.1); p.scale.set(1, 0.55, 1); g.add(p);
+  }
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), MAT.gold); core.position.y = 0.03; g.add(core);
+  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffe9a8, transparent: true, opacity: 0.85, depthWrite: false }));
+  gl.scale.set(1.0, 1.0, 1); g.add(gl);
+  g.position.set((Math.random() - 0.5) * 16, 6.8, -6 + Math.random() * 10);
+  g.userData.sala = { vy: 0.5 + Math.random() * 0.2, sway: Math.random() * 10, state: 'fall', t: 0 };
+  scene.add(g); sala = g;
+}
+function catchSala() {
+  if (!sala || sala.userData.sala.state === 'fly') return;
+  sala.userData.sala.state = 'fly'; sala.userData.sala.t = 0;
+  sala.userData.from = sala.position.clone();
+}
+
 /* ============ Avatar builder ============ */
 function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false }) {
   const g = new THREE.Group();
@@ -861,6 +935,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
     g.userData.halo = halo;
   }
   g.userData.bodyG = bodyG;
+  g.userData.beads = beads;
   g.userData.upperG = upperG;
   scene.add(g);
   return g;
@@ -915,6 +990,7 @@ const P = {
   bowT: -1,
   walkCycle: 0,
   incenseAfterWalk: false,
+  sweepPile: null,
 };
 const SPEED = 3.4;
 let room = 'yard';
@@ -939,6 +1015,7 @@ function setWalkTarget(v, cushion = null, incense = false) {
   P.target.z = THREE.MathUtils.clamp(P.target.z, RB.zMin, RB.zMax);
   P.sitCushion = cushion;
   P.incenseAfterWalk = incense;
+  P.sweepPile = null;
   P.mode = 'walk';
 }
 function sitDown(cushion) {
@@ -973,6 +1050,21 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointer, camera);
   if (room === 'hall' && raycaster.intersectObject(xamGroup, true).length) { drawXam(); return; }
+  if (room === 'yard') {
+    if (sala && raycaster.intersectObject(sala, true).length) { catchSala(); return; }
+    const lh = raycaster.intersectObjects(leafPiles, true);
+    if (lh.length) {
+      let o = lh[0].object;
+      while (o && !o.userData.isLeafPile) o = o.parent;
+      if (o) {
+        if (P.mode === 'seated') standUp();
+        const p = o.position.clone(); p.y = 0;
+        if (player.position.distanceTo(p) < 1.0) startSweep(o);
+        else { setWalkTarget(p); P.sweepPile = o; }
+        return;
+      }
+    }
+  }
   const hits = raycaster.intersectObjects([activeFloor(), ...activeCushions()], true);
   if (!hits.length) return;
   let obj = hits[0].object, cushionGroup = null;
@@ -1008,7 +1100,7 @@ const btnMala = document.getElementById('btnMala');
 const btnIncense = document.getElementById('btnIncense');
 const malaCntEl = document.getElementById('malaCnt');
 const senEl = document.getElementById('pSen');
-let mala = 0, sen = 0;
+let mala = 0, sen = 0, malaPulse = 0;
 function addSen(n) { sen += n; senEl.textContent = sen; }
 
 btnSit.addEventListener('click', () => {
@@ -1026,6 +1118,7 @@ btnSit.addEventListener('click', () => {
 });
 btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); } });
 btnMala.addEventListener('click', () => {
+  malaPulse = 0.35;
   mala++; addSen(1);
   malaCntEl.textContent = mala + '/108';
   if (mala >= 108) {
@@ -1035,11 +1128,13 @@ btnMala.addEventListener('click', () => {
 });
 btnIncense.addEventListener('click', () => {
   if (room !== 'yard') { toast('Trong chánh điện đã có hương trầm cháy sẵn rồi 🙏'); return; }
+  if (incenseLit) { toast('Nhang đang cháy thơm, còn khoảng ' + Math.ceil(incenseLeft) + ' giây nữa'); return; }
   const front = new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9);
   if (player.position.distanceTo(front) < 0.7) lightIncense();
   else { if (P.mode === 'seated') standUp(); setWalkTarget(front, null, true); }
 });
 function lightIncense() {
+  setIncenseLit(true); incenseLeft = 180;
   smokeBoost = 30;
   addSen(5);
   toast('Đã đốt nhang — khói hương tỏa khắp sân chùa 🙏', 3200);
@@ -1070,11 +1165,43 @@ musAudio.addEventListener('ended', () => musLoad(musIdx + 1, true));
 document.getElementById('btnXam').addEventListener('click', () => {
   if (room !== 'hall') { goToRoom('hall'); setTimeout(drawXam, 750); } else drawXam();
 });
+document.getElementById('btnSweep').addEventListener('click', () => {
+  if (room !== 'yard') { toast('Quét lá là việc ngoài sân — ra sân đã nhé 🍂'); return; }
+  if (!leafPiles.length) { toast('Sân sạch bong rồi 🙏 đợi lá rụng thêm nhé'); return; }
+  let best = null, bd = 1e9;
+  leafPiles.forEach(p => { const d = player.position.distanceTo(p.position); if (d < bd) { bd = d; best = p; } });
+  if (best) {
+    if (P.mode === 'seated') standUp();
+    const p = best.position.clone(); p.y = 0;
+    if (bd < 1.0) startSweep(best); else { setWalkTarget(p); P.sweepPile = best; }
+  }
+});
+document.getElementById('btnSala').addEventListener('click', () => {
+  if (room !== 'yard') { toast('Hoa sala rụng ngoài sân 🌼'); return; }
+  if (sala) catchSala(); else toast('Hoa sala chưa rụng — lâu lâu mới có một bông, để ý nhé 🌼');
+});
 const btnHall = document.getElementById('btnHall');
 const btnLantern = document.getElementById('btnLantern');
 btnLantern.addEventListener('click', () => {
   window.open('https://mtrhuynh.github.io/tha-den/', '_blank');
 });
+let bellCtx = null, bellT = 40 + Math.random() * 30;
+function ringBell() {
+  try {
+    bellCtx = bellCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (bellCtx.state === 'suspended') bellCtx.resume();
+    const t0 = bellCtx.currentTime + 0.02;
+    const master = bellCtx.createGain(); master.gain.value = 0.13; master.connect(bellCtx.destination);
+    [[392, 1], [587, 0.55], [806, 0.32], [1093, 0.18]].forEach(([fr, gn]) => {
+      const o = bellCtx.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+      const g = bellCtx.createGain();
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(gn, t0 + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 4.2);
+      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 4.4);
+    });
+  } catch (e) {}
+}
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
   P.target = null; P.sitCushion = null; P.mode = 'idle';
@@ -1101,6 +1228,10 @@ function goToRoom(next) {
 btnHall.addEventListener('click', () => goToRoom(room === 'yard' ? 'hall' : 'yard'));
 /* restore the room after a refresh */
 try {
+  try {
+    const rq = new URLSearchParams(location.search).get('room');
+    if (rq === 'hall' || rq === 'yard') localStorage.setItem('pt3d-room', rq);
+  } catch (e) {}
   if (localStorage.getItem('pt3d-room') === 'hall') {
     room = 'hall';
     player.position.set(HALL_X, 0, 7.6);
@@ -1143,6 +1274,7 @@ function animate() {
       P.target = null;
       if (P.sitCushion) { const c = P.sitCushion; P.sitCushion = null; sitDown(c); }
       else if (P.incenseAfterWalk) { P.incenseAfterWalk = false; lightIncense(); P.mode = 'idle'; }
+      else if (P.sweepPile) { const pl = P.sweepPile; P.sweepPile = null; startSweep(pl); P.mode = 'idle'; }
       else P.mode = 'idle';
     } else {
       turnToward(player, faceAngle(pos, to), dt);
@@ -1168,10 +1300,18 @@ function animate() {
     if (k >= 1) { P.bowT = -1; player.userData.upperG.rotation.x = 0; }
     else player.userData.upperG.rotation.x = Math.sin(k * Math.PI) * 0.55;
   }
+  if (malaPulse > 0) {
+    malaPulse -= dt;
+    const b = player.userData.beads;
+    if (b) { b.rotation.z += dt * 7; const s = 1 + Math.sin((0.35 - Math.max(0, malaPulse)) / 0.35 * Math.PI) * 0.16; b.scale.set(s, s, s); }
+  } else if (player.userData.beads) player.userData.beads.scale.set(1, 1, 1);
   /* NPC breathing */
   npcs.forEach(n => { n.userData.bodyG.scale.y = 0.78 * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); });
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
+  if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn thắp lại thì bấm Đốt nhang nhé 🕯️'); } }
+  bellT -= dt;
+  if (bellT <= 0) { ringBell(); bellT = 100 + Math.random() * 70; }
   /* smoke */
   const boost = smokeBoost > 0 ? 1 : 0;
   if (smokeBoost > 0) smokeBoost -= dt;
@@ -1182,7 +1322,7 @@ function animate() {
     sp.position.set(Math.sin(ph * 9 + i * 2.4) * 0.22 * ph, 2.4 + ph * 3.1, Math.cos(ph * 7 + i) * 0.18 * ph);
     const sc = 0.5 + ph * 1.9;
     sp.scale.set(sc, sc, 1);
-    sp.material.opacity = Math.sin(ph * Math.PI) * (boost ? 0.75 : 0.45);
+    sp.material.opacity = Math.sin(ph * Math.PI) * (incenseLit ? (boost ? 0.75 : 0.45) : 0);
   });
   emberMat.emissiveIntensity = 1.9 + Math.sin(t * 7.3) * 0.45 + (boost ? 0.9 : 0);
 
@@ -1207,6 +1347,7 @@ function animate() {
   });
 
   emberFx.forEach((e) => {
+    if (e.off) { e.ember.material.opacity = 0; e.fl.intensity = 0; return; }
     const f = 0.82 + Math.sin(t * 11 + e.seed * 7) * 0.12 + Math.sin(t * 23 + e.seed * 3) * 0.07;
     e.fl.intensity = 3.4 * f;
     e.ember.material.opacity = 0.88 * f;
@@ -1231,6 +1372,42 @@ function animate() {
       jar.rotation.z = Math.sin(k * 34) * 0.13 * (1 - k);
       xamSticks.forEach((s, i) => { s.position.y = 0.55 + Math.abs(Math.sin(k * 30 + i * 1.7)) * 0.05 * (1 - k); });
       chosenStick.position.y = 0.55 + Math.max(0, k - 0.55) * 0.75;
+    }
+  }
+
+  /* cong qua: sweeping + sala in the yard */
+  if (sweeping) {
+    sweeping.t += dt / 0.9;
+    const pl = sweeping.pile, k = sweeping.t;
+    pl.rotation.y += dt * 9;
+    pl.scale.setScalar(Math.max(0.01, 1 - k));
+    if (k >= 1) {
+      scene.remove(pl);
+      leafPiles.splice(leafPiles.indexOf(pl), 1);
+      sweeping = null; addSen(2); updateLeafBtn();
+      toast('🍂 Quét sạch một đống lá đa (+2 🪷) — còn ' + leafPiles.length + ' đống', 2200);
+    }
+  }
+  leafTimer -= dt;
+  if (leafTimer <= 0) { leafTimer = 40; if (leafPiles.length < 11 && room === 'yard') spawnLeafPile(); }
+  if (!sala) {
+    salaTimer -= dt;
+    if (salaTimer <= 0) { if (room === 'yard') spawnSala(); salaTimer = 18 + Math.random() * 12; }
+  } else {
+    const u = sala.userData.sala;
+    if (u.state === 'fall') {
+      sala.position.y -= u.vy * dt;
+      sala.position.x += Math.sin(t * 1.6 + u.sway) * dt * 0.35;
+      sala.rotation.y += dt * 0.8;
+      if (sala.position.y <= 0.35) { sala.position.y = 0.35; u.state = 'rest'; u.t = 0; }
+    } else if (u.state === 'rest') {
+      u.t += dt;
+      if (u.t > 5) { scene.remove(sala); sala = null; }
+    } else if (u.state === 'fly') {
+      u.t += dt / 0.45;
+      const dest = player.position.clone(); dest.y = 1.25;
+      sala.position.lerpVectors(sala.userData.from, dest, Math.min(1, u.t));
+      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); toast('🌼 Hứng được hoa sala! (+3 🪷)', 2400); }
     }
   }
 
