@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.7.3">
+<meta name="pt3d-ver" content="2.7.4">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.4</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1913,7 +1913,13 @@ function applyRobeTint(inst, hex) {
       o.geometry = o.geometry.clone();
       const c0 = o.geometry.getAttribute('color');
       if (!c0) return;
-      o.geometry.userData.origColor = c0.array.slice();
+      /* the GLB stores vertex colours as normalised UNSIGNED BYTES: read via getX (denormalised)
+         and swap in a float attribute before any rewriting, or every write truncates to 0/1 noise */
+      const n = c0.count;
+      const arr = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) { arr[i * 3] = c0.getX(i); arr[i * 3 + 1] = c0.getY(i); arr[i * 3 + 2] = c0.getZ(i); }
+      o.geometry.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+      o.geometry.userData.origColor = arr.slice();
     }
     const orig = o.geometry.userData.origColor;
     const col = o.geometry.getAttribute('color');
@@ -2098,7 +2104,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.7.3';
+const PT3D_VER = '2.7.4';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
