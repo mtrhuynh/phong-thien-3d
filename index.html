@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.11.3">
+<meta name="pt3d-ver" content="2.11.4">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.11.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.11.4</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1601,19 +1601,22 @@ function animate() {
     player.position.y += (gy - player.position.y) * Math.min(1, dt * 9);
   }
   /* movement */
+  if (turnTarget !== null && P.mode !== 'seated') {
+    turnToward(player, turnTarget, dt);
+    let dtt = turnTarget - player.rotation.y;
+    while (dtt > Math.PI) dtt -= Math.PI * 2;
+    while (dtt < -Math.PI) dtt += Math.PI * 2;
+    if (Math.abs(dtt) < 0.06) turnTarget = null;
+  }
   if (keysHeld.size && !/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) {
     if (P.mode === 'seated') standUp();
-    const fwd = new THREE.Vector3(player.position.x - camera.position.x, 0, player.position.z - camera.position.z).normalize();
-    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
-    const dir = new THREE.Vector3();
-    if (keysHeld.has('ArrowUp')) dir.add(fwd);
-    if (keysHeld.has('ArrowDown')) dir.sub(fwd);
-    if (keysHeld.has('ArrowRight')) dir.add(right);
-    if (keysHeld.has('ArrowLeft')) dir.sub(right);
-    if (dir.lengthSq() > 0) {
-      dir.normalize();
+    if (keysHeld.has('ArrowLeft')) { player.rotation.y += 2.4 * dt; turnTarget = null; }
+    if (keysHeld.has('ArrowRight')) { player.rotation.y -= 2.4 * dt; turnTarget = null; }
+    if (keysHeld.has('ArrowUp')) {
+      const dir = new THREE.Vector3(Math.sin(player.rotation.y), 0, Math.cos(player.rotation.y));
       const dest = player.position.clone().addScaledVector(dir, 2.4); dest.y = 0;
       if (!P.target || P.target.distanceTo(dest) > 0.35) setWalkTarget(dest);
+      keyDriveT = 0;
     }
   }
   if (P.mode === 'walk' && P.target) {
@@ -1809,6 +1812,19 @@ function animate() {
   camDelta.copy(desiredTarget).sub(controls.target).multiplyScalar(0.07);
   controls.target.add(camDelta);
   camera.position.add(camDelta);
+  if (keyDriveT < 0.6) {
+    keyDriveT += dt;
+    const want = player.rotation.y + Math.PI;
+    const off = camera.position.clone().sub(controls.target);
+    const cur = Math.atan2(off.x, off.z);
+    let dA = want - cur;
+    while (dA > Math.PI) dA -= Math.PI * 2;
+    while (dA < -Math.PI) dA += Math.PI * 2;
+    const na = cur + dA * Math.min(1, dt * 2.2);
+    const rr = Math.hypot(off.x, off.z);
+    camera.position.x = controls.target.x + Math.sin(na) * rr;
+    camera.position.z = controls.target.z + Math.cos(na) * rr;
+  }
   controls.update();
   const cgy = groundY(camera.position.x, camera.position.z) + 0.5;
   if (camera.position.y < cgy) camera.position.y = cgy;
@@ -1831,9 +1847,14 @@ function animate() {
 }
 /* arrow keys: walk on desktop (mouse / touch keep working as before) */
 const keysHeld = new Set();
+let turnTarget = null, keyDriveT = 99;
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) {
     keysHeld.add(e.key);
+    if (e.key === 'ArrowDown' && !e.repeat && !/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) {
+      if (P.mode === 'seated') standUp();
+      turnTarget = player.rotation.y + Math.PI;
+    }
     if (!/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) e.preventDefault();
   }
 });
@@ -2100,7 +2121,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.11.3';
+const PT3D_VER = '2.11.4';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
