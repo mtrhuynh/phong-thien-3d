@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.17.0">
+<meta name="pt3d-ver" content="2.18.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -169,7 +169,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.17.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.18.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -867,6 +867,45 @@ function cushion(x, z) {
 const cushionSpots = [];
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
+/* Thien Xa: an open meditation pavilion in the east yard, modelled on the simple
+   wooden shelter in Anita's Second Life photo - deck, posts, beam roof with
+   upturned ends, shoji back screen, a small Buddha, tatami and cushions */
+{
+  const px = 12.6, pz = 8.6;
+  const deck = box(6.4, 0.18, 4.8, MAT.woodDark, px, 0.09, pz, scene); deck.receiveShadow = true;
+  const shojiM = new THREE.MeshStandardMaterial({ color: 0xf3e9d2, roughness: 0.9 });
+  box(0.08, 2.2, 4.4, shojiM, px - 3.0, 1.28, pz, scene);
+  for (let i = 0; i < 5; i++) box(0.05, 2.2, 0.07, MAT.woodDark, px - 2.95, 1.28, pz - 1.76 + i * 0.88, scene);
+  box(0.05, 0.07, 4.4, MAT.woodDark, px - 2.95, 1.75, pz, scene);
+  [[-2.9, -1.9], [2.9, -1.9], [-2.9, 1.9], [2.9, 1.9]].forEach(([ox, oz]) => {
+    const post = box(0.18, 2.6, 0.18, MAT.woodDark, px + ox, 1.48, pz + oz, scene); post.castShadow = true;
+  });
+  const beamM = MAT.woodDark;
+  [-1.9, 1.9].forEach(oz => {
+    const bm = box(7.6, 0.16, 0.2, beamM, px, 2.86, pz + oz, scene); bm.castShadow = true;
+    [-1, 1].forEach(sd => { const tip = box(0.7, 0.13, 0.18, beamM, px + sd * 3.95, 3.02, pz + oz, scene); tip.rotation.z = sd * 0.42; });
+  });
+  const roofSlab = box(7.0, 0.1, 5.2, MAT.roofRidge, px, 3.06, pz, scene); roofSlab.castShadow = true;
+  box(4.6, 0.09, 3.4, MAT.roofRidge, px, 3.38, pz, scene);
+  const tatM = new THREE.MeshStandardMaterial({ color: 0xd9c491, roughness: 0.95 });
+  [13.1, 14.9].forEach(tx => { const tm = box(1.15, 0.035, 3.9, tatM, tx, 0.2, pz, scene); tm.receiveShadow = true; });
+  [13.1, 14.9].forEach(tx => [7.3, 8.6, 9.9].forEach(tz => { const c = cushion(tx, tz); c.position.y = 0.22; cushionSpots.push(c); }));
+  const ptag = nameTag('Thiền Xá', 'ngồi thiền ngắm thác'); ptag.position.set(px, 3.85, pz); scene.add(ptag);
+  new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
+    const m = gltf.scene;
+    const bb = new THREE.Box3().setFromObject(m);
+    m.scale.setScalar(0.78 / bb.getSize(new THREE.Vector3()).y);
+    const bb2 = new THREE.Box3().setFromObject(m);
+    const c2 = bb2.getCenter(new THREE.Vector3());
+    m.rotation.y = Math.PI / 2;
+    const bb3 = new THREE.Box3().setFromObject(m);
+    const c3 = bb3.getCenter(new THREE.Vector3());
+    m.position.set((px - 2.45) - c3.x, 0.5 - bb3.min.y, pz - c3.z);
+    m.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    scene.add(m);
+    box(0.7, 0.32, 0.9, MAT.woodDark, px - 2.45, 0.34, pz, scene);
+  });
+}
 
 /* ============ v2.11 MERGE: the hall now stands IN the yard — real interior fittings are in the temple block above + the boards/cushions/burner/jar sections below ============ */
 function textBoard(lines, w, h) {
@@ -1131,7 +1170,7 @@ const leafGeo = (() => {
   return new THREE.ShapeGeometry(s, 6);
 })();
 /* leaf piles live at FIXED spots with ids, so every visitor's yard holds the same 11 piles and sweeping can be shared */
-const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-13.5, -1.5], [13.5, -1.5], [-11.8, 3.6], [11.8, 3.6], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [13.5, 10.5], [-5.5, -2.2]];
+const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-13.5, -1.5], [13.5, -1.5], [-11.8, 3.6], [11.8, 3.6], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [15.9, 12.6], [-5.5, -2.2]];
 const leafGoneAt = new Map();
 let remoteSweeps = [];
 function updateLeafBtn() {
@@ -1409,6 +1448,7 @@ const SPEED = 3.4;
 let room = 'yard';
 /* v2.11: ONE space. groundY = the height under a point (yard 0, steps, platform, hall floor) */
 function groundY(x, z) {
+  if (x > 9.2 && x < 16.0 && z > 6.0 && z < 11.2) return 0.18;
   if (Math.abs(x) < 10.6 && z < -10.3 && z > -24.9) {
     if (z < -12.95 && Math.abs(x) < 8.6) return 1.12;
     if (z < -12.25) return 1.0;
@@ -1441,6 +1481,11 @@ const COLLIDERS = [
   { x0: 7.45, x1: 10.95, z0: -1.25, z1: 2.25 },
   { x0: -10.95, x1: -7.45, z0: -12.25, z1: -8.75 },
   { x0: 7.45, x1: 10.95, z0: -12.25, z1: -8.75 },
+  { x0: 9.35, x1: 9.85, z0: 6.2, z1: 11.0 },       // thien xa back screen
+  { x0: 9.55, x1: 9.9, z0: 6.55, z1: 6.9 },        // thien xa posts
+  { x0: 15.3, x1: 15.65, z0: 6.55, z1: 6.9 },
+  { x0: 9.55, x1: 9.9, z0: 10.3, z1: 10.65 },
+  { x0: 15.3, x1: 15.65, z0: 10.3, z1: 10.65 },
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -2467,7 +2512,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.17.0';
+const PT3D_VER = '2.18.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
