@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.8.0">
+<meta name="pt3d-ver" content="2.8.1">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.8.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.8.1</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -454,15 +454,25 @@ function lanternPole(x, z) {
   const cap = cyl(0.36, 0.4, 0.1, MAT.roofRidge, 0, 3.05, 0, g); cap.castShadow = true;
   scene.add(g);
 }
-lanternPole(-3.4, -4); lanternPole(3.4, -4);
+
 
 /* ============ Incense burner + smoke ============ */
 const burner = new THREE.Group(); burner.position.set(0, 0, -8.6); scene.add(burner);
-cyl(0.85, 0.65, 1.0, MAT.bronze, 0, 0.62, 0, burner);
-cyl(1.0, 1.0, 0.16, MAT.bronze, 0, 1.16, 0, burner);
+const urnPts = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
+const urn = new THREE.Mesh(new THREE.LatheGeometry(urnPts, 22), MAT.bronze);
+urn.castShadow = true; urn.receiveShadow = true; burner.add(urn);
+const urnRim = new THREE.Mesh(new THREE.TorusGeometry(0.63, 0.045, 8, 22), MAT.bronze);
+urnRim.rotation.x = Math.PI / 2; urnRim.position.y = 1.15; burner.add(urnRim);
+const ash = new THREE.Mesh(new THREE.CircleGeometry(0.58, 20), new THREE.MeshStandardMaterial({ color: 0x8a7a68, roughness: 1 }));
+ash.rotation.x = -Math.PI / 2; ash.position.y = 1.04; burner.add(ash);
 for (let i = 0; i < 3; i++) {
-  const a = (i / 3) * Math.PI * 2;
-  cyl(0.07, 0.09, 0.35, MAT.bronze, Math.cos(a) * 0.62, 0.17, Math.sin(a) * 0.62, burner);
+  const a = (i / 3) * Math.PI * 2 + 0.5;
+  const foot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), MAT.bronze);
+  foot.position.set(Math.cos(a) * 0.44, 0.05, Math.sin(a) * 0.44); foot.scale.y = 0.7; burner.add(foot);
+}
+for (const sx of [-1, 1]) {
+  const h = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.035, 8, 14, Math.PI), MAT.bronze);
+  h.position.set(sx * 0.74, 0.72, 0); h.rotation.z = -sx * Math.PI / 2; burner.add(h);
 }
 const stickMat = new THREE.MeshStandardMaterial({ color: 0x9a4a30, roughness: 0.8 });
 const emberMat = new THREE.MeshStandardMaterial({ color: 0xff5a26, emissive: 0xff4400, emissiveIntensity: 2.2 });
@@ -531,27 +541,23 @@ function lotusPond(x, z) {
     pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.425, pz); g.add(pad);
   });
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xf2a7c3, roughness: 0.6 });
-  const bud = new THREE.Group(); bud.position.set(0.1, 0.42, 0.05); g.add(bud);
-  cyl(0.02, 0.02, 0.3, MAT.leaf, 0, 0.15, 0, bud, 6);
-  for (let i = 0; i < 6; i++) {
-    const p = new THREE.Mesh(new THREE.SphereGeometry(0.085, 8, 8), petalMat);
-    const a = (i / 6) * Math.PI * 2;
-    p.position.set(Math.cos(a) * 0.085, 0.36, Math.sin(a) * 0.085);
-    p.scale.set(1, 1.5, 0.5); p.rotation.y = -a; p.rotation.z = 0.5; bud.add(p);
+  function lotus(scale, tilt) {
+    const f = new THREE.Group();
+    cyl(0.02, 0.02, 0.3, MAT.leaf, 0, 0.15, 0, f, 6);
+    const bl = new THREE.Group(); bl.position.y = 0.32; f.add(bl);
+    for (let i = 0; i < 6; i++) {
+      const holder = new THREE.Group(); holder.rotation.y = (i / 6) * Math.PI * 2; bl.add(holder);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.085, 8, 8), petalMat);
+      p.position.set(0.05, 0.07, 0); p.scale.set(0.55, 1.25, 0.24); p.rotation.z = -tilt; holder.add(p);
+    }
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold);
+    core.position.y = 0.05; bl.add(core);
+    f.scale.setScalar(scale);
+    return f;
   }
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold);
-  core.position.y = 0.38; bud.add(core);
-  const bud2 = bud.clone(); bud2.position.set(-0.38, 0.42, -0.32); bud2.scale.setScalar(0.75); g.add(bud2);
-  const open = new THREE.Group(); open.position.set(0.48, 0.42, -0.12); g.add(open);
-  cyl(0.018, 0.018, 0.24, MAT.leaf, 0, 0.12, 0, open, 6);
-  for (let i = 0; i < 5; i++) {
-    const p = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), petalMat);
-    const a = (i / 5) * Math.PI * 2;
-    p.position.set(Math.cos(a) * 0.11, 0.3, Math.sin(a) * 0.11);
-    p.scale.set(1, 0.9, 0.45); p.rotation.y = -a; p.rotation.z = 1.0; open.add(p);
-  }
-  const core2 = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), MAT.gold);
-  core2.position.y = 0.31; open.add(core2);
+  const f1 = lotus(1.0, 0.18); f1.position.set(0.1, 0.42, 0.05); g.add(f1);
+  const f2 = lotus(0.75, 0.3); f2.position.set(-0.38, 0.42, -0.32); g.add(f2);
+  const f3 = lotus(1.05, 0.55); f3.position.set(0.48, 0.42, -0.12); g.add(f3);
   scene.add(g); return g;
 }
 lotusPond(-6.4, 0.5); lotusPond(6.4, 0.5); lotusPond(-6.4, -10.5); lotusPond(6.4, -10.5);
@@ -603,8 +609,8 @@ function cushion(x, z) {
   scene.add(g); cushions.push(g); return g;
 }
 const cushionSpots = [];
-[-4.8, -1.6, 1.6, 4.8].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
-[-4.8, -1.6, 1.6, 4.8].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
+[-5.9, -3.6, 3.6, 5.9].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
+[-5.9, -3.6, 3.6, 5.9].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
 
 /* ============ Chánh điện (interior) at x=+90, backdrop = 2D room painting ============ */
 const HALL_X = 90;
@@ -1137,7 +1143,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk.glb?v=280', (gltf) => {
+new GLTFLoader().load('models/monk.glb?v=281', (gltf) => {
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -1252,7 +1258,7 @@ npcData.forEach((d, i) => {
 
 
 /* Player */
-const player = buildAvatar({ name: 'Ivy', sub: 'Bậc 1', bald: false, robeMat: MAT.robe, player: true });
+const player = buildAvatar({ name: 'Ivy', sub: 'Bậc ' + bacOf(stats.sen || 0), bald: false, robeMat: MAT.robe, player: true });
 player.position.set(0, 0, 6.5);
 player.rotation.y = Math.PI;
 
@@ -1493,7 +1499,7 @@ function applyName(n) {
   myName = n;
   document.getElementById('pName').textContent = n;
   const tag = player.userData.tag;
-  if (tag) { tag.material.map = nameTag(n, 'Bậc 1').material.map; tag.material.needsUpdate = true; }
+  if (tag) { tag.material.map = nameTag(n, 'Bậc ' + bacOf(sen)).material.map; tag.material.needsUpdate = true; }
 }
 function openNameModal() {
   nameInput.value = myName || '';
@@ -1913,7 +1919,7 @@ try {
 
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(0), z: +player.position.z.toFixed(0),
-           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: myC, bd: look.bd, sc: look.sect,
+           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: myC, bd: look.bd, sc: look.sect, bc: bacOf(sen),
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -1997,7 +2003,7 @@ function ptSync() {
     const p = metas[metas.length - 1];
     let r = remotes.get(key);
     if (!r) {
-      const g = buildAvatar({ name: p.name || 'Khách', sub: SECTS[p.sc] || '', bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
+      const g = buildAvatar({ name: p.name || 'Khách', sub: [SECTS[p.sc] || '', 'Bậc ' + (p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
       g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
       r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
       remotes.set(key, r);
@@ -2031,13 +2037,18 @@ function ptSync() {
     if ((p.sc || 0) !== r.sc) {
       r.sc = p.sc || 0;
       const tg2 = r.g.userData.tag;
-      if (tg2) { tg2.material.map = nameTag(r.name, SECTS[r.sc] || '').material.map; tg2.material.needsUpdate = true; }
+      if (tg2) { tg2.material.map = nameTag(r.name, [SECTS[r.sc] || '', 'Bậc ' + (r.bc || 1)].filter(Boolean).join(' · ')).material.map; tg2.material.needsUpdate = true; }
+    }
+    if ((p.bc || 1) !== r.bc) {
+      r.bc = p.bc || 1;
+      const tg3 = r.g.userData.tag;
+      if (tg3) { tg3.material.map = nameTag(r.name || p.name || 'Khách', [SECTS[r.sc] || '', 'Bậc ' + r.bc].filter(Boolean).join(' · ')).material.map; tg3.material.needsUpdate = true; }
     }
     const nm = p.name || 'Khách';
     if (r.name !== nm) {
       r.name = nm;
       const tg = r.g.userData.tag;
-      if (tg) { tg.material.map = nameTag(nm, SECTS[r.sc] || '').material.map; tg.material.needsUpdate = true; }
+      if (tg) { tg.material.map = nameTag(nm, [SECTS[r.sc] || '', 'Bậc ' + (r.bc || 1)].filter(Boolean).join(' · ')).material.map; tg.material.needsUpdate = true; }
     }
   });
   ptSweep();
@@ -2138,7 +2149,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.8.0';
+const PT3D_VER = '2.8.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -2192,7 +2203,17 @@ setTimeout(ptCheckUpdate, 20000);
 
 /* ============ Profile (Hồ sơ tu tập) — v2.5.0, modelled on niemphat.online · linh thú removed in v2.5.2 at Anita's request (lag) ============ */
 function bacOf(s) { const T = [30, 80, 150, 250, 400, 600, 850, 1150, 1500]; let b = 1; for (const t of T) if (s >= t) b++; return b; }
-function refreshBac() { const el = document.getElementById('pBac'); if (el) el.textContent = bacOf(sen); }
+let myTagBac = 0;
+function refreshBac() {
+  const b = bacOf(sen);
+  const el = document.getElementById('pBac'); if (el) el.textContent = b;
+  if (b !== myTagBac) {
+    myTagBac = b;
+    const tg = player.userData.tag;
+    if (tg && myName) { tg.material.map = nameTag(myName, 'Bậc ' + b).material.map; tg.material.needsUpdate = true; }
+    if (typeof ptTrack === 'function') ptTrack(true);
+  }
+}
 const profileModal = document.getElementById('profileModal');
 function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
 const BEAD_NAMES = ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'];
