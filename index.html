@@ -134,7 +134,7 @@
   </div>
 </div>
 <div id="credit">Tượng Phật: model 3D Tripo</div>
-<div class="ui" id="hint">Chạm vào sân để đi · Kéo để xoay góc nhìn · Bấm đệm trống để ngồi thiền</div>
+<div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div class="ui" id="actions">
   <button class="abtn" id="btnSit"><span class="ic">🧎</span><span class="lb">Thiền</span></button>
@@ -748,7 +748,7 @@ function framedBoard(lines, w, h, x, y, z, rotY) {
   return grp;
 }
 framedBoard(['BẢNG VÀNG CÔNG ĐỨC', 'Khương Minh — 500', 'Trí Tài — 420', 'Thương Đạo Thọ — 380', 'Vô Ưu Minh — 350', 'Doanh Khoa — 320'], 3.6, 4.4, HALL_X - 9.3, 2.9, -7.6, 0.42);
-framedBoard(['PHÁP NGỮ', 'Không làm các điều ác,', 'siêng làm các việc lành,', 'giữ tâm ý trong sạch.'], 3.6, 3.2, HALL_X + 9.3, 2.6, -7.6, -0.42);
+framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 3.6, 3.2, HALL_X + 9.3, 2.6, -7.6, -0.42);
 box(0.6, 9, 20, MAT.woodDark, HALL_X - 14.6, 4.5, 0, hallGroup);
 box(0.6, 9, 20, MAT.woodDark, HALL_X + 14.6, 4.5, 0, hallGroup);
 box(30, 0.6, 20, MAT.woodDark, HALL_X, 9.2, 0, hallGroup);
@@ -842,6 +842,29 @@ document.getElementById('xamClose').addEventListener('click', () => xamCard.clas
 document.getElementById('xamAgain').addEventListener('click', () => { xamCard.classList.remove('open'); drawXam(); });
 
 
+
+/* ============ Dong ho nuoc (lau ho) — ancient water clock in the yard ============ */
+const waterDrops = [];
+let floatRod = null;
+{
+  const clockG = new THREE.Group(); clockG.position.set(-9.6, 0, -4.2); clockG.rotation.y = 0.55; scene.add(clockG);
+  box(1.5, 0.25, 1.1, MAT.stone, 0, 0.12, 0, clockG);
+  [[-0.6, -0.4], [0.6, -0.4], [-0.6, 0.4], [0.6, 0.4]].forEach(([px, pz]) => box(0.09, 1.55, 0.09, MAT.woodDark, px, 0.95, pz, clockG));
+  box(1.45, 0.09, 1.0, MAT.woodDark, 0, 1.78, 0, clockG);
+  cyl(0.30, 0.24, 0.40, MAT.bronze, 0, 1.50, 0, clockG);
+  cyl(0.24, 0.19, 0.32, MAT.bronze, 0, 1.02, 0, clockG);
+  cyl(0.42, 0.34, 0.30, MAT.bronze, 0, 0.42, 0, clockG);
+  const wmat = new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.1 });
+  cyl(0.37, 0.37, 0.03, wmat, 0, 0.56, 0, clockG);
+  const dmat = new THREE.MeshBasicMaterial({ color: 0xbfe6f5, transparent: true, opacity: 0.85 });
+  cyl(0.012, 0.012, 0.26, dmat, 0, 0.72, 0, clockG);
+  for (let i = 0; i < 3; i++) {
+    const dm = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), new THREE.MeshBasicMaterial({ color: 0xbfe6f5, transparent: true, opacity: 0.9 }));
+    dm.position.set(0, 0.88, 0); dm.userData.ph = i / 3; clockG.add(dm); waterDrops.push(dm);
+  }
+  floatRod = box(0.05, 0.62, 0.05, MAT.woodDark, 0.18, 0.80, 0, clockG);
+  const ctag = nameTag('Đồng hồ nước', 'lậu hồ · tính canh giờ'); ctag.position.y = 2.2; clockG.add(ctag);
+}
 
 /* ============ Cong qua: sweep bodhi leaves + catch sala flowers ============ */
 const leafPiles = [];
@@ -947,9 +970,9 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
 
 /* NPCs already seated */
 const npcData = [
-  { spot: 1, name: 'Minh Thiện', sub: 'Cấp 4', bald: true, robeMat: MAT.robe },
+  { spot: 1, name: 'Minh Thiện', sub: 'Bậc 4', bald: true, robeMat: MAT.robe },
   { spot: 2, name: 'Cụ Từ Thanh Sam', sub: '', bald: true, robeMat: MAT.robeBrown },
-  { spot: 6, name: 'Thích Cái Này', sub: 'Cấp 2', bald: false, robeMat: MAT.robe },
+  { spot: 6, name: 'Thích Cái Này', sub: 'Bậc 2', bald: false, robeMat: MAT.robe },
 ];
 const npcs = [];
 npcData.forEach((d, i) => {
@@ -965,8 +988,8 @@ npcData.forEach((d, i) => {
 
 /* NPCs inside the hall */
 [
-  { spot: 1, name: 'Thầy Tâm Từ', sub: 'Cấp 5', bald: true, robeMat: MAT.robeBrown },
-  { spot: 6, name: 'Diệu Tâm', sub: 'Cấp 3', bald: false, robeMat: MAT.robe },
+  { spot: 1, name: 'Thầy Tâm Từ', sub: 'Bậc 5', bald: true, robeMat: MAT.robeBrown },
+  { spot: 6, name: 'Diệu Tâm', sub: 'Bậc 3', bald: false, robeMat: MAT.robe },
   { spot: 11, name: 'Khách Hành Hương', sub: '', bald: true, robeMat: MAT.robe },
 ].forEach((d, i) => {
   const c = hallCushions[d.spot];
@@ -1137,6 +1160,8 @@ btnIncense.addEventListener('click', () => {
   if (player.position.distanceTo(front) < 0.7) lightIncense();
   else { if (P.mode === 'seated') standUp(); setWalkTarget(front, null, true); }
 });
+const incenseLb = document.querySelector('#btnIncense .lb');
+let incenseShown = '';
 function lightIncense() {
   setIncenseLit(true); incenseLeft = 180;
   smokeBoost = 30;
@@ -1192,21 +1217,40 @@ window.addEventListener('pointerdown', () => {
     if (bellCtx.state === 'suspended') bellCtx.resume();
   } catch (e) {}
 }, { passive: true });
-function ringBell() {
+function ringBell(longBell = false) {
   try {
     bellCtx = bellCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (bellCtx.state === 'suspended') bellCtx.resume();
     const t0 = bellCtx.currentTime + 0.02;
-    const master = bellCtx.createGain(); master.gain.value = 0.16; master.connect(bellCtx.destination);
-    [[392, 1], [587, 0.55], [806, 0.32], [1093, 0.18]].forEach(([fr, gn]) => {
+    const base = longBell ? 330 : 392, dec = longBell ? 8.5 : 4.2;
+    const master = bellCtx.createGain(); master.gain.value = longBell ? 0.2 : 0.16; master.connect(bellCtx.destination);
+    [[base, 1], [base * 1.498, 0.55], [base * 2.056, 0.32], [base * 2.788, 0.18]].forEach(([fr, gn]) => {
       const o = bellCtx.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
       const g = bellCtx.createGain();
       g.gain.setValueAtTime(0, t0);
       g.gain.linearRampToValueAtTime(gn, t0 + 0.015);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 4.2);
-      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 4.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dec);
+      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dec + 0.2);
     });
   } catch (e) {}
+}
+function strikeDrum() {
+  try {
+    bellCtx = bellCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (bellCtx.state === 'suspended') bellCtx.resume();
+    const t0 = bellCtx.currentTime + 0.02;
+    const o = bellCtx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(150, t0);
+    o.frequency.exponentialRampToValueAtTime(48, t0 + 0.28);
+    const g = bellCtx.createGain();
+    g.gain.setValueAtTime(0.5, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.7);
+    o.connect(g); g.connect(bellCtx.destination); o.start(t0); o.stop(t0 + 0.75);
+  } catch (e) {}
+}
+function ringDrum(n) { for (let i = 0; i < n; i++) setTimeout(strikeDrum, i * 1400); }
+function playRooster() {
+  try { const au = new Audio('sounds/ga-gay.mp3'); au.volume = 0.55; au.play().catch(() => {}); } catch (e) {}
 }
 function syncCongQuaBtns() {
   const d = room === 'yard' ? '' : 'none';
@@ -1218,8 +1262,24 @@ function syncCongQuaBtns() {
   if (bx) bx.style.display = room === 'hall' ? '' : 'none';
 }
 let bellDue = Date.now() + 30000 + Math.random() * 15000;
+let lastHourBell = -1, lastCanhHour = -1, lastRoosterDay = '';
 setInterval(() => {
-  if (Date.now() >= bellDue) { ringBell(); bellDue = Date.now() + 80000 + Math.random() * 50000; }
+  const now = new Date();
+  if (Date.now() >= bellDue) { ringBell(); bellDue = Date.now() + 270000 + Math.random() * 60000; }
+  if (now.getMinutes() === 0) {
+    const h = now.getHours();
+    if (lastHourBell !== h) { lastHourBell = h; ringBell(true); }
+    const canhMap = { 19: 1, 21: 2, 23: 3, 1: 4, 3: 5 };
+    if (canhMap[h] && lastCanhHour !== h) {
+      lastCanhHour = h;
+      const names = ['', 'một', 'hai', 'ba', 'bốn', 'năm'];
+      setTimeout(() => { ringDrum(canhMap[h]); toast('🥁 Trống điểm canh ' + names[canhMap[h]] + '…', 3600); }, 6000);
+    }
+    if (h === 5 && lastRoosterDay !== now.toDateString()) {
+      lastRoosterDay = now.toDateString();
+      setTimeout(() => { playRooster(); toast('🐓 Gà gáy sáng rồi — canh năm, trời sắp sáng…', 4000); }, 3000);
+    }
+  }
 }, 4000);
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
@@ -1338,6 +1398,10 @@ function animate() {
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
   if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn thắp lại thì bấm Đốt nhang nhé 🕯️'); } }
+  if (incenseLb) {
+    const s = incenseLit ? 'Còn ' + Math.floor(Math.max(0, incenseLeft) / 60) + ':' + String(Math.floor(Math.max(0, incenseLeft) % 60)).padStart(2, '0') : 'Đốt nhang';
+    if (s !== incenseShown) { incenseShown = s; incenseLb.textContent = s; }
+  }
   /* smoke */
   const boost = smokeBoost > 0 ? 1 : 0;
   if (smokeBoost > 0) smokeBoost -= dt;
@@ -1400,6 +1464,15 @@ function animate() {
       chosenStick.position.y = 0.55 + Math.max(0, k - 0.55) * 0.75;
     }
   }
+
+  /* water clock: dripping + float gauge */
+  waterDrops.forEach((d) => {
+    d.userData.ph += dt * 0.85;
+    if (d.userData.ph > 1) d.userData.ph -= 1;
+    d.position.y = 0.88 - d.userData.ph * 0.3;
+    d.material.opacity = Math.sin(d.userData.ph * Math.PI) * 0.9;
+  });
+  if (floatRod) floatRod.position.y = 0.72 + ((t % 300) / 300) * 0.22;
 
   /* cong qua: sweeping + sala in the yard */
   if (sweeping) {
