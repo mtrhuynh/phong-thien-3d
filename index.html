@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.11.1">
+<meta name="pt3d-ver" content="2.11.2">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@
   .zbtn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66);
     color:#ffe1a8; font-size:22px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px); }
   .zbtn:active { background:rgba(90,64,25,.8); }
-  #camModes { position:fixed; right:12px; bottom:118px; display:flex; gap:6px; z-index:30; }
+  #camModes { position:fixed; right:12px; bottom:118px; display:flex; flex-direction:column; gap:6px; z-index:30; }
   .cmode { padding:8px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66); color:#ffe9bd; font-size:13px; cursor:pointer; }
   .cmode.on { background:rgba(146,96,28,.9); color:#fff; }
 
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.11.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.11.2</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -406,8 +406,19 @@ carpet.receiveShadow = true; scene.add(carpet);
   const creamWall = new THREE.MeshStandardMaterial({ color: 0xf1e7d0, roughness: 0.9 });
   const pillarRed = new THREE.MeshStandardMaterial({ color: 0x9e2b1e, roughness: 0.55 });
   const T = temple;
-  inFloorMesh = box(13, 0.12, 7.6, new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.85 }), 0, 1.06, -0.2, T); // floor
-  box(13.2, 0.3, 7.8, MAT.stone, 0, 1.18, -0.2, T);                       // base trim
+  const tileTex = canvasTexture(512, 512, (g) => {
+    for (let ty = 0; ty < 2; ty++) for (let tx = 0; tx < 2; tx++) {
+      const v = 196 + Math.floor(Math.random() * 22);
+      g.fillStyle = 'rgb(' + v + ',' + (v - 26) + ',' + (v - 62) + ')';
+      g.fillRect(tx * 256 + 5, ty * 256 + 5, 246, 246);
+      g.fillStyle = 'rgba(120,95,70,0.25)';
+      for (let i = 0; i < 26; i++) g.fillRect(tx * 256 + Math.random() * 250, ty * 256 + Math.random() * 250, 3, 3);
+    }
+    g.strokeStyle = '#8a7358'; g.lineWidth = 9;
+    g.strokeRect(0, 0, 512, 512); g.beginPath(); g.moveTo(256, 0); g.lineTo(256, 512); g.moveTo(0, 256); g.lineTo(512, 256); g.stroke();
+  });
+  tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(4, 3);
+  inFloorMesh = box(13, 0.12, 7.6, new THREE.MeshStandardMaterial({ map: tileTex, roughness: 0.9 }), 0, 1.06, -0.2, T); // floor
   box(13, 3.6, 0.35, creamWall, 0, 2.92, -3.85, T);                      // back wall
   box(0.35, 3.6, 7.6, creamWall, -6.32, 2.92, -0.2, T);                  // side walls
   box(0.35, 3.6, 7.6, creamWall, 6.32, 2.92, -0.2, T);
@@ -439,7 +450,7 @@ carpet.receiveShadow = true; scene.add(carpet);
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
     fl.scale.set(0.38, 0.38, 1); fl.position.set(cx, 2.78, -2.9); T.add(fl);
   });
-  box(2.6, 0.04, 5.4, new THREE.MeshStandardMaterial({ color: 0x8e2f26, roughness: 0.9 }), 0, 1.14, 0.7, T); // runner
+  box(3.0, 0.04, 6.2, new THREE.MeshStandardMaterial({ color: 0x8e2f26, roughness: 0.9 }), 0, 1.14, 0.9, T); // runner
   [-2.6, 2.6].forEach(lx => {
     const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), MAT.lanternRed);
     l.position.set(lx, 4.35, 3.55); T.add(l);
@@ -805,8 +816,22 @@ const hallCushions = [];
 const hallSmokes = [];
 function hallBurner() {
   const b = new THREE.Group(); b.position.set(-5.3, 1.12, -19.3); scene.add(b);
-  cyl(0.7, 0.55, 0.85, MAT.bronze, 0, 0.55, 0, b);
-  cyl(0.84, 0.84, 0.13, MAT.bronze, 0, 1.0, 0, b);
+  const urnPtsH = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
+  const urnH = new THREE.Mesh(new THREE.LatheGeometry(urnPtsH, 22), MAT.bronze);
+  urnH.castShadow = true; urnH.receiveShadow = true; b.add(urnH);
+  const rimH = new THREE.Mesh(new THREE.TorusGeometry(0.63, 0.045, 8, 22), MAT.bronze);
+  rimH.rotation.x = Math.PI / 2; rimH.position.y = 1.15; b.add(rimH);
+  const ashH = new THREE.Mesh(new THREE.CircleGeometry(0.58, 20), new THREE.MeshStandardMaterial({ color: 0x8a7a68, roughness: 1 }));
+  ashH.rotation.x = -Math.PI / 2; ashH.position.y = 1.04; b.add(ashH);
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 + 0.5;
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), MAT.bronze);
+    foot.position.set(Math.cos(a) * 0.44, 0.05, Math.sin(a) * 0.44); foot.scale.y = 0.7; b.add(foot);
+  }
+  for (const sx of [-1, 1]) {
+    const h = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.035, 8, 14, Math.PI), MAT.bronze);
+    h.position.set(sx * 0.74, 0.72, 0); h.rotation.z = -sx * Math.PI / 2; b.add(h);
+  }
   for (let i = 0; i < 5; i++) {
     const sx = (Math.random() - 0.5) * 0.6, sz = (Math.random() - 0.5) * 0.6;
     cyl(0.014, 0.014, 0.7, stickMat, sx, 1.35, sz, b, 6);
@@ -2067,7 +2092,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.11.1';
+const PT3D_VER = '2.11.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
