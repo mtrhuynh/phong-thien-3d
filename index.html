@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.7">
+<meta name="pt3d-ver" content="2.12.8">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.7</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.8</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2103,9 +2103,7 @@ function ptSync() {
     }
   });
   ptSweep();
-  const n = winKeys.size;
-  const pill = document.getElementById('onlinePill');
-  if (pill) pill.innerHTML = '<span class="dot"></span>' + (n <= 1 ? 'Online · mình bạn trong chùa' : 'Online · ' + n + ' người trong chùa');
+  ptSetPill();
   ptBooted = true;
 }
 function ptSweep() {
@@ -2181,16 +2179,40 @@ function ptWorld(pl) {
 }
 requestAnimationFrame(ptAnim);
 setInterval(() => { ptTrack(false); ptMove(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
+let sbClient = null, ptConnOk = false, ptReconnectAt = 0;
+function ptSetPill() {
+  const pill = document.getElementById('onlinePill');
+  if (!pill) return;
+  if (!ptConnOk) { pill.innerHTML = '<span class="dot" style="background:#e0a75e;box-shadow:0 0 6px #e0a75e"></span>Đang nối lại…'; return; }
+  const n = ptChannel ? Object.keys(ptChannel.presenceState()).length : 0;
+  pill.innerHTML = '<span class="dot"></span>' + (n <= 1 ? 'Online · mình bạn trong chùa' : 'Online · ' + n + ' người trong chùa');
+}
+function ptConnect() {
+  if (!sbClient) return;
+  try { if (ptChannel) ptChannel.unsubscribe(); } catch (e) {}
+  ptChannel = sbClient.channel('pt3d:temple', { config: { presence: { key: myGid }, broadcast: { self: true } } });
+  ptChannel.on('presence', { event: 'sync' }, () => { ptSync(); ptSetPill(); });
+  ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
+  ptChannel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); }
+    else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { ptConnOk = false; ptSetPill(); ptScheduleReconnect(); }
+  });
+}
+function ptScheduleReconnect() {
+  const now = Date.now();
+  if (now < ptReconnectAt) return;
+  ptReconnectAt = now + 8000;
+  setTimeout(() => { try { sbClient.realtime.disconnect(); } catch (e) {} ptConnect(); }, 1200);
+}
+/* watchdog: a half-dead socket (long-lived tab, background throttling, wifi blip) used to
+   freeze a visitor for everyone else with no recovery - now it heals itself */
+setInterval(() => { if (sbClient && ptChannel && ptChannel.state !== 'joined' && ptChannel.state !== 'joining') { ptConnOk = false; ptSetPill(); ptScheduleReconnect(); } }, 7000);
 try {
   if (window.supabase) {
-    const sb = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
-    ptChannel = sb.channel('pt3d:temple', { config: { presence: { key: myGid }, broadcast: { self: true } } });
-    ptChannel.on('presence', { event: 'sync' }, ptSync);
-    ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
-    ptChannel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') { ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); }
-    });
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) { ptTrack(true); ptMove(true); } });
+    sbClient = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
+    ptConnect();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (ptChannel && ptChannel.state === 'joined') { ptTrack(true); ptMove(true); } else ptScheduleReconnect(); } });
+    addEventListener('online', () => ptScheduleReconnect());
   } else throw new Error('no supabase');
 } catch (e) {
   const pill = document.getElementById('onlinePill');
@@ -2206,7 +2228,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.7';
+const PT3D_VER = '2.12.8';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
