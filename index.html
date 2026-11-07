@@ -1185,13 +1185,19 @@ const btnLantern = document.getElementById('btnLantern');
 btnLantern.addEventListener('click', () => {
   window.open('https://mtrhuynh.github.io/tha-den/', '_blank');
 });
-let bellCtx = null, bellT = 40 + Math.random() * 30;
+let bellCtx = null, bellT = 25 + Math.random() * 20;
+window.addEventListener('pointerdown', () => {
+  try {
+    bellCtx = bellCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (bellCtx.state === 'suspended') bellCtx.resume();
+  } catch (e) {}
+}, { passive: true });
 function ringBell() {
   try {
     bellCtx = bellCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (bellCtx.state === 'suspended') bellCtx.resume();
     const t0 = bellCtx.currentTime + 0.02;
-    const master = bellCtx.createGain(); master.gain.value = 0.13; master.connect(bellCtx.destination);
+    const master = bellCtx.createGain(); master.gain.value = 0.16; master.connect(bellCtx.destination);
     [[392, 1], [587, 0.55], [806, 0.32], [1093, 0.18]].forEach(([fr, gn]) => {
       const o = bellCtx.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
       const g = bellCtx.createGain();
@@ -1302,16 +1308,23 @@ function animate() {
   }
   if (malaPulse > 0) {
     malaPulse -= dt;
+    const prog = (0.35 - Math.max(0, malaPulse)) / 0.35;
     const b = player.userData.beads;
-    if (b) { b.rotation.z += dt * 7; const s = 1 + Math.sin((0.35 - Math.max(0, malaPulse)) / 0.35 * Math.PI) * 0.16; b.scale.set(s, s, s); }
-  } else if (player.userData.beads) player.userData.beads.scale.set(1, 1, 1);
+    if (b) { b.rotation.z += dt * 7; const s = 1 + Math.sin(prog * Math.PI) * 0.16; b.scale.set(s, s, s); }
+    const h = player.userData.halo;
+    if (h) { if (!h.userData.bs) h.userData.bs = h.scale.x; const hs = h.userData.bs * (1 + Math.sin(prog * Math.PI) * 0.3); h.scale.set(hs, hs, 1); }
+  } else {
+    if (player.userData.beads) player.userData.beads.scale.set(1, 1, 1);
+    const h = player.userData.halo;
+    if (h && h.userData.bs) h.scale.set(h.userData.bs, h.userData.bs, 1);
+  }
   /* NPC breathing */
   npcs.forEach(n => { n.userData.bodyG.scale.y = 0.78 * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); });
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
   if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn thắp lại thì bấm Đốt nhang nhé 🕯️'); } }
   bellT -= dt;
-  if (bellT <= 0) { ringBell(); bellT = 100 + Math.random() * 70; }
+  if (bellT <= 0) { ringBell(); bellT = 80 + Math.random() * 50; }
   /* smoke */
   const boost = smokeBoost > 0 ? 1 : 0;
   if (smokeBoost > 0) smokeBoost -= dt;
