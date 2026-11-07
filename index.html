@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.11.4">
+<meta name="pt3d-ver" content="2.12.0">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.11.4</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1890,8 +1890,10 @@ try {
 }
 
 function ptState() {
-  return { name: myName || 'Hành giả', x: +player.position.x.toFixed(0), z: +player.position.z.toFixed(0),
-           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: myC, bd: look.bd, sc: look.sect, bc: bacOf(sen),
+  /* STATIC profile + world snapshots only. Positions used to ride in here, and re-tracking
+     them ~1/s while walking got the realtime socket closed by the server (~20 s) - which is
+     why visitors kept vanishing for each other. Movement now travels by broadcast (ptMove). */
+  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, bc: bacOf(sen),
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -1900,12 +1902,24 @@ function ptState() {
 function ptTrack(force) {
   if (!ptChannel) return;
   const s = ptState();
-  const key = [s.name, s.x, s.z, s.sit, s.room, s.c, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
+  const key = [s.name, s.c, s.bd, s.sc, s.bc, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
   const now = performance.now();
-  if (!force && now - ptLastAt < 1000) return;
+  if (now - ptLastAt < (force ? 600 : 2000)) return;
   if (!force && key === ptLastSent) return;
   ptLastSent = key; ptLastAt = now;
   ptChannel.track(s).catch(() => {});
+}
+const pendingMv = new Map();
+let mvLast = { x: 0, z: 0, ry: 0, sit: 0, at: 0 };
+function ptMove(force) {
+  if (!ptChannel) return;
+  const x = +player.position.x.toFixed(2), z = +player.position.z.toFixed(2), ry = +player.rotation.y.toFixed(2), sit = P.mode === 'seated' ? 1 : 0;
+  const now = performance.now();
+  const moved = Math.abs(x - mvLast.x) > 0.12 || Math.abs(z - mvLast.z) > 0.12 || Math.abs(ry - mvLast.ry) > 0.04 || sit !== mvLast.sit;
+  if (!force && now - mvLast.at < 120) return;
+  if (!force && !moved && now - mvLast.at < 5000) return;
+  mvLast = { x, z, ry, sit, at: now };
+  ptSend({ k: 'mv', x, z, ry, sit });
 }
 let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + myGid.charCodeAt(i)) >>> 0;
 const MY_C = ptHash % ROBE_COLORS.length;
@@ -1975,9 +1989,12 @@ function ptSync() {
     const p = metas[metas.length - 1];
     let r = remotes.get(key);
     if (!r) {
+      const pm = pendingMv.get(key); if (pm) pendingMv.delete(key);
+      const sx = pm ? pm.x : (typeof p.x === 'number' ? p.x : 0), sz = pm ? pm.z : (typeof p.z === 'number' ? p.z : 9.5);
+      const sry = pm ? (pm.ry || 0) : (p.ry || 0), ssit = pm ? !!pm.sit : !!p.sit;
       const g = buildAvatar({ name: p.name || 'Khách', sub: [SECTS[p.sc] || '', 'Bậc ' + (p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
-      g.position.set(p.x || 0, p.sit ? 0.24 : 0, p.z || 0);
-      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
+      g.position.set(sx, ssit ? 0.24 : 0, sz);
+      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
       remotes.set(key, r);
       if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
     }
@@ -2092,10 +2109,16 @@ function ptWorld(pl) {
     if (sala && sala.userData.salaId === pl.id && sala.userData.sala.state !== 'fly') { sala.userData.sala.state = 'gone'; sala.userData.sala.t = 0; }
   } else if (pl.k === 'bow') {
     const r = remotes.get(pl.from); if (r) r.bowT = 0;
+  } else if (pl.k === 'mv') {
+    const r = remotes.get(pl.from);
+    if (r) { r.tx = pl.x; r.tz = pl.z; r.try_ = pl.ry || 0; r.sit = !!pl.sit; r.lastSeen = performance.now(); }
+    else pendingMv.set(pl.from, pl);
+  } else if (pl.k === 'hi') {
+    ptMove(true); ptTrack(true);
   }
 }
 requestAnimationFrame(ptAnim);
-setInterval(() => { ptTrack(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
+setInterval(() => { ptTrack(false); ptMove(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
 try {
   if (window.supabase) {
     const sb = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
@@ -2103,9 +2126,9 @@ try {
     ptChannel.on('presence', { event: 'sync' }, ptSync);
     ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
     ptChannel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') { ptTrack(true); ptSync(); }
+      if (status === 'SUBSCRIBED') { ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); }
     });
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) ptTrack(true); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { ptTrack(true); ptMove(true); } });
   } else throw new Error('no supabase');
 } catch (e) {
   const pill = document.getElementById('onlinePill');
@@ -2121,7 +2144,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.11.4';
+const PT3D_VER = '2.12.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
