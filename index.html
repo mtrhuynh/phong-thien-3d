@@ -51,11 +51,12 @@
     background:linear-gradient(160deg, rgba(52,34,16,.9), rgba(26,17,9,.9)); border:1px solid rgba(255,205,120,.5); border-radius:14px; color:#f3e5c3; box-shadow:0 6px 20px rgba(0,0,0,.35);
     font-size:11.5px; cursor:pointer; backdrop-filter:blur(6px); }
   .abtn .ic { font-size:20px; line-height:1; }
+  .abtn .lb { white-space:nowrap; }
   .abtn:active, .abtn.on { background:linear-gradient(160deg, #e9b558, #b57f22); color:#2a1a05; border-color:#ffe1a0; }
   .abtn .cnt { font-size:10px; color:#ffd76e; }
 
   /* Hint + toast */
-  #hint { bottom:96px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); white-space:nowrap; pointer-events:none; }
+  #hint { bottom:98px; left:50%; transform:translateX(-50%); font-size:12px; color:#efe3c2; text-shadow:0 1px 5px rgba(0,0,0,.8); width:max-content; max-width:94vw; white-space:normal; text-align:center; line-height:1.45; pointer-events:none; }
   #musicBar { position:fixed; top:108px; right:10px; z-index:30; display:flex; align-items:center; gap:8px;
     padding:6px 10px; border-radius:999px; background:rgba(38,24,10,0.82); border:1px solid rgba(240,199,106,0.45);
     color:#fdf3d8; font-size:13px; backdrop-filter:blur(6px); max-width:72vw; }
@@ -133,17 +134,17 @@
   </div>
 </div>
 <div id="credit">Tượng Phật: model 3D Tripo</div>
-<div class="ui" id="hint">Chạm vào sân để đi · Kéo để xoay góc nhìn · Bấm vào đệm trống để ngồi thiền</div>
+<div class="ui" id="hint">Chạm vào sân để đi · Kéo để xoay góc nhìn · Bấm đệm trống để ngồi thiền</div>
 
 <div class="ui" id="actions">
-  <button class="abtn" id="btnSit"><span class="ic">🧎</span>Thiền</button>
-  <button class="abtn" id="btnBow"><span class="ic">🙏</span>Lạy Phật</button>
-  <button class="abtn" id="btnMala"><span class="ic">📿</span>Tràng hạt<span class="cnt" id="malaCnt">0/108</span></button>
-  <button class="abtn" id="btnIncense"><span class="ic">🕯️</span>Đốt nhang</button>
-  <button class="abtn" id="btnXam"><span class="ic">🎋</span>Xin xăm</button>
-  <button class="abtn" id="btnSweep"><span class="ic">🍂</span>Quét lá (<span id="leafCnt">11</span>)</button>
-  <button class="abtn" id="btnSala"><span class="ic">🌼</span>Hứng hoa</button>
-  <button class="abtn" id="btnHall"><span class="ic">🏛️</span>Vào chánh điện</button>
+  <button class="abtn" id="btnSit"><span class="ic">🧎</span><span class="lb">Thiền</span></button>
+  <button class="abtn" id="btnBow"><span class="ic">🙏</span><span class="lb">Lạy Phật</span></button>
+  <button class="abtn" id="btnMala"><span class="ic">📿</span><span class="lb">Tràng hạt</span><span class="cnt" id="malaCnt">0/108</span></button>
+  <button class="abtn" id="btnIncense"><span class="ic">🕯️</span><span class="lb">Đốt nhang</span></button>
+  <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb">Xin xăm</span></button>
+  <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb">Quét lá (<span id="leafCnt">11</span>)</span></button>
+  <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb">Hứng hoa</span></button>
+  <button class="abtn" id="btnHall"><span class="ic">🏛️</span><span class="lb">Vào chánh điện</span></button>
 </div>
 
 <script src="xam-data.js"></script>
