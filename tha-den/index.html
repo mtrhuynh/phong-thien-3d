@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <title>Thả Đèn Hoa Đăng — 🏮</title>
+    <!-- build v0.11 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Noto+Serif:wght@600;800&display=swap" rel="stylesheet" />
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: "Be Vietnam Pro", system-ui, sans-serif; background: #0d1420; color: #eef2f7; }
+      h1, h2, h3 { font-family: "Noto Serif", serif; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 18px 14px 60px; }
+      header { text-align: center; padding: 14px 0 4px; }
+      header h1 { margin: 0; font-size: 34px; }
+      header p { color: #aebdd0; margin: 6px 0 0; }
+      .backlink { color: #9fc3ff; font-size: 13px; text-decoration: none; }
+      .card { background: #16202f; border: 1px solid #263650; border-radius: 16px; padding: 16px; margin-top: 16px; }
+      .card h2 { margin: 0 0 10px; font-size: 20px; }
+      label { font-size: 13px; color: #aebdd0; display: block; margin: 10px 0 4px; }
+      input[type="text"] { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #33465f; background: #0d1624; color: #eef2f7; font-size: 15px; }
+      .gates { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+      .gate { border: 1px solid #33465f; background: #0d1624; color: #dbe6f3; border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer; font-family: inherit; }
+      .gate.on { background: #f2b64b; color: #23180a; border-color: #f2b64b; font-weight: 700; }
+      .btn { border: 0; border-radius: 10px; padding: 11px 18px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; background: #f2b64b; color: #23180a; }
+      .btn.ghost { background: #22314a; color: #dbe6f3; }
+      .btn:disabled { opacity: .45; cursor: default; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+      .status { color: #ffdf8a; font-size: 14px; min-height: 20px; }
+      .scene { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid #263650; }
+      .stage { position: relative; width: 100%; }
+      .stage > img { display: block; width: 100%; height: auto; }
+      .finish { position: absolute; left: 90%; top: 44%; bottom: 3%; width: 0; border-left: 3px dashed rgba(255, 214, 110, .95); filter: drop-shadow(0 0 6px rgba(255,190,60,.8)); }
+      .finish span { position: absolute; top: 2px; left: 6px; color: #ffd66e; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 1px 4px #000; white-space: nowrap; }
+      .finishmark { position: absolute; left: 90.7%; transform: translateY(-50%); font-size: 11.5px; font-weight: 700; background: rgba(124,74,18,.94); border: 1px solid #ffd66e; color: #fff0cd; border-radius: 999px; padding: 2px 9px; white-space: nowrap; box-shadow: 0 0 12px rgba(255,200,80,.7); z-index: 5; }
+      .lanes { position: absolute; inset: 0; }
+      .rlan { position: absolute; width: 54px; transform: translate(-50%,-50%); text-align: center; transition: none; }
+      .rlan svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 4px 10px rgba(255,170,40,.35)); }
+      .rlan .tag { position: absolute; left: calc(100% + 7px); top: 50%; transform: translateY(-50%); font-size: 11.5px; font-weight: 700; background: rgba(10,16,26,.82); border-radius: 999px; padding: 2px 9px; color: #ffe9bd; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+      .rlan.me svg { filter: drop-shadow(0 0 12px rgba(255,210,90,.95)); }
+      .rlan .gatebadge { position: absolute; top: -8px; right: -6px; font-size: 14px; background: rgba(10,16,26,.85); border-radius: 50%; width: 22px; height: 22px; line-height: 22px; }
+      .banner { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: rgba(10,16,26,.85); border: 1px solid #f2b64b; color: #ffe1a1; border-radius: 999px; padding: 6px 16px; font-size: 14px; display: none; white-space: nowrap; }
+      .frow { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+      .frow input { flex: 1; margin: 0; }
+      .frow select { background: #16233c; color: #d7e3f2; border: 1px solid #2b4066; border-radius: 10px; padding: 9px 8px; font-size: 14px; }
+      .frow .fdel { padding: 7px 11px; }
+      .music-ico { display: inline-block; background: #f2b64b; border-radius: 50%; padding: 2px 8px 4px; margin-right: 8px; box-shadow: 0 0 16px rgba(242,182,75,.85); }
+      .mtracks { display: flex; flex-wrap: wrap; gap: 8px; }
+      .mtracks button { background: #16233c; color: #d7e3f2; border: 1px solid #2b4066; border-radius: 999px; padding: 7px 13px; font-size: 13.5px; cursor: pointer; }
+      .mtracks button:hover { border-color: #f2b64b; }
+      .mtracks button.playing { background: #7c4a12; border-color: #f2b64b; color: #ffe9bd; }
+      .feed { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
+      .feed li { padding: 6px 2px; border-bottom: 1px dashed #263650; font-size: 14px; color: #d7e3f2; }
+      table.res { width: 100%; border-collapse: collapse; font-size: 14px; }
+      table.res td, table.res th { padding: 8px 6px; border-bottom: 1px solid #263650; text-align: left; }
+      .chip { border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+      .chip.good { background: #14532d; color: #bbf7d0; }
+      .chip.mid { background: #3f3f46; color: #e4e4e7; }
+      .chip.low { background: #713f12; color: #fde68a; }
+      .lock { color: #8fa5bd; font-size: 13px; }
+      .reward { background: #1d1503; border: 1px solid #8a6d1f; border-radius: 14px; padding: 16px; margin-top: 14px; }
+      .reward h3 { margin: 0 0 4px; color: #ffd66e; }
+      .reward .tho { white-space: pre-line; font-style: italic; color: #ffe9bd; line-height: 1.7; }
+      .reward .lbl { color: #aebdd0; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; margin-top: 12px; }
+      .reward ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.65; }
+      .reward p { line-height: 1.65; margin: 6px 0 0; }
+      .hint { color: #8fa5bd; font-size: 13px; line-height: 1.6; }
+      footer { text-align: center; color: #647d99; font-size: 12px; margin-top: 26px; line-height: 1.7; }
+      @media (max-width: 700px) {
+        header h1 { font-size: 26px; }
+        .card { padding: 12px; }
+        .stage { width: 260%; }
+        .tablewrap { overflow-x: auto; }
+        table.res { font-size: 13px; }
+        .frow select { max-width: 44%; }
+        .finishmark { font-size: 10px; padding: 2px 6px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>🏮 Thả Đèn Hoa Đăng</h1>
+        <p>Thả đèn, chọn cổng ước nguyện, đua theo gió nước — về đích nhận quẻ xăm đúng chủ đề của mình.</p>
+      </header>
+
+      <div class="card" style="text-align:center">
+        <a class="btn ghost" href="/?room=hall">🏛️ Vào chánh điện 3D</a>
+        <a class="btn ghost" href="/?room=yard">🌿 Ra sân chùa 3D</a>
+      </div>
+
+      <div class="card">
+        <h2>1 · Thả đèn của bạn</h2>
+        <label>Tên của bạn</label>
+        <input id="nameIn" type="text" maxlength="24" placeholder="Ví dụ: Ivy" />
+        <label>Lời ước nguyện (không bắt buộc)</label>
+        <input id="wishIn" type="text" maxlength="60" placeholder="Ví dụ: Mong năm nay công việc hanh thông" />
+        <label>Chọn cổng đích — chủ đề bạn muốn xin quẻ</label>
+        <div class="gates" id="gates"></div>
+        <div class="row">
+          <button class="btn" id="joinBtn">🪷 Thả đèn xuống ao</button>
+          <span class="status" id="joinStatus"></span>
+        </div>
+        <div style="margin-top:14px">
+          <label>👥 Thêm bạn cùng đua (tối đa 4 người)</label>
+          <div id="friendRows"></div>
+          <div class="row">
+            <button class="btn ghost" id="addFriendBtn" type="button">＋ Thêm một người bạn</button>
+            <span class="status" id="fillInfo"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Cuộc đua</h2>
+        <div class="scene" id="scene">
+          <div class="stage" id="stage">
+            <img src="pond.webp" alt="Ao hoa đăng" />
+            <div class="finish"><span>VẠCH ĐÍCH</span></div>
+            <div id="posts"></div>
+            <div class="lanes" id="lanes"></div>
+          </div>
+          <div class="banner" id="banner"></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="startBtn" disabled>🏁 Bắt đầu đua</button>
+          <button class="btn ghost" id="resetBtn" disabled>↺ Đua lượt mới</button>
+          <span class="status" id="raceStatus">Thả đèn của bạn rồi bấm Bắt đầu đua.</span>
+        </div>
+      </div>
+
+      <div class="card" id="resultCard" style="display:none">
+        <h2>3 · Kết quả &amp; phần thưởng</h2>
+        <div class="tablewrap"><table class="res"><thead><tr><th>Hạng</th><th>Đèn</th><th>Cổng</th><th>Quẻ rút được</th><th>Nội dung</th></tr></thead><tbody id="resBody"></tbody></table></div>
+        <div id="myReward"></div>
+      </div>
+
+      <div class="card">
+        <h2>📜 Diễn biến</h2>
+        <ul class="feed" id="feed"></ul>
+      </div>
+
+      <div class="card">
+        <h2><span class="music-ico">🎵</span>Nhạc thiền &amp; cổ vũ</h2>
+        <div class="row">
+          <button class="btn" id="cheerBtn">👏 Vỗ tay reo hò cổ vũ!</button>
+          <span class="status">Tiếng cổ vũ cũng tự vang lên khi đua bắt đầu và khi có đèn về nhất.</span>
+        </div>
+        <audio id="cheerAudio" src="music/votay.mp3" preload="auto"></audio>
+        <div class="mtracks" id="musicGrid"></div>
+        <div class="row">
+          <button class="btn ghost" id="musicStop">⏹ Tắt nhạc</button>
+          <span class="status" id="musicStatus">Chọn một bản để mở nhạc nền.</span>
+        </div>
+        <audio id="raceAudio" loop preload="none"></audio>
+      </div>
+
+      <footer>Bản thử nghiệm — đua đèn là trò chơi riêng, không thuộc Phòng Thiền.<br />Quẻ dùng bộ Quan Âm Linh Xăm có sẵn; câu giải hiển thị đúng mặt chủ đề của cổng đích.</footer>
+    </div>
+
+    <script>
+      "use strict";
+      var LANTERN_SVG = "<svg viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'><defs><radialGradient id='lg' cx='50%' cy='38%' r='65%'><stop offset='0%' stop-color='#fff3c4'/><stop offset='55%' stop-color='#ffd66e'/><stop offset='100%' stop-color='#e8930c'/></radialGradient></defs><ellipse cx='32' cy='52' rx='17' ry='4.5' fill='rgba(0,0,0,.25)'/><path d='M32 50 C14 46 8 36 10 27 C18 33 24 35 32 35 C40 35 46 33 54 27 C56 36 50 46 32 50Z' fill='url(#lg)'/><path d='M32 49 C20 44 16 34 19 24 C24 30 28 32 32 32 C36 32 40 30 45 24 C48 34 44 44 32 49Z' fill='#ffdf8a' opacity='.85'/><path d='M32 34 C29 28 30 22 32 15 C34 22 35 28 32 34Z' fill='#ffb703'/><circle cx='32' cy='35' r='3.2' fill='#fff6d8'/></svg>";
+      var GATES = [
+        { key: "tinh_duyen", icon: "💗", label: "Tình Duyên", aspect: "tinh_duyen" },
+        { key: "su_nghiep", icon: "💼", label: "Công Danh", aspect: "su_nghiep" },
+        { key: "tai_chinh", icon: "💰", label: "Tài Lộc", aspect: "tai_chinh" },
+        { key: "suc_khoe", icon: "🕊️", label: "Bình An", aspect: "suc_khoe" },
+        { key: "hoc_hanh", icon: "📚", label: "Học Hành", aspect: "hoc_hanh" }
+      ];
+      var NPCS = [
+        { name: "Cô Tư", face: "👩" }, { name: "Chú Bảy", face: "👨" },
+        { name: "Bà Tám", face: "👵" }, { name: "Ông Chín", face: "👴" }
+      ];
+      var LANES = [48, 59, 70, 80, 90];
+      var SCALES = [0.78, 0.9, 1.0, 1.1, 1.2];
+      var XAM = null, POOLS = null;
+      var myGate = GATES[3];
+      var racers = [], racing = false, finishedCount = 0, rafId = null, lastTs = 0, gustTimer = 0, myResult = null;
+
+      var $ = function (id) { return document.getElementById(id); };
+      function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+      function rnd(a, b) { return a + Math.random() * (b - a); }
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      var camX = 0;
+      function applyCam() {
+        var st = $("stage"), sc = $("scene");
+        if (!st || !sc) return;
+        var maxShift = st.offsetWidth - sc.clientWidth;
+        if (maxShift <= 2) { st.style.transform = ""; camX = 0; return; }
+        camX = Math.max(0, Math.min(maxShift, camX));
+        st.style.transform = "translateX(" + (-camX) + "px)";
+      }
+      function updateCam(dt) {
+        var st = $("stage"), sc = $("scene");
+        if (!st || !sc || !racers.length) return;
+        var maxShift = st.offsetWidth - sc.clientWidth;
+        if (maxShift <= 2) return;
+        var lead = 0;
+        racers.forEach(function (r) { if (r.p > lead) lead = r.p; });
+        var leaderX = (5 + lead * 85) / 100 * st.offsetWidth;
+        var target = Math.max(0, Math.min(maxShift, leaderX - sc.clientWidth * 0.55));
+        camX += (target - camX) * Math.min(1, dt * 2.0);
+        if (Math.abs(target - camX) < 0.5) camX = target;
+        applyCam();
+      }
+      window.addEventListener("resize", applyCam);
+      function capChip(cap) {
+        if (cap === "thuong") return '<span class="chip good">🌟 Quẻ tốt</span>';
+        if (cap === "trung") return '<span class="chip mid">Quẻ bình thường</span>';
+        return '<span class="chip low">Quẻ hơi chưa thuận</span>';
+      }
+      function capWord(cap) { return cap === "thuong" ? "quẻ tốt" : cap === "trung" ? "quẻ bình thường" : "quẻ hơi chưa thuận"; }
+      function feed(html) {
+        var li = document.createElement("li"); li.innerHTML = html;
+        var f = $("feed"); f.insertBefore(li, f.firstChild);
+      }
+      function bell() {
+        try {
+          var ctx = bell.ctx || (bell.ctx = new (window.AudioContext || window.webkitAudioContext)());
+          [1567, 2093].forEach(function (fr, i) {
+            var o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = "sine"; o.frequency.value = fr;
+            g.gain.setValueAtTime(0.0001, ctx.currentTime + i * 0.18);
+            g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + i * 0.18 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.18 + 1.1);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(ctx.currentTime + i * 0.18); o.stop(ctx.currentTime + i * 0.18 + 1.2);
+          });
+        } catch (e) {}
+      }
+
+      // gate picker
+      GATES.forEach(function (g) {
+        var b = document.createElement("button");
+        b.className = "gate" + (g.key === myGate.key ? " on" : "");
+        b.textContent = g.icon + " " + g.label;
+        b.onclick = function () {
+          myGate = g;
+          document.querySelectorAll(".gate").forEach(function (x) { x.classList.remove("on"); });
+          b.classList.add("on");
+        };
+        $("gates").appendChild(b);
+      });
+      $("nameIn").value = localStorage.getItem("pt_name") || "";
+
+      function makeRacer(name, gate, isMe, laneIdx, isReal) {
+        return { name: name, gate: gate, isMe: !!isMe, real: isReal === true || !!isMe, lane: laneIdx, p: 0, base: rnd(0.021, 0.028),
+                 phase: rnd(0, Math.PI * 2), freq: rnd(0.5, 0.9), boostUntil: 0, finished: false, rank: 0, que: null, el: null };
+      }
+      function renderRacer(r) {
+        var d = document.createElement("div");
+        d.className = "rlan" + (r.isMe ? " me" : "");
+        d.style.left = "5%"; d.style.top = LANES[r.lane] + "%"; d.style.width = (54 * SCALES[r.lane]) + "px";
+        d.innerHTML = LANTERN_SVG + '<span class="tag">' + r.gate.icon + " " + esc(r.name) + "</span>";
+        $("lanes").appendChild(d);
+        r.el = d;
+      }
+      function updateFill() {
+        var rows = $("friendRows").children.length;
+        var n = 1 + rows, npc = 5 - n;
+        $("fillInfo").textContent = "Đang có " + n + " người thật → " +
+          (npc > 0 ? "chùa thêm " + npc + " đèn ảo cho đủ 5 đèn." : "đủ 5 người thật, không cần đèn ảo.");
+        $("addFriendBtn").disabled = rows >= 4;
+      }
+      function friendRow() {
+        var idx = $("friendRows").children.length;
+        var row = document.createElement("div");
+        row.className = "frow";
+        row.innerHTML = '<input type="text" class="fname" maxlength="24" placeholder="Tên người bạn" />' +
+          '<select class="fgate">' + GATES.map(function (g, i) { return '<option value="' + i + '"' + (i === idx % 5 ? " selected" : "") + ">" + g.icon + " " + g.label + "</option>"; }).join("") + "</select>" +
+          '<button type="button" class="btn ghost fdel">✕</button>';
+        row.querySelector(".fdel").onclick = function () { row.remove(); updateFill(); };
+        return row;
+      }
+      $("addFriendBtn").onclick = function () {
+        if ($("friendRows").children.length >= 4) return;
+        var r = friendRow();
+        $("friendRows").appendChild(r);
+        updateFill();
+        var inp = r.querySelector(".fname"); if (inp) inp.focus();
+      };
+      function readFriends() {
+        var out = [];
+        document.querySelectorAll("#friendRows .frow").forEach(function (row, idx) {
+          var nm = row.querySelector(".fname").value.trim();
+          var gi = parseInt(row.querySelector(".fgate").value || "0", 10);
+          out.push({ name: nm || ("Bạn " + (idx + 1)), gate: GATES[gi] || GATES[0] });
+        });
+        return out;
+      }
+      function placeAll() {
+        $("lanes").innerHTML = ""; $("posts").innerHTML = ""; racers = [];
+        var laneOrder = [2, 0, 4, 1, 3];
+        var mine = makeRacer($("nameIn").value.trim() || "Bạn", myGate, true, laneOrder[0], true);
+        racers.push(mine);
+        readFriends().forEach(function (f, i) {
+          racers.push(makeRacer(f.name, f.gate, false, laneOrder[i + 1], true));
+        });
+        var need = 5 - racers.length;
+        for (var k = 0; k < need; k++) {
+          racers.push(makeRacer(NPCS[k].name, pick(GATES), false, laneOrder[racers.length], false));
+        }
+        racers.forEach(renderRacer);
+        camX = 0; applyCam();
+        return mine;
+      }
+      updateFill();
+
+      $("joinBtn").onclick = function () {
+        if (!XAM) { $("joinStatus").textContent = "Đang tải bộ quẻ, chờ một chút rồi thử lại…"; return; }
+        localStorage.setItem("pt_name", $("nameIn").value.trim());
+        placeAll();
+        finishedCount = 0; myResult = null;
+        $("resultCard").style.display = "none"; $("myReward").innerHTML = "";
+        var nReal = racers.filter(function (r) { return r.real; }).length;
+        $("joinStatus").textContent = "Đã thả 5 đèn: " + nReal + " người thật" + (5 - nReal > 0 ? " + " + (5 - nReal) + " đèn của chùa" : "") + ".";
+        $("startBtn").disabled = false; $("resetBtn").disabled = true;
+        $("raceStatus").textContent = "5 đèn đã vào vị trí. Bấm Bắt đầu đua!";
+        feed("🪷 " + esc(racers[0].name) + " thả đèn, hướng về cổng " + myGate.icon + " " + esc(myGate.label) + ".");
+        racers.forEach(function (r) {
+          if (r.real && !r.isMe) feed("👥 " + esc(r.name) + " cùng tham gia, hướng về cổng " + r.gate.icon + " " + esc(r.gate.label) + ".");
+        });
+      };
+
+      function drawQue(rank, isLast) {
+        var pool;
+        if (rank === 1) pool = POOLS.thuong;
+        else if (isLast) pool = POOLS.trung.concat(POOLS.ha);
+        else pool = POOLS.thuong.concat(POOLS.trung);
+        return pick(pool);
+      }
+      function banner(txt) {
+        var b = $("banner"); b.textContent = txt; b.style.display = "block";
+        setTimeout(function () { b.style.display = "none"; }, 2600);
+      }
+      function finishRacer(r, now) {
+        r.finished = true; finishedCount++;
+        r.rank = finishedCount;
+        var isLast = finishedCount === racers.length;
+        r.que = drawQue(r.rank, isLast);
+        var mark = document.createElement("div");
+        mark.className = "finishmark";
+        mark.style.top = r.el.style.top;
+        mark.textContent = r.gate.icon + " " + r.gate.label;
+        $("posts").appendChild(mark);
+        feed("🏁 Đèn của <b>" + esc(r.name) + "</b> về đích thứ " + r.rank + " — cổng " + r.gate.icon + " " + esc(r.gate.label) +
+             " · rút được <b>quẻ số " + r.que.so_que + "</b> · " + capWord(r.que.cap) + ".");
+        if (r.isMe) { myResult = r; bell(); }
+        if (isLast) endRace();
+        else $("raceStatus").textContent = "Đã có " + finishedCount + "/5 đèn về đích…";
+      }
+      function endRace() {
+        racing = false; cancelAnimationFrame(rafId);
+        $("raceStatus").textContent = "Cuộc đua kết thúc! Xem phần thưởng ở mục 3 bên dưới.";
+        $("resetBtn").disabled = false;
+        renderResults();
+        feed("🎉 Tất cả đèn đã về đích. Mỗi người thật xem thẻ quẻ của mình ở mục 3; đèn của chùa thì khóa nội dung.");
+      }
+      function renderResults() {
+        var rows = racers.slice().sort(function (a, b) { return a.rank - b.rank; }).map(function (r) {
+          return "<tr><td><b>" + r.rank + "</b></td><td>" + (r.isMe ? "⭐ " : "") + esc(r.name) + "</td><td>" + r.gate.icon + " " + esc(r.gate.label) +
+            "</td><td>Quẻ số <b>" + r.que.so_que + "</b><br />" + capChip(r.que.cap) + "</td><td>" +
+            (r.real ? "👇 Mở ở thẻ bên dưới" : '<span class="lock">🔒 Đèn của chùa — nội dung được khóa</span>') + "</td></tr>";
+        }).join("");
+        $("resBody").innerHTML = rows;
+        $("resultCard").style.display = "block";
+        var cards = racers.filter(function (r) { return r.real; }).sort(function (a, b) { return a.rank - b.rank; }).map(function (r) {
+          var q = r.que, asp = q.cac_mat[r.gate.aspect] || q.cac_mat.tong_quan;
+          var tips = (asp.goi_y_hanh_dong || []).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+          return '<div class="reward"><h3>🎁 Phần thưởng của ' + esc(r.name) + " — Quẻ số " + q.so_que + ": " + esc(q.ten_que) + "</h3>" +
+            capChip(q.cap) + ' <span class="lock">Cổng ' + r.gate.icon + " " + esc(r.gate.label) + " · về đích thứ " + r.rank + "</span>" +
+            '<div class="lbl">Bài xăm</div><div class="tho">' + esc(q.tho) + "</div>" +
+            '<div class="lbl">Giải chung</div><p>' + esc(q.loi_giai_chung) + "</p>" +
+            '<div class="lbl">Riêng mặt ' + esc(r.gate.label) + "</div><p>" + esc(asp.nhin_nhan) + "</p><p><i>" + esc(asp.cau_dong_vien) + "</i></p>" +
+            (tips ? '<div class="lbl">Gợi ý hành động</div><ul>' + tips + "</ul>" : "") + "</div>";
+        }).join("");
+        $("myReward").innerHTML = cards;
+      }
+      function step(ts) {
+        if (!racing) return;
+        var dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016); lastTs = ts;
+        var t = ts / 1000;
+        gustTimer -= dt;
+        if (gustTimer <= 0) {
+          gustTimer = rnd(6, 10);
+          var alive = racers.filter(function (r) { return !r.finished; });
+          if (alive.length > 1) {
+            var lucky = pick(alive); lucky.boostUntil = ts + 2200;
+            banner("🍃 Gió nổi lên — đèn của " + lucky.name + " được đẩy nhanh!");
+            feed("🍃 Gió nổi lên giữa ao, đèn của " + esc(lucky.name) + " bỗng vọt lên.");
+          }
+        }
+        racers.forEach(function (r) {
+          if (r.finished) return;
+          var wind = 1 + 0.38 * Math.sin(t * r.freq + r.phase);
+          var boost = ts < r.boostUntil ? 1.9 : 1;
+          r.p += r.base * wind * boost * dt;
+          if (r.p >= 1) { r.p = 1; finishRacer(r, ts); }
+          r.el.style.left = (5 + r.p * 85) + "%";
+          r.el.style.top = (LANES[r.lane] + Math.sin(t * 1.4 + r.phase) * 0.35) + "%";
+        });
+        updateCam(dt);
+        if (racing) rafId = requestAnimationFrame(step);
+      }
+      $("startBtn").onclick = function () {
+        if (!racers.length || racing) return;
+        racing = true; lastTs = performance.now(); gustTimer = 3.5;
+        $("startBtn").disabled = true; $("joinBtn").disabled = true;
+        $("raceStatus").textContent = "Đang đua… gió nước khó lường, cứ thong thả xem.";
+        feed("🏁 Cuộc đua bắt đầu! 5 đèn rời vạch xuất phát.");
+        rafId = requestAnimationFrame(step);
+      };
+      $("resetBtn").onclick = function () {
+        racing = false; cancelAnimationFrame(rafId);
+        racers = []; $("lanes").innerHTML = ""; $("posts").innerHTML = ""; camX = 0; applyCam();
+        $("resultCard").style.display = "none";
+        $("startBtn").disabled = true; $("resetBtn").disabled = true; $("joinBtn").disabled = false;
+        $("joinStatus").textContent = ""; $("raceStatus").textContent = "Thả đèn của bạn rồi bấm Bắt đầu đua.";
+        feed("↺ Sẵn sàng cho lượt đua mới.");
+      };
+
+      function cheer() {
+        var a = $("cheerAudio");
+        try { a.currentTime = 0; a.volume = 0.85; var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      }
+      $("cheerBtn").onclick = cheer;
+      var TRACKS = [
+        ["thien.mp3", "🎵 Nhạc thiền không lời"], ["mua.mp3", "🌧️ Mưa & sấm xa"],
+        ["chim.mp3", "🐦 Chim rừng buổi sớm"], ["karma.mp3", "🧘 Meditation Karma"],
+        ["yoga.mp3", "🧘‍♀️ Yoga thư giãn"], ["serenity.mp3", "🌿 Serenity"],
+        ["relax.mp3", "🍃 Relaxation"], ["healing.mp3", "💗 Healing Sleep"],
+        ["moonlight.mp3", "🌙 Moonlight"], ["canon.mp3", "🎹 Canon in D"]
+      ];
+      var audio = $("raceAudio"), curBtn = null, curFile = null;
+      TRACKS.forEach(function (t) {
+        var b = document.createElement("button");
+        b.textContent = t[1];
+        b.onclick = function () {
+          if (curFile === t[0] && !audio.paused) { audio.pause(); b.classList.remove("playing"); $("musicStatus").textContent = "Đã tạm dừng: " + t[1]; return; }
+          if (curBtn) curBtn.classList.remove("playing");
+          if (curFile !== t[0]) { audio.src = "../music/" + t[0]; curFile = t[0]; }
+          audio.play(); curBtn = b; b.classList.add("playing");
+          $("musicStatus").textContent = "Đang phát (lặp): " + t[1];
+        };
+        $("musicGrid").appendChild(b);
+      });
+      $("musicStop").onclick = function () {
+        audio.pause(); if (curBtn) curBtn.classList.remove("playing");
+        $("musicStatus").textContent = "Đã tắt nhạc.";
+      };
+
+      fetch("xam.json").then(function (r) { return r.json(); }).then(function (d) {
+        XAM = d.danh_sach_que || d.ques || d;
+        if (!Array.isArray(XAM)) throw new Error("bad xam format");
+        POOLS = { thuong: [], trung: [], ha: [] };
+        XAM.forEach(function (q) { if (POOLS[q.cap]) POOLS[q.cap].push(q); });
+      }).catch(function () { $("joinStatus").textContent = "Không tải được bộ quẻ — kiểm tra mạng rồi tải lại trang."; });
+    </script>
+  </body>
+</html>
