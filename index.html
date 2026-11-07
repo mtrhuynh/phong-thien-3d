@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.7.2">
+<meta name="pt3d-ver" content="2.7.3">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.3</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -395,23 +395,23 @@ carpet.receiveShadow = true; scene.add(carpet);
   new GLTFLoader().load('models/pagoda.glb', (gltf) => {
     const m = gltf.scene;
     m.scale.setScalar(11.5 / 55.5);
-    m.position.set(0, 1.0, -17.3);
+    m.position.set(0, 0.61, -17.3);
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     scene.add(m);
   }, undefined, () => {});
   /* a glimpse into the shrine through the doorway: dark backdrop, small gold statue, warm light */
-  box(2.4, 2.6, 0.35, MAT.woodDark, 0, 2.3, -17.75, scene);
+  box(3.2, 2.5, 0.35, MAT.woodDark, 0, 2.36, -17.6, scene);
   const shrineLight = new THREE.PointLight(0xffc37a, 9, 8, 1.8);
-  shrineLight.position.set(0, 2.4, -16.45); scene.add(shrineLight);
+  shrineLight.position.set(0, 2.35, -16.5); scene.add(shrineLight);
   const sg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.8, depthWrite: false }));
-  sg.scale.set(2.6, 2.6, 1); sg.position.set(0, 2.1, -16.55); scene.add(sg);
+  sg.scale.set(2.2, 2.2, 1); sg.position.set(0, 2.0, -16.6); scene.add(sg);
   new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
     const m = gltf.scene;
     const bb = new THREE.Box3().setFromObject(m);
     m.scale.setScalar(1.5 / bb.getSize(new THREE.Vector3()).y);
     const bb2 = new THREE.Box3().setFromObject(m);
     const c2 = bb2.getCenter(new THREE.Vector3());
-    m.position.set(-c2.x, 1.0 - bb2.min.y, -17.0 - c2.z);
+    m.position.set(-c2.x, 1.11 - bb2.min.y, -16.85 - c2.z);
     m.traverse(o => { if (o.isMesh) o.castShadow = true; });
     scene.add(m);
   }, undefined, () => {});
@@ -2098,7 +2098,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.7.2';
+const PT3D_VER = '2.7.3';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
