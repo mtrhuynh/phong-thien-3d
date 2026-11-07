@@ -776,7 +776,66 @@ function framedBoard(lines, w, h, x, y, z, rotY) {
   });
   return grp;
 }
-framedBoard(['BẢNG VÀNG CÔNG ĐỨC', 'Khương Minh — 500', 'Trí Tài — 420', 'Thương Đạo Thọ — 380', 'Vô Ưu Minh — 350', 'Doanh Khoa — 320'], 3.6, 4.4, HALL_X - 9.3, 2.9, -7.6, 0.42);
+/* merit ledger: per-person counts, kept on this device, shared live via presence */
+let stats = { sw: 0, ma: 0, bw: 0, ic: 0, fl: 0, sen: 0 };
+try { Object.assign(stats, JSON.parse(localStorage.getItem('pt3d-stats') || '{}')); } catch (e) {}
+let meritDirty = true, meritLastDraw = 0;
+function saveStats() { try { localStorage.setItem('pt3d-stats', JSON.stringify(stats)); } catch (e) {} }
+function bumpStat(k) { stats[k]++; saveStats(); meritDirty = true; ptTrack(false); }
+const meritCv = document.createElement('canvas'); meritCv.width = 768; meritCv.height = 940;
+const meritCtx = meritCv.getContext('2d');
+const meritTex = new THREE.CanvasTexture(meritCv);
+meritTex.colorSpace = THREE.SRGBColorSpace;
+function drawMeritBase() {
+  const c = meritCtx, W = 768, H = 940;
+  const gr = c.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#f9e7b2'); gr.addColorStop(1, '#f0d078');
+  c.fillStyle = gr; c.fillRect(0, 0, W, H);
+  c.strokeStyle = '#8a2b12'; c.lineWidth = 10; c.strokeRect(18, 18, W - 36, H - 36);
+  c.strokeStyle = '#b8860b'; c.lineWidth = 3; c.strokeRect(40, 40, W - 80, H - 80);
+  c.textAlign = 'center';
+  c.fillStyle = '#8a2b12'; c.font = '900 56px "Segoe UI", sans-serif';
+  c.fillText('BẢNG VÀNG CÔNG ĐỨC', W / 2, 118);
+  c.fillStyle = '#6b4a12'; c.font = '600 29px "Segoe UI", sans-serif';
+  c.fillText('Công quả của người đang trong chùa', W / 2, 168);
+  meritTex.needsUpdate = true;
+}
+function drawMerit() {
+  drawMeritBase();
+  const c = meritCtx, W = 768;
+  const people = [{ name: (typeof myName !== 'undefined' && myName) || 'Hành giả', me: true, st: stats }];
+  if (typeof remotes !== 'undefined') remotes.forEach(r => { if (r.st) people.push({ name: r.name, me: false, st: r.st }); });
+  let y = 258;
+  people.slice(0, 4).forEach(p => {
+    const s = Array.isArray(p.st) ? { sw: p.st[0] || 0, ma: p.st[1] || 0, bw: p.st[2] || 0, ic: p.st[3] || 0, fl: p.st[4] || 0, sen: p.st[5] || 0 } : p.st;
+    c.textAlign = 'left';
+    c.fillStyle = '#5a3410'; c.font = '900 38px "Segoe UI", sans-serif';
+    c.fillText('🪷 ' + p.name + (p.me ? ' (bạn)' : ''), 56, y);
+    c.fillStyle = '#4a2f0d'; c.font = '600 31px "Segoe UI", sans-serif';
+    c.fillText('🧹 Quét sân ×' + s.sw + '    📿 Tràng hạt ×' + s.ma, 56, y + 48);
+    c.fillText('🙏 Lạy Phật ×' + s.bw + '    🕯 Đốt nhang ×' + s.ic, 56, y + 92);
+    c.fillText('🌼 Hứng hoa ×' + s.fl + '    🪷 Hạt sen ' + s.sen, 56, y + 136);
+    y += 176;
+  });
+  c.textAlign = 'center';
+  if (people.length === 1) { c.fillStyle = '#7a5a1a'; c.font = 'italic 600 28px "Segoe UI", sans-serif'; c.fillText('Bạn bè vào chùa cùng, công quả', W / 2, y + 6); c.fillText('sẽ cùng hiện lên bảng này', W / 2, y + 44); }
+  c.fillStyle = '#8a6a2a'; c.font = '600 24px "Segoe UI", sans-serif';
+  c.fillText('Số liệu được lưu trên máy của mỗi người', W / 2, 892);
+  meritTex.needsUpdate = true; meritLastDraw = performance.now(); meritDirty = false;
+}
+function makeMeritBoard(w, h, x, y, z, rotY) {
+  const grp = new THREE.Group(); grp.position.set(x, y, z); grp.rotation.y = rotY; hallGroup.add(grp);
+  box(w + 0.35, h + 0.35, 0.14, MAT.woodDark, 0, 0, 0, grp);
+  box(w + 0.52, 0.18, 0.2, MAT.woodRed, 0, h / 2 + 0.21, 0, grp);
+  box(w + 0.52, 0.18, 0.2, MAT.woodRed, 0, -h / 2 - 0.21, 0, grp);
+  box(0.18, h + 0.52, 0.2, MAT.woodRed, -w / 2 - 0.21, 0, 0, grp);
+  box(0.18, h + 0.52, 0.2, MAT.woodRed, w / 2 + 0.21, 0, 0, grp);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: meritTex }));
+  face.position.z = 0.09; grp.add(face);
+  [-w / 3, w / 3].forEach(dx => { const leg = box(0.16, 2.4, 0.16, MAT.woodDark, dx, -h / 2 - 1.0, -0.4, grp); leg.rotation.x = 0.35; });
+  return grp;
+}
+makeMeritBoard(3.6, 4.4, HALL_X - 9.3, 2.9, -7.6, 0.42);
+drawMeritBase();
 framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 3.6, 3.2, HALL_X + 9.3, 2.6, -7.6, -0.42);
 box(0.6, 9, 20, MAT.woodDark, HALL_X - 14.6, 4.5, 0, hallGroup);
 box(0.6, 9, 20, MAT.woodDark, HALL_X + 14.6, 4.5, 0, hallGroup);
@@ -1192,8 +1251,9 @@ const btnMala = document.getElementById('btnMala');
 const btnIncense = document.getElementById('btnIncense');
 const malaCntEl = document.getElementById('malaCnt');
 const senEl = document.getElementById('pSen');
-let mala = 0, sen = 0, malaPulse = 0;
-function addSen(n) { sen += n; senEl.textContent = sen; }
+let mala = 0, sen = stats.sen || 0, malaPulse = 0;
+if (senEl) senEl.textContent = sen;
+function addSen(n) { sen += n; senEl.textContent = sen; stats.sen = sen; saveStats(); meritDirty = true; }
 
 btnSit.addEventListener('click', () => {
   if (P.mode === 'seated') { standUp(); return; }
@@ -1208,10 +1268,10 @@ btnSit.addEventListener('click', () => {
     if (bestD < 0.6) sitDown(best); else setWalkTarget(p, best);
   } else sitDown(null);
 });
-btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); } });
+btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpStat('bw'); } });
 btnMala.addEventListener('click', () => {
   malaPulse = 0.35;
-  mala++; addSen(1);
+  mala++; addSen(1); bumpStat('ma');
   malaCntEl.textContent = mala + '/108';
   if (mala >= 108) {
     toast('🎉 Đã tròn một chuỗi 108 hạt! Công đức viên mãn 🪷', 3600);
@@ -1234,6 +1294,7 @@ btnIncense.addEventListener('click', () => {
 const incenseLb = document.querySelector('#btnIncense .lb');
 let incenseShown = '';
 function lightIncense() {
+  bumpStat('ic');
   if (room === 'hall') {
     setHallLit(true); hallLeft = 180;
     addSen(5);
@@ -1593,7 +1654,7 @@ function animate() {
     if (k >= 1) {
       scene.remove(pl);
       leafPiles.splice(leafPiles.indexOf(pl), 1);
-      sweeping = null; addSen(2); updateLeafBtn();
+      sweeping = null; addSen(2); bumpStat('sw'); updateLeafBtn();
       toast('🍂 Quét sạch một đống lá đa (+2 🪷) — còn ' + leafPiles.length + ' đống', 2200);
     }
   }
@@ -1616,7 +1677,7 @@ function animate() {
       u.t += dt / 0.45;
       const dest = player.position.clone(); dest.y = 1.25;
       sala.position.lerpVectors(sala.userData.from, dest, Math.min(1, u.t));
-      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); toast('🌼 Hứng được hoa sala! (+3 🪷)', 2400); }
+      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); bumpStat('fl'); toast('🌼 Hứng được hoa sala! (+3 🪷)', 2400); }
     }
   }
 
@@ -1674,12 +1735,13 @@ try {
 
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(1), z: +player.position.z.toFixed(1),
-           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C, at: Date.now() };
+           ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C,
+           st: [stats.sw, stats.ma, stats.bw, stats.ic, stats.fl, stats.sen], at: Date.now() };
 }
 function ptTrack(force) {
   if (!ptChannel) return;
   const s = ptState();
-  const key = [s.name, s.x, s.z, s.sit, s.room, s.c].join('|');
+  const key = [s.name, s.x, s.z, s.sit, s.room, s.c, s.st.join(',')].join('|');
   const now = performance.now();
   if (!force && (key === ptLastSent || now - ptLastAt < 350)) return;
   ptLastSent = key; ptLastAt = now;
@@ -1706,11 +1768,12 @@ function ptSync() {
     if (!r) {
       const g = buildAvatar({ name: p.name || 'Khách', sub: '', bald: false, robeMat: robeFor(key, p.c) });
       g.position.set(p.x || 0, 0, p.z || 0);
-      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now() };
+      r = { g, tx: p.x || 0, tz: p.z || 0, try_: p.ry || 0, sit: !!p.sit, name: p.name || 'Khách', ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null };
       remotes.set(key, r);
       if (ptBooted) toast('🪷 ' + r.name + ' vừa vào chùa', 2000);
     }
     r.lastSeen = performance.now();
+    if (Array.isArray(p.st) && JSON.stringify(p.st) !== JSON.stringify(r.st)) { r.st = p.st; meritDirty = true; }
     if (typeof p.x === 'number') r.tx = p.x;
     if (typeof p.z === 'number') r.tz = p.z;
     if (typeof p.ry === 'number') r.try_ = p.ry;
@@ -1762,7 +1825,7 @@ function ptAnim(now) {
   });
 }
 requestAnimationFrame(ptAnim);
-setInterval(() => { ptTrack(false); ptSweep(); }, 200);
+setInterval(() => { ptTrack(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
 try {
   if (window.supabase) {
     const sb = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
@@ -1778,7 +1841,7 @@ try {
   if (pill) pill.innerHTML = '<span class="dot"></span>Một mình trong chùa (chưa nối được online)';
 }
 const _applyNamePt = applyName;
-applyName = function (n) { _applyNamePt(n); ptTrack(true); };
+applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
 
 </script>
 </body>
