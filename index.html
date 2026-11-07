@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.12.5">
+<meta name="pt3d-ver" content="2.12.6">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.12.5</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.12.6</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1676,7 +1676,7 @@ function animate() {
       else if (P.sweepPile) { const pl = P.sweepPile; P.sweepPile = null; startSweep(pl); P.mode = 'idle'; }
       else P.mode = 'idle';
     } else {
-      turnToward(player, faceAngle(pos, P.target), dt);
+      if (!keysHeld.has('ArrowLeft') && !keysHeld.has('ArrowRight')) turnToward(player, faceAngle(pos, P.target), dt);
       const step = Math.min(dist, SPEED * dt);
       const mx = (dxw / dist) * step, mz = (dzw / dist) * step;
       const canStep = (nx, nz) => groundY(nx, nz) - pos.y <= 0.45;
@@ -1907,6 +1907,9 @@ let turnTarget = null, keyDriveT = 99;
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) {
     keysHeld.add(e.key);
+    if (!e.repeat && P.mode === 'walk' && !/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) {
+      P.target = null; P.sitCushion = null; P.incenseAfterWalk = false; P.sweepPile = null; P.stuckT = 0; P.mode = 'idle';
+    }
     if (e.key === 'ArrowDown' && !e.repeat && !/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) {
       if (P.mode === 'seated') standUp();
       turnTarget = player.rotation.y + Math.PI;
@@ -2200,7 +2203,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.12.5';
+const PT3D_VER = '2.12.6';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
