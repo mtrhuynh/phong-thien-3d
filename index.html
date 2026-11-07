@@ -13,6 +13,9 @@
   canvas { display:block; }
 
   .ui { position:fixed; z-index:10; color:#fff; user-select:none; }
+  #gateDen { position:fixed; top:34px; left:10px; z-index:6; font-size:12.5px; color:#ffe9bb; text-decoration:none;
+    background:rgba(20,26,22,.55); border:1px solid rgba(255,233,187,.35); padding:5px 10px; border-radius:999px; backdrop-filter:blur(6px); }
+  #gateDen:active { transform:scale(.96); }
   #ribbon { top:0; left:0; right:0; text-align:center; font-size:12px; letter-spacing:.4px; color:#ffe9bb;
     background:linear-gradient(90deg, rgba(94,32,18,.92), rgba(140,52,24,.92), rgba(94,32,18,.92));
     padding:6px 10px; border-bottom:1px solid rgba(255,205,120,.45); }
@@ -88,6 +91,7 @@
 <div id="loading"><div class="spin">🪷</div><div>Đang dựng sân chùa…</div></div>
 
 <div class="ui" id="ribbon">🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏</div>
+<a id="gateDen" href="https://mtrhuynh.github.io/tha-den/" target="_blank" rel="noopener">🏮 Cổng thả đèn →</a>
 
 <div class="ui" id="playerCard">
   <div class="ava">🧘</div>
@@ -140,7 +144,6 @@
   <button class="abtn" id="btnSweep"><span class="ic">🍂</span>Quét lá (<span id="leafCnt">11</span>)</button>
   <button class="abtn" id="btnSala"><span class="ic">🌼</span>Hứng hoa</button>
   <button class="abtn" id="btnHall"><span class="ic">🏛️</span>Vào chánh điện</button>
-  <button class="abtn" id="btnLantern"><span class="ic">🏮</span>Thả đèn</button>
 </div>
 
 <script src="xam-data.js"></script>
@@ -1181,10 +1184,6 @@ document.getElementById('btnSala').addEventListener('click', () => {
   if (sala) catchSala(); else toast('Hoa sala chưa rụng — lâu lâu mới có một bông, để ý nhé 🌼');
 });
 const btnHall = document.getElementById('btnHall');
-const btnLantern = document.getElementById('btnLantern');
-btnLantern.addEventListener('click', () => {
-  window.open('https://mtrhuynh.github.io/tha-den/', '_blank');
-});
 let bellCtx = null, bellT = 25 + Math.random() * 20;
 window.addEventListener('pointerdown', () => {
   try {
@@ -1214,6 +1213,8 @@ function syncCongQuaBtns() {
   const ba = document.getElementById('btnSala');
   if (bs) bs.style.display = d;
   if (ba) ba.style.display = d;
+  const bx = document.getElementById('btnXam');
+  if (bx) bx.style.display = room === 'hall' ? '' : 'none';
 }
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
