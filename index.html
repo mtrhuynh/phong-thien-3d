@@ -1216,6 +1216,10 @@ function syncCongQuaBtns() {
   const bx = document.getElementById('btnXam');
   if (bx) bx.style.display = room === 'hall' ? '' : 'none';
 }
+let bellDue = Date.now() + 30000 + Math.random() * 15000;
+setInterval(() => {
+  if (Date.now() >= bellDue) { ringBell(); bellDue = Date.now() + 80000 + Math.random() * 50000; }
+}, 4000);
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
   P.target = null; P.sitCushion = null; P.mode = 'idle';
@@ -1333,8 +1337,6 @@ function animate() {
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
   if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn thắp lại thì bấm Đốt nhang nhé 🕯️'); } }
-  bellT -= dt;
-  if (bellT <= 0) { ringBell(); bellT = 80 + Math.random() * 50; }
   /* smoke */
   const boost = smokeBoost > 0 ? 1 : 0;
   if (smokeBoost > 0) smokeBoost -= dt;
