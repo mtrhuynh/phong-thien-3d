@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.6.2">
-<title>Phòng Thiền 3D — Demo</title>
+<meta name="pt3d-ver" content="2.7.0">
+<title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -36,9 +36,6 @@
   #onlinePill .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#5ee06e; margin-right:6px; box-shadow:0 0 6px #5ee06e; }
 
   /* Title */
-  #roomTitle { top:92px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; }
-  #roomTitle .t1 { font-family:'Playfair Display', serif; font-size:23px; font-weight:800; letter-spacing:3px; color:#ffdf9e; text-shadow:0 2px 10px rgba(0,0,0,.65); }
-  #roomTitle .t2 { font-size:11px; color:#e8dcc2; text-shadow:0 1px 6px rgba(0,0,0,.7); margin-top:2px; white-space:nowrap; letter-spacing:.2px; }
 
   /* Zoom buttons */
   #zoomBtns { left:12px; top:45%; display:flex; flex-direction:column; gap:10px; }
@@ -134,10 +131,6 @@
 
 <div class="ui" id="onlinePill"><span class="dot"></span>Đang nối online…</div>
 
-<div class="ui" id="roomTitle">
-  <div class="t1">SÂN CHÙA TỊNH TÂM</div>
-  <div class="t2">Phòng Thiền 3D — bản demo giai đoạn 1</div>
-</div>
 
 <div class="ui" id="zoomBtns">
   <button class="zbtn" id="zoomIn">+</button>
@@ -164,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.6.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -298,7 +291,7 @@ function nameTag(text, sub) {
   });
   const m = new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false });
   const s = new THREE.Sprite(m);
-  s.scale.set(1.9, 0.6, 1);
+  s.scale.set(1.28, 0.4, 1);
   return s;
 }
 const MAT = {
@@ -370,54 +363,7 @@ scene.add(temple);
 box(17, 1.0, 8.5, MAT.stone, 0, 0.5, 0, temple);                 // platform
 box(13, 0.34, 2.2, MAT.stone, 0, 0.17, 5.1, temple);             // steps low
 box(11, 0.34, 1.4, MAT.stone, 0, 0.5, 4.6, temple);              // steps high
-box(15.6, 4.6, 0.5, MAT.wall, 0, 3.3, -3.4, temple);             // back wall
-box(0.5, 4.6, 6.4, MAT.wall, -7.55, 3.3, -0.2, temple);          // side walls
-box(0.5, 4.6, 6.4, MAT.wall, 7.55, 3.3, -0.2, temple);
-for (let i = -2; i <= 2; i++) cyl(0.3, 0.34, 4.9, MAT.woodRed, i * 3.1, 3.4, 2.9, temple); // columns
-box(16.6, 0.55, 7.6, MAT.woodDark, 0, 5.95, -0.2, temple);       // beam
-/* two-tier pyramid roofs */
-function roofTier(w, h, d, y) {
-  const r = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 4), MAT.roof);
-  r.scale.set(w * 0.74, h, d * 0.74);
-  r.rotation.y = Math.PI / 4;
-  r.position.set(0, y, -0.2);
-  r.castShadow = true;
-  temple.add(r);
-  return r;
-}
-roofTier(19.5, 2.6, 10.5, 7.5);
-roofTier(13.5, 2.1, 7.6, 9.9);
-const finial = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 12), MAT.gold);
-finial.position.set(0, 11.25, -0.2); finial.castShadow = true; temple.add(finial);
-/* Buddha silhouette glow inside the hall */
-const buddhaGlow = new THREE.Mesh(new THREE.SphereGeometry(1.05, 18, 14),
-  new THREE.MeshStandardMaterial({ color: 0xe8b45a, emissive: 0xa8742a, emissiveIntensity: 0.55, roughness: 0.4 }));
-buddhaGlow.scale.set(1, 1.45, 0.8);
-buddhaGlow.position.set(0, 2.6, -3.0); temple.add(buddhaGlow);
-box(3.6, 1.1, 1.1, MAT.woodDark, 0, 1.55, -2.9, temple);         // altar table
-/* hanging lanterns under the beam */
-for (let i = -2; i <= 2; i++) {
-  const l = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 12), MAT.lanternRed);
-  l.scale.y = 0.82; l.position.set(i * 3.1, 5.2, 2.9); temple.add(l);
-}
 
-/* Temple luxury trim: gold edges, glowing lanterns, carpet runner */
-box(16.7, 0.14, 0.2, MAT.gold, 0, 6.26, 3.65, temple);
-box(16.7, 0.14, 0.2, MAT.gold, 0, 5.64, 3.65, temple);
-roofTier(19.5, 2.6, 10.5, 0); // placeholder removed below
-temple.children.pop();
-function eaveTips(w, d, yTop) {
-  const sx = w * 0.74 / Math.SQRT2, sz = d * 0.74 / Math.SQRT2;
-  [[sx, 0], [-sx, 0], [0, sz], [0, -sz]].forEach(([ex, ez]) => {
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.55, 8), MAT.gold);
-    tip.position.set(ex, yTop, ez - 0.2);
-    tip.rotation.z = ex > 0 ? -0.5 : ex < 0 ? 0.5 : 0;
-    tip.rotation.x = ez > 0 ? 0.5 : ez < 0 ? -0.5 : 0;
-    tip.castShadow = true; temple.add(tip);
-  });
-}
-eaveTips(19.5, 10.5, 6.35);
-eaveTips(13.5, 7.6, 8.95);
 const flameTex = canvasTexture(128, 128, (g) => {
   const gr = g.createRadialGradient(64, 58, 2, 64, 64, 62);
   gr.addColorStop(0, 'rgba(255,246,216,1)');
@@ -431,10 +377,6 @@ const glowTex = canvasTexture(128, 128, (g) => {
   gr.addColorStop(0, 'rgba(255,190,90,0.85)'); gr.addColorStop(1, 'rgba(255,150,40,0)');
   g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
 });
-for (let i = -2; i <= 2; i++) {
-  const gs = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.75, depthWrite: false }));
-  gs.scale.set(1.5, 1.5, 1); gs.position.set(i * 3.1, 5.2, 3.1); temple.add(gs);
-}
 /* red-gold runner carpet from gate to hall */
 const carpetTex = canvasTexture(256, 256, (g) => {
   g.fillStyle = '#8e2f26'; g.fillRect(0, 0, 256, 256);
@@ -448,6 +390,33 @@ const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 21),
   new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.9 }));
 carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 0.2);
 carpet.receiveShadow = true; scene.add(carpet);
+/* ============ Red pagoda = the main temple (Poly by Google via Poly Pizza, CC-BY; doorway cut open) ============ */
+{
+  new GLTFLoader().load('models/pagoda.glb', (gltf) => {
+    const m = gltf.scene;
+    m.scale.setScalar(11.5 / 55.5);
+    m.position.set(0, 1.0, -17.3);
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(m);
+  }, undefined, () => {});
+  /* a glimpse into the shrine through the doorway: dark backdrop, small gold statue, warm light */
+  box(2.4, 2.6, 0.35, MAT.woodDark, 0, 2.3, -17.75, scene);
+  const shrineLight = new THREE.PointLight(0xffc37a, 9, 8, 1.8);
+  shrineLight.position.set(0, 2.4, -16.45); scene.add(shrineLight);
+  const sg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.8, depthWrite: false }));
+  sg.scale.set(2.6, 2.6, 1); sg.position.set(0, 2.1, -16.55); scene.add(sg);
+  new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
+    const m = gltf.scene;
+    const bb = new THREE.Box3().setFromObject(m);
+    m.scale.setScalar(1.5 / bb.getSize(new THREE.Vector3()).y);
+    const bb2 = new THREE.Box3().setFromObject(m);
+    const c2 = bb2.getCenter(new THREE.Vector3());
+    m.position.set(-c2.x, 1.0 - bb2.min.y, -17.0 - c2.z);
+    m.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    scene.add(m);
+  }, undefined, () => {});
+}
+
 
 /* ============ Trees + fence ============ */
 function tree(x, z, s = 1) {
@@ -474,18 +443,6 @@ fenceRun(-13.5, -2, 26, Math.PI / 2);
 fenceRun(13.5, -2, 26, Math.PI / 2);
 fenceRun(0, 11.5, 27, 0);
 
-/* red five-storey pagoda — yard landmark (model: Poly by Google via Poly Pizza, CC-BY; texture downscaled to 1024) */
-{
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.55, 0.3, 24), MAT.stone);
-  base.position.set(-10.6, 0.15, -9.8); base.receiveShadow = true; base.castShadow = true; scene.add(base);
-  new GLTFLoader().load('models/pagoda.glb', (gltf) => {
-    const m = gltf.scene;
-    m.scale.setScalar(7.6 / 55.5);
-    m.position.set(-10.6, 0.3, -9.8);
-    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    scene.add(m);
-  }, undefined, () => {});
-}
 
 /* ============ Lantern poles along the path ============ */
 function lanternPole(x, z) {
@@ -763,7 +720,7 @@ function placeStatue(url, x, h) {
     hallGroup.add(m);
   });
 }
-placeStatue('models/cand-b/buddha-statue.gltf', HALL_X, 3.4);
+placeStatue('models/cand-b/buddha-statue.glb', HALL_X, 3.4);
 cyl(0.52, 0.4, 0.62, MAT.bronze, HALL_X, 0.81, -7.15, hallGroup);
 cyl(0.62, 0.62, 0.1, MAT.bronze, HALL_X, 1.16, -7.15, hallGroup);
 for (let i = 0; i < 4; i++) {
@@ -1138,6 +1095,26 @@ function swapToModel(g) {
   bodyG.position.copy(old.position);
   const pivot = new THREE.Group(); pivot.position.y = 0.45; bodyG.add(pivot);
   const inst = monkProto.clone(true);
+  g.userData.tintMats = [];
+  inst.traverse(o => {
+    if (!o.isMesh || !o.material) return;
+    o.material = o.material.clone();
+    o.material.vertexColors = true;
+    const u = { value: new THREE.Color(g.userData.robeTint != null ? g.userData.robeTint : 0x74a9d8) };
+    o.material.userData.tintU = u;
+    o.material.onBeforeCompile = (sh) => {
+      sh.uniforms.uRobe = u;
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vTintColor;')
+        .replace('#include <color_vertex>', '#include <color_vertex>\n vTintColor = color;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform vec3 uRobe; varying vec3 vTintColor;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          { float tm = smoothstep(0.06, 0.14, vTintColor.b - vTintColor.r) * smoothstep(0.02, 0.08, vTintColor.b - vTintColor.g);
+            diffuseColor.rgb = mix(diffuseColor.rgb, uRobe * (0.32 + 0.78 * vTintColor.b), tm); }`);
+    };
+    g.userData.tintMats.push(o.material);
+  });
   inst.position.y = -0.45;
   pivot.add(inst);
   g.remove(old); g.add(bodyG);
@@ -1165,6 +1142,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   const bodyG = new THREE.Group(); g.add(bodyG);
   const robe = cyl(0.17, 0.35, 0.64, robeMat, 0, 0.32, 0, bodyG);
   g.userData.robeMesh = robe;
+  g.userData.robeTint = (robeMat && robeMat.color) ? robeMat.color.getHex() : 0x74a9d8;
   const hem = new THREE.Mesh(new THREE.SphereGeometry(0.345, 18, 10), robeMat);
   hem.scale.set(1, 0.38, 1); hem.position.y = 0.045; bodyG.add(hem);
   cyl(0.243, 0.258, 0.075, MAT.robeGold, 0, 0.40, 0, bodyG);
@@ -1205,7 +1183,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
     const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), eyeMat);
     eye.position.set(ex, 0.38, 0.198); upperG.add(eye);
   });
-  const tag = nameTag(name, sub); tag.position.y = 1.52; g.add(tag);
+  const tag = nameTag(name, sub); tag.position.y = 1.44; g.add(tag);
   g.userData.tag = tag;
   if (player) {
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.44, 0.56, 36),
@@ -1658,6 +1636,21 @@ function animate() {
   const t = clock.elapsedTime;
 
   /* movement */
+  if (keysHeld.size && !/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) {
+    if (P.mode === 'seated') standUp();
+    const fwd = new THREE.Vector3(player.position.x - camera.position.x, 0, player.position.z - camera.position.z).normalize();
+    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    const dir = new THREE.Vector3();
+    if (keysHeld.has('ArrowUp')) dir.add(fwd);
+    if (keysHeld.has('ArrowDown')) dir.sub(fwd);
+    if (keysHeld.has('ArrowRight')) dir.add(right);
+    if (keysHeld.has('ArrowLeft')) dir.sub(right);
+    if (dir.lengthSq() > 0) {
+      dir.normalize();
+      const dest = player.position.clone().addScaledVector(dir, 2.4); dest.y = 0;
+      if (!P.target || P.target.distanceTo(dest) > 0.35) setWalkTarget(dest);
+    }
+  }
   if (P.mode === 'walk' && P.target) {
     const pos = player.position;
     const to = P.target.clone(); to.y = 0;
@@ -1861,14 +1854,19 @@ function animate() {
     setTimeout(() => toast(room === 'hall'
       ? 'Chào mừng trở lại chánh điện 🙏 Chọn một đệm trống để ngồi thiền'
       : 'Chào mừng ' + (myName ? myName + ' ' : '') + 'đến sân chùa Tịnh Tâm 🙏 Chạm vào sân để đi dạo'), 500);
-    setTimeout(() => {
-      const rt = document.getElementById('roomTitle');
-      rt.style.transition = 'all 1.4s ease';
-      rt.style.opacity = '0.32';
-      rt.style.transform = 'translateX(-50%) scale(0.62)';
-    }, 7000);
   }
 }
+/* arrow keys: walk on desktop (mouse / touch keep working as before) */
+const keysHeld = new Set();
+addEventListener('keydown', (e) => {
+  if (e.key.startsWith('Arrow')) {
+    keysHeld.add(e.key);
+    if (!/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) e.preventDefault();
+  }
+});
+addEventListener('keyup', (e) => keysHeld.delete(e.key));
+addEventListener('blur', () => keysHeld.clear());
+
 animate();
 
 addEventListener('resize', () => {
@@ -1923,12 +1921,19 @@ let look = { c: null, bd: 0, sect: 0 };
 try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}')); } catch (e) {}
 let myC = look.c != null ? look.c : MY_C;
 function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
+
+/* per-person robe colour on the monk MODEL: tints only robe-coloured vertices (skin, belt, beads untouched) */
+function tintAvatar(g, hex) {
+  if (!g || !g.userData) return;
+  g.userData.robeTint = hex;
+  (g.userData.tintMats || []).forEach(m => { if (m.userData.tintU) m.userData.tintU.value.setHex(hex); });
+}
 function robeFor(key, c) {
   if (Number.isInteger(c)) return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[c % ROBE_COLORS.length], roughness: 0.55 });
   let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
   return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[h % ROBE_COLORS.length], roughness: 0.55 });
 }
-if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC);
+if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
@@ -2088,7 +2093,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.6.2';
+const PT3D_VER = '2.7.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -2147,7 +2152,7 @@ const profileModal = document.getElementById('profileModal');
 function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
 const BEAD_NAMES = ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'];
 function applyLook() {
-  if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC);
+  if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
   const bm = player.userData.beadMats;
   if (bm) { const bsv = BEAD_SETS[look.bd % BEAD_SETS.length]; bm[0].color.setHex(bsv[0]); bm[1].color.setHex(bsv[1]); }
   ptTrack(true);
