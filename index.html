@@ -37,7 +37,7 @@
   /* Title */
   #roomTitle { top:92px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; }
   #roomTitle .t1 { font-family:'Playfair Display', serif; font-size:23px; font-weight:800; letter-spacing:3px; color:#ffdf9e; text-shadow:0 2px 10px rgba(0,0,0,.65); }
-  #roomTitle .t2 { font-size:12px; color:#e8dcc2; text-shadow:0 1px 6px rgba(0,0,0,.7); margin-top:2px; }
+  #roomTitle .t2 { font-size:11px; color:#e8dcc2; text-shadow:0 1px 6px rgba(0,0,0,.7); margin-top:2px; white-space:nowrap; letter-spacing:.2px; }
 
   /* Zoom buttons */
   #zoomBtns { left:12px; top:45%; display:flex; flex-direction:column; gap:10px; }
@@ -481,6 +481,7 @@ function setIncenseLit(on) {
   if (!on) burnerLight.intensity = 0;
 }
 setIncenseLit(false);
+const hallFxEntries = [], hallFlames = [], hallTips = [];
 
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
 function lotusPond(x, z) {
@@ -693,12 +694,14 @@ for (let i = 0; i < 4; i++) {
   cyl(0.016, 0.016, 0.55, stickMat, HALL_X + sx, 1.46, -7.15 + sz, hallGroup, 6);
   const tip = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), emberMat);
   tip.position.set(HALL_X + sx, 1.75, -7.15 + sz); hallGroup.add(tip);
+  hallTips.push(tip);
 }
 const urnGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
 urnGlow.scale.set(1.4, 1.05, 1); urnGlow.position.set(HALL_X, 1.8, -7.15); hallGroup.add(urnGlow);
 const urnLight = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); urnLight.position.set(HALL_X, 1.9, -7.15); hallGroup.add(urnLight);
-emberFx.push({ ember: urnGlow, fl: urnLight, seed: 7.3 });
-addFlame(hallGroup, HALL_X, 1.92, -7.15, 0.85);
+const urnFx = { ember: urnGlow, fl: urnLight, seed: 7.3 };
+emberFx.push(urnFx); hallFxEntries.push(urnFx);
+hallFlames.push(addFlame(hallGroup, HALL_X, 1.92, -7.15, 0.85));
 [-2.3, 2.3].forEach(dx => {
   cyl(0.09, 0.13, 1.15, MAT.wall, HALL_X + dx, 1.45, -8.8, hallGroup);
   const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb45e, transparent: true, opacity: 0.95, depthWrite: false }));
@@ -788,6 +791,7 @@ function hallBurner(dx) {
     cyl(0.014, 0.014, 0.7, stickMat, sx, 1.35, sz, b, 6);
     const tip = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), emberMat);
     tip.position.set(sx, 1.71, sz); b.add(tip);
+    hallTips.push(tip);
   }
   for (let i = 0; i < 12; i++) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false }));
@@ -796,10 +800,19 @@ function hallBurner(dx) {
   const ember = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
   ember.scale.set(1.5, 1.1, 1); ember.position.y = 1.55; b.add(ember);
   const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
-  emberFx.push({ ember, fl, seed: Math.random() * 10 });
-  addFlame(b, 0, 1.88, 0, 0.78);
+  const hfx = { ember, fl, seed: Math.random() * 10 };
+  emberFx.push(hfx); hallFxEntries.push(hfx);
+  hallFlames.push(addFlame(b, 0, 1.88, 0, 0.78));
 }
 hallBurner(-3.4); hallBurner(3.4);
+let hallLit = false, hallLeft = 0;
+function setHallLit(on) {
+  hallLit = on;
+  hallFxEntries.forEach(e => { e.off = !on; if (!on) e.fl.intensity = 0; });
+  hallFlames.forEach(f => { f.visible = on; });
+  hallTips.forEach(t => { t.visible = on; });
+}
+setHallLit(false);
 
 /* ============ Fortune-stick jar (xin xam) ============ */
 const xamGroup = new THREE.Group(); xamGroup.position.set(HALL_X + 4.9, 0, -6.1); hallGroup.add(xamGroup);
@@ -1154,7 +1167,13 @@ btnMala.addEventListener('click', () => {
   } else if (mala % 27 === 0) toast('Đã lần được ' + mala + ' hạt 📿');
 });
 btnIncense.addEventListener('click', () => {
-  if (room !== 'yard') { toast('Trong chánh điện đã có hương trầm cháy sẵn rồi 🙏'); return; }
+  if (room === 'hall') {
+    if (hallLit) { toast('Nhang trong chánh điện đang cháy, còn khoảng ' + Math.ceil(hallLeft) + ' giây nữa'); return; }
+    const frontH = new THREE.Vector3(HALL_X, 0, -5.75);
+    if (player.position.distanceTo(frontH) < 0.7) lightIncense();
+    else { if (P.mode === 'seated') standUp(); setWalkTarget(frontH, null, true); }
+    return;
+  }
   if (incenseLit) { toast('Nhang đang cháy thơm, còn khoảng ' + Math.ceil(incenseLeft) + ' giây nữa'); return; }
   const front = new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9);
   if (player.position.distanceTo(front) < 0.7) lightIncense();
@@ -1163,6 +1182,12 @@ btnIncense.addEventListener('click', () => {
 const incenseLb = document.querySelector('#btnIncense .lb');
 let incenseShown = '';
 function lightIncense() {
+  if (room === 'hall') {
+    setHallLit(true); hallLeft = 180;
+    addSen(5);
+    toast('Đã đốt nhang trong chánh điện — khói hương lan tỏa 🙏', 3200);
+    return;
+  }
   setIncenseLit(true); incenseLeft = 180;
   smokeBoost = 30;
   addSen(5);
@@ -1398,8 +1423,10 @@ function animate() {
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
   if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast('Nhang đã tàn — muốn thắp lại thì bấm Đốt nhang nhé 🕯️'); } }
+  if (hallLeft > 0) { hallLeft -= dt; if (hallLeft <= 0) { setHallLit(false); toast('Nhang trong chánh điện đã tàn — bấm Đốt nhang để thắp lại nhé 🕯️'); } }
   if (incenseLb) {
-    const s = incenseLit ? 'Còn ' + Math.floor(Math.max(0, incenseLeft) / 60) + ':' + String(Math.floor(Math.max(0, incenseLeft) % 60)).padStart(2, '0') : 'Đốt nhang';
+    const burnLeft = room === 'hall' ? (hallLit ? hallLeft : -1) : (incenseLit ? incenseLeft : -1);
+    const s = burnLeft >= 0 ? 'Còn ' + Math.floor(Math.max(0, burnLeft) / 60) + ':' + String(Math.floor(Math.max(0, burnLeft) % 60)).padStart(2, '0') : 'Đốt nhang';
     if (s !== incenseShown) { incenseShown = s; incenseLb.textContent = s; }
   }
   /* smoke */
@@ -1433,7 +1460,7 @@ function animate() {
     sp.position.set(Math.sin(ph * 8 + i * 2.1) * 0.26 * ph, 2.1 + ph * 3.3, Math.cos(ph * 6 + i) * 0.2 * ph);
     const sc = 0.5 + ph * 2.3;
     sp.scale.set(sc, sc, 1);
-    sp.material.opacity = Math.sin(ph * Math.PI) * 0.72;
+    sp.material.opacity = Math.sin(ph * Math.PI) * 0.72 * (hallLit ? 1 : 0);
   });
 
   emberFx.forEach((e) => {
