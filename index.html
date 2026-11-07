@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.16.0">
+<meta name="pt3d-ver" content="2.17.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -146,6 +146,7 @@
   <button class="cmode" data-m="cao">📷 Cao</button>
   <button class="cmode" data-m="mat">👁️ Tầm mắt</button>
   <button class="cmode" data-m="top">🗺️ Top</button>
+  <button class="cmode" id="btnDN">🌙 Giờ thật</button>
 </div>
 
 <div class="ui" id="toast"></div>
@@ -168,7 +169,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.16.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.17.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -272,7 +273,7 @@ controls.enablePan = false;
 controls.target.set(0, 1.1, 4);
 
 /* ============ Lights ============ */
-scene.add(new THREE.HemisphereLight(0xffe8c4, 0x8a7a5a, 1.05));
+const hemi = new THREE.HemisphereLight(0xffe8c4, 0x8a7a5a, 1.05); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffdfae, 2.15);
 sun.position.set(14, 22, 10);
 sun.castShadow = true;
@@ -559,23 +560,140 @@ fenceRun(17.5, -0.5, 31, Math.PI / 2);
 fenceRun(0, 14.5, 35, 0);
 
 /* ============ Forest panorama backdrop (2D ring) ============ */
+let bgRingMesh = null;
 {
   const bgTex = new THREE.TextureLoader().load('bg/forest.jpg');
   bgTex.colorSpace = THREE.SRGBColorSpace;
   const bgRing = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 30, 40, 1, true),
     new THREE.MeshBasicMaterial({ map: bgTex, side: THREE.BackSide, fog: false }));
   bgRing.position.y = 9; bgRing.rotation.y = Math.PI;
-  scene.add(bgRing);
+  scene.add(bgRing); bgRingMesh = bgRing;
 }
+
+/* ============ Distant waterfall (v2.17.0) ============ */
+const fallsTex = canvasTexture(256, 256, (g) => {
+  g.fillStyle = 'rgba(178,214,242,0.30)'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 46; i++) {
+    const x = Math.random() * 256, w = 2 + Math.random() * 5;
+    g.fillStyle = `rgba(255,255,255,${0.25 + Math.random() * 0.5})`;
+    g.fillRect(x, 0, w, 256);
+  }
+  for (let i = 0; i < 12; i++) { g.fillStyle = 'rgba(140,180,220,0.35)'; g.fillRect(Math.random() * 256, 0, 8 + Math.random() * 10, 256); }
+});
+fallsTex.wrapS = fallsTex.wrapT = THREE.RepeatWrapping; fallsTex.repeat.set(1, 2);
+const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide });
+{
+  const wf = new THREE.Group(); wf.position.set(37, 0, -4); wf.rotation.y = -0.9; scene.add(wf);
+  const rockM = new THREE.MeshStandardMaterial({ color: 0x767c84, roughness: 1, flatShading: true });
+  const rock2M = new THREE.MeshStandardMaterial({ color: 0x8a9097, roughness: 1, flatShading: true });
+  const rb = (w, h, d, m, x, y, z) => { const q = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); q.position.set(x, y, z); q.castShadow = true; wf.add(q); return q; };
+  rb(9.5, 3, 6.5, rockM, 0, 1.5, 0); rb(7.2, 3.4, 5.2, rock2M, 0, 4.4, -0.4); rb(5.2, 3.4, 4.2, rockM, 0, 7.6, -0.7); rb(3.6, 1.8, 3.2, rock2M, 0, 9.9, -0.8);
+  const f1 = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 9.4), fallsMat); f1.position.set(0, 5.2, 2.45); f1.rotation.x = 0.05; wf.add(f1);
+  const f2 = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 3.4), fallsMat); f2.position.set(0, 1.1, 3.6); f2.rotation.x = -0.55; wf.add(f2);
+  const pool = new THREE.Mesh(new THREE.CircleGeometry(3.8, 22), new THREE.MeshStandardMaterial({ color: 0x3d7a99, roughness: 0.3 }));
+  pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.04, 5.2); wf.add(pool);
+  for (let i = 0; i < 3; i++) {
+    const mist = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false }));
+    mist.scale.set(3.6, 1.7, 1); mist.position.set((i - 1) * 1.1, 0.8, 3.4 + (i % 2) * 0.7); wf.add(mist);
+  }
+  tree(30.5, -11.5, 1.25); tree(43.5, 1.5, 1.1); tree(30.8, 3.8, 0.9);
+}
+
+/* ============ Day / night (v2.17.0) ============
+   One blend factor drives everything: sky + fog colour, sun -> moonlight,
+   backdrop dimming, lantern glows, stars, moon, fireflies. All cheap tricks -
+   no heavy assets, so the free static host only ever ships small files and
+   each visitor's own device does the rendering. */
+let dnMode = 'auto';
+try { dnMode = localStorage.getItem('pt3d-daynight') || 'auto'; } catch (e) {}
+let dnCur = -1;
+const DN = { bgD: new THREE.Color(0xd9edf8), bgN: new THREE.Color(0x0c1828), fogD: new THREE.Color(0xf0d3a2), fogN: new THREE.Color(0x14253f),
+             sunD: new THREE.Color(0xffdfae), sunN: new THREE.Color(0xa8c4ff), ringD: new THREE.Color(0xffffff), ringN: new THREE.Color(0x2e4258),
+             fallD: new THREE.Color(0xffffff), fallN: new THREE.Color(0x9fc0e8) };
+function dnTarget() {
+  if (dnMode === 'night') return 1;
+  if (dnMode === 'day') return 0;
+  const h = new Date().getHours() + new Date().getMinutes() / 60;
+  return (h >= 18 || h < 5.5) ? 1 : 0;
+}
+const starMat = new THREE.PointsMaterial({ size: 0.55, map: glowTex, color: 0xd6e4ff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+{
+  const N = 380, pos = new Float32Array(N * 3);
+  let i = 0;
+  while (i < N) {
+    const x = (Math.random() - 0.5) * 108, z = (Math.random() - 0.5) * 108;
+    if (x * x + z * z > 54 * 54) continue;
+    pos[i * 3] = x; pos[i * 3 + 1] = 11 + Math.random() * 30; pos[i * 3 + 2] = z; i++;
+  }
+  const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(gg, starMat));
+}
+const moonMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xdceaff, transparent: true, opacity: 0, depthWrite: false });
+const moonCoreMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
+{
+  const halo = new THREE.Sprite(moonMat); halo.scale.set(13, 13, 1); halo.position.set(36, 31, -50); scene.add(halo);
+  const core = new THREE.Sprite(moonCoreMat); core.scale.set(3.6, 3.6, 1); core.position.set(36, 31, -50); scene.add(core);
+}
+const FLY_N = 80;
+const flyBase = new Float32Array(FLY_N * 3), flyPh = new Float32Array(FLY_N);
+const flyMat = new THREE.PointsMaterial({ size: 0.17, map: glowTex, color: 0xd9f99d, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+const flyGeo = new THREE.BufferGeometry();
+{
+  for (let i = 0; i < FLY_N; i++) {
+    flyBase[i * 3] = (Math.random() - 0.5) * 30; flyBase[i * 3 + 1] = 0.35 + Math.random() * 2.0; flyBase[i * 3 + 2] = -12 + Math.random() * 25;
+    flyPh[i] = Math.random() * Math.PI * 2;
+  }
+  flyGeo.setAttribute('position', new THREE.BufferAttribute(flyBase.slice(), 3));
+}
+const flyPts = new THREE.Points(flyGeo, flyMat); flyPts.visible = false; scene.add(flyPts);
+function dnApply(f) {
+  scene.background.lerpColors(DN.bgD, DN.bgN, f);
+  scene.fog.color.lerpColors(DN.fogD, DN.fogN, f);
+  sun.intensity = 2.15 + (0.22 - 2.15) * f; sun.color.lerpColors(DN.sunD, DN.sunN, f);
+  hemi.intensity = 1.05 + (0.30 - 1.05) * f;
+  if (bgRingMesh) bgRingMesh.material.color.lerpColors(DN.ringD, DN.ringN, f);
+  lampGlowMat.opacity = f * 0.8;
+  starMat.opacity = f * 0.95; moonMat.opacity = f * 0.85; moonCoreMat.opacity = f;
+  fallsMat.color.lerpColors(DN.fallD, DN.fallN, f);
+}
+function dnTick(dt) {
+  const tgt = dnTarget();
+  if (dnCur < 0) { dnCur = tgt; dnApply(dnCur); }
+  else if (Math.abs(tgt - dnCur) > 0.0005) {
+    dnCur += Math.sign(tgt - dnCur) * Math.min(Math.abs(tgt - dnCur), dt * 0.25);
+    dnApply(dnCur);
+  }
+  flyPts.visible = dnCur > 0.02;
+  if (flyPts.visible) {
+    flyMat.opacity = dnCur * 0.85;
+    const t = performance.now() / 1000, pa = flyGeo.attributes.position;
+    for (let i = 0; i < FLY_N; i++) {
+      pa.array[i * 3] = flyBase[i * 3] + Math.sin(t * 0.31 + flyPh[i]) * 0.9;
+      pa.array[i * 3 + 1] = flyBase[i * 3 + 1] + Math.sin(t * 0.47 + flyPh[i] * 1.7) * 0.3;
+      pa.array[i * 3 + 2] = flyBase[i * 3 + 2] + Math.cos(t * 0.23 + flyPh[i]) * 0.9;
+    }
+    pa.needsUpdate = true;
+  }
+}
+const btnDN = document.getElementById('btnDN');
+function dnLabel() { btnDN.textContent = dnMode === 'auto' ? '🌙 Giờ thật' : dnMode === 'night' ? '🌙 Đêm' : '☀️ Ngày'; btnDN.classList.toggle('on', dnMode !== 'auto'); }
+btnDN.addEventListener('click', () => {
+  dnMode = dnMode === 'auto' ? 'night' : dnMode === 'night' ? 'day' : 'auto';
+  try { localStorage.setItem('pt3d-daynight', dnMode); } catch (e) {}
+  dnLabel();
+});
+dnLabel();
 
 
 /* ============ Lantern poles along the path ============ */
+const lampGlowMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffb45e, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
 function lanternPole(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
   cyl(0.06, 0.08, 2.6, MAT.woodDark, 0, 1.3, 0, g);
   const l = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 12), MAT.lanternRed);
   l.scale.y = 0.85; l.position.y = 2.75; l.castShadow = true; g.add(l);
   const cap = cyl(0.36, 0.4, 0.1, MAT.roofRidge, 0, 3.05, 0, g); cap.castShadow = true;
+  const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(2.6, 2.6, 1); glow.position.y = 2.75; g.add(glow);
   scene.add(g);
 }
 
@@ -1697,7 +1815,7 @@ function applyCamMode(snap) {
   const m = CAM_MODES[camMode] || CAM_MODES.cao;
   controls.minPolarAngle = m.min * Math.PI;
   controls.maxPolarAngle = m.max * Math.PI;
-  document.querySelectorAll('.cmode').forEach(b => b.classList.toggle('on', b.dataset.m === camMode));
+  document.querySelectorAll('.cmode[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === camMode));
   if (snap) {
     const az = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
     const pr = m.polar * Math.PI;
@@ -1706,7 +1824,7 @@ function applyCamMode(snap) {
   }
   try { localStorage.setItem('pt3d-cam', camMode); } catch (e) {}
 }
-document.querySelectorAll('.cmode').forEach(b => b.addEventListener('click', () => { camMode = b.dataset.m; applyCamMode(true); }));
+document.querySelectorAll('.cmode[data-m]').forEach(b => b.addEventListener('click', () => { camMode = b.dataset.m; applyCamMode(true); }));
 applyCamMode(false);
 document.getElementById('zoomIn').addEventListener('click', () => dolly(0.8));
 document.getElementById('zoomOut').addEventListener('click', () => dolly(1.25));
@@ -1734,6 +1852,8 @@ function animate() {
      (before, a 10 fps desktop ran the sala blossom in slow motion vs the phone) */
   prAcc += rawDt; prN++;
   if (prAcc >= 2.5) { const avgF = prAcc / prN; prAcc = 0; prN = 0; if (avgF > 0.024 && prLevel > 1.0) { prLevel = Math.max(1.0, prLevel - 0.25); renderer.setPixelRatio(prLevel); } }
+  dnTick(dt);
+  fallsTex.offset.y = (fallsTex.offset.y - dt * 0.45) % 1;
   const t = clock.elapsedTime;
 
   setZone(zoneOf(player.position.x, player.position.z));
@@ -2347,7 +2467,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.16.0';
+const PT3D_VER = '2.17.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
