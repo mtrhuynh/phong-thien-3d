@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.7.4">
+<meta name="pt3d-ver" content="2.8.0">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.7.4</div>
+<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.8.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -308,6 +308,7 @@ const MAT = {
   bronze: new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.4, metalness: 0.5 }),
   cushion: new THREE.MeshStandardMaterial({ color: 0xc08c46, roughness: 0.6 }),
   cushionTop: new THREE.MeshStandardMaterial({ color: 0xe0aa54, roughness: 0.55 }),
+  matSide: new THREE.MeshStandardMaterial({ color: 0x6e2a20, roughness: 0.85 }),
   skin: new THREE.MeshStandardMaterial({ color: 0xffd2a8, roughness: 0.45 }),
   hair: new THREE.MeshStandardMaterial({ color: 0x2e2019, roughness: 0.8 }),
   robe: new THREE.MeshStandardMaterial({ color: 0x4f9be0, roughness: 0.5 }),
@@ -453,7 +454,7 @@ function lanternPole(x, z) {
   const cap = cyl(0.36, 0.4, 0.1, MAT.roofRidge, 0, 3.05, 0, g); cap.castShadow = true;
   scene.add(g);
 }
-lanternPole(-3.4, -4); lanternPole(3.4, -4); lanternPole(-3.4, 2.5); lanternPole(3.4, 2.5);
+lanternPole(-3.4, -4); lanternPole(3.4, -4);
 
 /* ============ Incense burner + smoke ============ */
 const burner = new THREE.Group(); burner.position.set(0, 0, -8.6); scene.add(burner);
@@ -525,7 +526,7 @@ function lotusPond(x, z) {
     new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.25 }));
   water.rotation.x = -Math.PI / 2; water.position.y = 0.41; g.add(water);
   const padMat = new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.9 });
-  [[-0.4, -0.2], [0.35, 0.3], [0.05, -0.5]].forEach(([px, pz]) => {
+  [[-0.4, -0.2], [0.35, 0.3], [0.05, -0.5], [-0.15, 0.55], [0.55, -0.35]].forEach(([px, pz]) => {
     const pad = new THREE.Mesh(new THREE.CircleGeometry(0.24, 14), padMat);
     pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.425, pz); g.add(pad);
   });
@@ -540,6 +541,17 @@ function lotusPond(x, z) {
   }
   const core = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold);
   core.position.y = 0.38; bud.add(core);
+  const bud2 = bud.clone(); bud2.position.set(-0.38, 0.42, -0.32); bud2.scale.setScalar(0.75); g.add(bud2);
+  const open = new THREE.Group(); open.position.set(0.48, 0.42, -0.12); g.add(open);
+  cyl(0.018, 0.018, 0.24, MAT.leaf, 0, 0.12, 0, open, 6);
+  for (let i = 0; i < 5; i++) {
+    const p = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), petalMat);
+    const a = (i / 5) * Math.PI * 2;
+    p.position.set(Math.cos(a) * 0.11, 0.3, Math.sin(a) * 0.11);
+    p.scale.set(1, 0.9, 0.45); p.rotation.y = -a; p.rotation.z = 1.0; open.add(p);
+  }
+  const core2 = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), MAT.gold);
+  core2.position.y = 0.31; open.add(core2);
   scene.add(g); return g;
 }
 lotusPond(-6.4, 0.5); lotusPond(6.4, 0.5); lotusPond(-6.4, -10.5); lotusPond(6.4, -10.5);
@@ -573,10 +585,18 @@ for (let i = 0; i < 42; i++) {
 
 /* ============ Cushions (đệm) ============ */
 const cushions = [];
+const matTopTex = canvasTexture(256, 256, (g) => {
+  g.fillStyle = '#7e2f24'; g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = '#d9a441'; g.lineWidth = 7; g.beginPath(); g.arc(128, 128, 110, 0, Math.PI * 2); g.stroke();
+  g.lineWidth = 3; g.beginPath(); g.arc(128, 128, 94, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = 'rgba(217,164,65,0.45)'; g.beginPath(); g.arc(128, 128, 30, 0, Math.PI * 2); g.fill();
+});
+const matTopMat = new THREE.MeshStandardMaterial({ map: matTopTex, roughness: 0.85 });
 function cushion(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
-  const base = cyl(0.62, 0.68, 0.22, MAT.cushion, 0, 0.11, 0, g, 24);
-  const top = cyl(0.56, 0.6, 0.08, MAT.cushionTop, 0, 0.25, 0, g, 24);
+  const base = cyl(0.68, 0.68, 0.05, MAT.matSide, 0, 0.025, 0, g, 26);
+  const top = new THREE.Mesh(new THREE.CircleGeometry(0.68, 26), matTopMat);
+  top.rotation.x = -Math.PI / 2; top.position.y = 0.052; top.receiveShadow = true; g.add(top);
   base.userData.isCushion = true; top.userData.isCushion = true;
   g.userData.isCushionGroup = true;
   g.traverse(o => { o.userData.cushionGroup = g; });
@@ -1050,6 +1070,18 @@ let sweeping = null;
 function startSweep(pile) {
   if (sweeping || !leafPiles.includes(pile)) return;
   sweeping = { pile, t: 0 };
+  if (!player.userData.broom) {
+    const br = new THREE.Group();
+    cyl(0.022, 0.022, 1.05, MAT.woodDark, 0, 0, 0, br, 8);
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.42, 10),
+      new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.95 }));
+    head.position.y = -0.68; head.rotation.x = Math.PI; head.scale.z = 0.45; br.add(head);
+    br.position.set(0.3, 0.62, 0.38);
+    br.rotation.set(0.5, 0, -0.25);
+    player.add(br);
+    player.userData.broom = br;
+  }
+  player.userData.broom.visible = true;
 }
 for (let i = 0; i < 11; i++) spawnLeafPile(i);
 let sala = null, salaTimer = 10;
@@ -1105,7 +1137,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk.glb?v=261', (gltf) => {
+new GLTFLoader().load('models/monk.glb?v=280', (gltf) => {
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -1195,7 +1227,7 @@ npcData.forEach((d, i) => {
   const c = cushionSpots[d.spot];
   c.userData.occupied = true;
   const a = buildAvatar(d);
-  a.position.copy(c.position).add(new THREE.Vector3(0, 0.24, 0));
+  a.position.copy(c.position).add(new THREE.Vector3(0, 0.02, 0));
   a.rotation.y = Math.PI;
   a.userData.bodyG.scale.set(1.15, 0.78, 1.15);
   a.userData.phase = i * 1.7;
@@ -1211,7 +1243,7 @@ npcData.forEach((d, i) => {
   const c = hallCushions[d.spot];
   c.userData.occupied = true;
   const a = buildAvatar(d);
-  a.position.copy(c.position).add(new THREE.Vector3(0, 0.24, 0));
+  a.position.copy(c.position).add(new THREE.Vector3(0, 0.02, 0));
   a.rotation.y = Math.PI;
   a.userData.bodyG.scale.set(1.15, 0.78, 1.15);
   a.userData.phase = i * 2.1 + 0.7;
@@ -1265,7 +1297,7 @@ function sitDown(cushion) {
   P.mode = 'seated';
   P.seatedOn = cushion || null;
   if (cushion) {
-    player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.24, 0));
+    player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
     cushion.userData.occupiedByPlayer = true;
   }
   player.rotation.y = Math.PI;
@@ -1768,7 +1800,9 @@ function animate() {
     const pl = sweeping.pile, k = sweeping.t;
     pl.rotation.y += dt * 9;
     pl.scale.setScalar(Math.max(0.01, 1 - k));
+    if (player.userData.broom) player.userData.broom.rotation.y = Math.sin(k * Math.PI * 4) * 0.45;
     if (k >= 1) {
+      if (player.userData.broom) player.userData.broom.visible = false;
       scene.remove(pl);
       leafPiles.splice(leafPiles.indexOf(pl), 1);
       sweeping = null; addSen(2); updateLeafBtn();
@@ -2104,7 +2138,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.7.4';
+const PT3D_VER = '2.8.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
