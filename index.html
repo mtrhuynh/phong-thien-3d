@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.15.1">
+<meta name="pt3d-ver" content="2.16.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -168,7 +168,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.15.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.16.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -196,6 +196,8 @@
     <div class="pf-sw" id="pfRobe"></div>
     <div class="pf-sec">Tràng hạt</div>
     <div class="pf-chips" id="pfBeads"></div>
+    <div class="pf-sec">Linh thú</div>
+    <div class="pf-chips" id="pfPet"></div>
     <div class="nm-row">
       <button class="nm-dice" id="pfRename">✏️ Đổi pháp danh</button>
       <button class="nm-go" id="pfPhoto">📷 Lưu ảnh</button>
@@ -1049,6 +1051,48 @@ function makeBroom() {
   br.position.set(0.3, 0.62, 0.38);
   br.rotation.set(0.5, 0, -0.25);
   return br;
+}
+/* linh thu (v2.16.0): a tiny chibi dragon from ~14 primitives - a few hundred
+   triangles, so it costs almost nothing (the old deer model was heavy and went).
+   It trails behind its owner, hops while they walk, idles with a gentle bob. */
+function makePet() {
+  const g = new THREE.Group();
+  const bodyM = new THREE.MeshStandardMaterial({ color: 0xe8913a, roughness: 0.6 });
+  const creamM = new THREE.MeshStandardMaterial({ color: 0xffe3b3, roughness: 0.7 });
+  const darkM = new THREE.MeshStandardMaterial({ color: 0x33302c, roughness: 0.5 });
+  const add = (geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = true; g.add(m); return m; };
+  add(new THREE.SphereGeometry(0.16, 14, 12), bodyM, 0, 0.17, 0, 1, 0.92, 1.1);
+  add(new THREE.SphereGeometry(0.105, 12, 10), creamM, 0, 0.155, 0.085, 1, 0.95, 0.7);
+  add(new THREE.SphereGeometry(0.135, 14, 12), bodyM, 0, 0.36, 0.02);
+  add(new THREE.SphereGeometry(0.07, 10, 8), creamM, 0, 0.325, 0.115, 1, 0.8, 0.9);
+  add(new THREE.SphereGeometry(0.021, 8, 6), darkM, -0.052, 0.385, 0.115);
+  add(new THREE.SphereGeometry(0.021, 8, 6), darkM, 0.052, 0.385, 0.115);
+  const h1 = add(new THREE.ConeGeometry(0.028, 0.11, 8), MAT.gold, -0.075, 0.485, -0.01); h1.rotation.z = 0.35;
+  const h2 = add(new THREE.ConeGeometry(0.028, 0.11, 8), MAT.gold, 0.075, 0.485, -0.01); h2.rotation.z = -0.35;
+  const w1 = add(new THREE.ConeGeometry(0.05, 0.16, 6), bodyM, -0.155, 0.30, -0.03); w1.rotation.z = 1.15;
+  const w2 = add(new THREE.ConeGeometry(0.05, 0.16, 6), bodyM, 0.155, 0.30, -0.03); w2.rotation.z = -1.15;
+  const tail = add(new THREE.ConeGeometry(0.045, 0.22, 8), bodyM, 0, 0.16, -0.20); tail.rotation.x = -1.15;
+  add(new THREE.SphereGeometry(0.035, 8, 6), MAT.gold, 0, 0.235, -0.295);
+  add(new THREE.SphereGeometry(0.045, 8, 6), bodyM, -0.085, 0.045, 0.05);
+  add(new THREE.SphereGeometry(0.045, 8, 6), bodyM, 0.085, 0.045, 0.05);
+  return g;
+}
+function petFollow(pet, ox, oz, ory, dt, now) {
+  const tx = ox + Math.cos(ory) * 0.42 - Math.sin(ory) * 0.5;
+  const tz = oz - Math.sin(ory) * 0.42 - Math.cos(ory) * 0.5;
+  const dx = tx - pet.position.x, dz = tz - pet.position.z;
+  const d = Math.hypot(dx, dz);
+  const k = Math.min(1, dt * (d > 1.2 ? 6 : 3.2));
+  pet.position.x += dx * k; pet.position.z += dz * k;
+  const moving = d > 0.12;
+  pet.position.y = groundY(pet.position.x, pet.position.z) + (moving ? Math.abs(Math.sin(now * 0.012)) * 0.07 : Math.sin(now * 0.0022) * 0.015);
+  if (moving) pet.rotation.y = Math.atan2(dx, dz);
+  pet.rotation.z = moving ? Math.sin(now * 0.012) * 0.06 : 0;
+}
+let myPet = null;
+function syncPet() {
+  if (look.pet && !myPet) { myPet = makePet(); myPet.position.copy(player.position); scene.add(myPet); }
+  if (!look.pet && myPet) { scene.remove(myPet); myPet = null; }
 }
 function startSweep(pile) {
   if (sweeping || !leafPiles.includes(pile)) return;
@@ -1950,6 +1994,7 @@ function animate() {
     if (camera.position.y > 4.5) camera.position.y = 4.5;
   }
 
+  if (myPet) petFollow(myPet, player.position.x, player.position.z, player.rotation.y, dt, performance.now());
   renderer.render(scene, camera);
   if (firstFrame) {
     firstFrame = false;
@@ -2012,7 +2057,7 @@ function ptState() {
   /* STATIC profile + world snapshots only. Positions used to ride in here, and re-tracking
      them ~1/s while walking got the realtime socket closed by the server (~20 s) - which is
      why visitors kept vanishing for each other. Movement now travels by broadcast (ptMove). */
-  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, bc: bacOf(sen),
+  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, pt: look.pet ? 1 : 0, bc: bacOf(sen),
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft / 30) : 0, hallLit ? Math.ceil(hallLeft / 30) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -2021,7 +2066,7 @@ function ptState() {
 function ptTrack(force) {
   if (!ptChannel) return;
   const s = ptState();
-  const key = [s.name, s.c, s.bd, s.sc, s.bc, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
+  const key = [s.name, s.c, s.bd, s.sc, s.pt, s.bc, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
   const now = performance.now();
   if (now - ptLastAt < (force ? 1500 : 5000)) return;
   if (!force && key === ptLastSent) return;
@@ -2044,7 +2089,7 @@ let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + m
 const MY_C = ptHash % ROBE_COLORS.length;
 /* personal look: robe colour, bead set, sect, pet — chosen in the profile panel */
 const SECTS = ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'];
-let look = { c: null, bd: 0, sect: 0 };
+let look = { c: null, bd: 0, sect: 0, pet: 1 };
 try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}')); } catch (e) {}
 let myC = look.c != null ? look.c : MY_C;
 function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
@@ -2140,6 +2185,8 @@ function ptSync() {
     if (typeof p.z === 'number') r.tz = p.z;
     if (typeof p.ry === 'number') r.try_ = p.ry;
     r.sit = !!p.sit;
+    if (p.pt && !r.pet) { r.pet = makePet(); r.pet.position.set(r.g.position.x, r.g.position.y, r.g.position.z); scene.add(r.pet); }
+    if (!p.pt && r.pet) { scene.remove(r.pet); r.pet = null; }
     if ((p.bd || 0) !== r.bd) {
       r.bd = p.bd || 0;
       const bm = r.g.userData.beadMats;
@@ -2173,7 +2220,7 @@ function ptSweep() {
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
     if (st[key]) { r.lastSeen = now; return; }
-    if (now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
+    if (now - r.lastSeen > 12000) { scene.remove(r.g); if (r.pet) scene.remove(r.pet); remotes.delete(key); }
   });
 }
 let ptPrev = performance.now();
@@ -2206,6 +2253,7 @@ function ptAnim(now) {
       if (bk >= 1) { r.bowT = -1; g.userData.upperG.rotation.x = 0; }
       else g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55;
     }
+    if (r.pet) petFollow(r.pet, g.position.x, g.position.z, g.rotation.y, dt, now);
   });
 }
 function ptSend(payload) {
@@ -2299,7 +2347,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.15.1';
+const PT3D_VER = '2.16.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -2369,6 +2417,7 @@ const profileModal = document.getElementById('profileModal');
 function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
 const BEAD_NAMES = ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'];
 function applyLook() {
+  syncPet();
   if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
   const bm = player.userData.beadMats;
   if (bm) { const bsv = BEAD_SETS[look.bd % BEAD_SETS.length]; bm[0].color.setHex(bsv[0]); bm[1].color.setHex(bsv[1]); }
@@ -2397,6 +2446,13 @@ function openProfile() {
     b.className = 'pf-chip' + (i === look.bd ? ' on' : ''); b.textContent = s;
     b.addEventListener('click', () => { look.bd = i; saveLook(); applyLook(); openProfile(); });
     beadBox.appendChild(b);
+  });
+  const petBox = document.getElementById('pfPet'); petBox.innerHTML = '';
+  [['Không có', 0], ['🐉 Tiểu Long', 1]].forEach(([label, v]) => {
+    const b = document.createElement('button');
+    b.className = 'pf-chip' + ((look.pet ? 1 : 0) === v ? ' on' : ''); b.textContent = label;
+    b.addEventListener('click', () => { look.pet = v; saveLook(); syncPet(); ptTrack(true); openProfile(); });
+    petBox.appendChild(b);
   });
   profileModal.classList.add('show');
 }
