@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.9.3">
+<meta name="pt3d-ver" content="2.10.0">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -157,7 +157,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · Tháp: Poly by Google (CC-BY) · v2.9.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.10.0</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -391,28 +391,45 @@ const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 21),
   new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.9 }));
 carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 0.2);
 carpet.receiveShadow = true; scene.add(carpet);
-/* ============ Red pagoda = the main temple (Poly by Google via Poly Pizza, CC-BY; doorway cut open) ============ */
+/* ============ Chánh điện: open hall like the reference (white walls, red pillars, see the altar from the yard) ============ */
 {
-  new GLTFLoader().load('models/pagoda.glb', (gltf) => {
-    const m = gltf.scene;
-    m.scale.setScalar(11.5 / 55.5);
-    m.position.set(0, 0.61, -17.3);
-    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    scene.add(m);
-  }, undefined, () => {});
-  /* a glimpse into the shrine through the doorway: dark backdrop, small gold statue, warm light */
-  box(3.2, 2.5, 0.35, MAT.woodDark, 0, 2.36, -17.6, scene);
-  const shrineLight = new THREE.PointLight(0xffc37a, 9, 8, 1.8);
-  shrineLight.position.set(0, 2.35, -16.5); scene.add(shrineLight);
-  const sg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.8, depthWrite: false }));
-  sg.scale.set(2.2, 2.2, 1); sg.position.set(0, 2.0, -16.6); scene.add(sg);
+  const creamWall = new THREE.MeshStandardMaterial({ color: 0xf1e7d0, roughness: 0.9 });
+  const pillarRed = new THREE.MeshStandardMaterial({ color: 0x9e2b1e, roughness: 0.55 });
+  const T = temple;
+  box(13, 0.12, 7.6, MAT.stone, 0, 1.06, -0.2, T);                       // floor
+  box(13, 3.6, 0.35, creamWall, 0, 2.92, -3.85, T);                      // back wall
+  box(0.35, 3.6, 7.6, creamWall, -6.32, 2.92, -0.2, T);                  // side walls
+  box(0.35, 3.6, 7.6, creamWall, 6.32, 2.92, -0.2, T);
+  box(2.6, 3.6, 0.35, creamWall, -5.2, 2.92, 3.55, T);                   // front stubs
+  box(2.6, 3.6, 0.35, creamWall, 5.2, 2.92, 3.55, T);
+  [-3.9, -1.3, 1.3, 3.9].forEach(px => { const p = cyl(0.16, 0.18, 3.6, pillarRed, px, 2.92, 3.55, T, 12); p.castShadow = true; });
+  box(13.2, 0.4, 0.5, MAT.woodDark, 0, 4.85, 3.55, T);                   // front beam
+  box(13.6, 0.16, 8.8, MAT.lanternRed, 0, 5.12, -0.2, T);                // red eave line
+  const roof1 = new THREE.Mesh(new THREE.ConeGeometry(10.6, 2.0, 4), MAT.roof);
+  roof1.rotation.y = Math.PI / 4; roof1.scale.set(1.25, 1, 0.78); roof1.position.set(0, 6.2, -0.2); roof1.castShadow = true; T.add(roof1);
+  const roof2 = new THREE.Mesh(new THREE.ConeGeometry(6.4, 1.5, 4), MAT.roof);
+  roof2.rotation.y = Math.PI / 4; roof2.scale.set(1.25, 1, 0.78); roof2.position.set(0, 7.55, -0.2); roof2.castShadow = true; T.add(roof2);
+  const fin = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), MAT.gold);
+  fin.position.set(0, 8.45, -0.2); T.add(fin);
+  /* interior, visible from the yard through the colonnade */
+  box(7, 3.0, 0.1, MAT.woodDark, 0, 2.7, -3.62, T);                      // altar backdrop
+  box(4.2, 0.95, 1.1, MAT.woodDark, 0, 1.6, -2.9, T);                    // altar table
+  box(2.6, 0.04, 5.4, new THREE.MeshStandardMaterial({ color: 0x8e2f26, roughness: 0.9 }), 0, 1.14, 0.7, T); // runner
+  [-2.6, 2.6].forEach(lx => {
+    const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), MAT.lanternRed);
+    l.position.set(lx, 4.35, 3.55); T.add(l);
+  });
+  const hallLight = new THREE.PointLight(0xffc37a, 12, 11, 1.8);
+  hallLight.position.set(0, 3.0, -14.9); scene.add(hallLight);
+  const hg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.85, depthWrite: false }));
+  hg.scale.set(3.4, 3.4, 1); hg.position.set(0, 3.35, -19.9); scene.add(hg);
   new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
     const m = gltf.scene;
     const bb = new THREE.Box3().setFromObject(m);
-    m.scale.setScalar(1.5 / bb.getSize(new THREE.Vector3()).y);
+    m.scale.setScalar(2.1 / bb.getSize(new THREE.Vector3()).y);
     const bb2 = new THREE.Box3().setFromObject(m);
     const c2 = bb2.getCenter(new THREE.Vector3());
-    m.position.set(-c2.x, 1.11 - bb2.min.y, -16.85 - c2.z);
+    m.position.set(-c2.x, 2.07 - bb2.min.y, -19.45 - c2.z);
     m.traverse(o => { if (o.isMesh) o.castShadow = true; });
     scene.add(m);
   }, undefined, () => {});
@@ -542,14 +559,18 @@ const hallFxEntries = [], hallFlames = [], hallTips = [];
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
 function lotusPond(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
-  cyl(1.15, 0.95, 0.4, MAT.stone, 0, 0.2, 0, g, 22);
+  const bowlPts = [[0.0, 0.02], [0.52, 0.02], [0.7, 0.08], [0.92, 0.24], [1.06, 0.4], [1.1, 0.46], [1.04, 0.5]].map(p => new THREE.Vector2(p[0], p[1]));
+  const bowl = new THREE.Mesh(new THREE.LatheGeometry(bowlPts, 22), MAT.stone);
+  bowl.castShadow = true; bowl.receiveShadow = true; g.add(bowl);
+  const band = new THREE.Mesh(new THREE.TorusGeometry(1.02, 0.035, 8, 22), MAT.bronze);
+  band.rotation.x = Math.PI / 2; band.position.y = 0.33; g.add(band);
   const water = new THREE.Mesh(new THREE.CircleGeometry(1.0, 22),
     new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.25 }));
-  water.rotation.x = -Math.PI / 2; water.position.y = 0.41; g.add(water);
+  water.rotation.x = -Math.PI / 2; water.position.y = 0.47; g.add(water);
   const padMat = new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.9 });
   [[-0.4, -0.2], [0.35, 0.3], [0.05, -0.5], [-0.15, 0.55], [0.55, -0.35]].forEach(([px, pz]) => {
     const pad = new THREE.Mesh(new THREE.CircleGeometry(0.24, 14), padMat);
-    pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.425, pz); g.add(pad);
+    pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.485, pz); g.add(pad);
   });
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xf2a7c3, roughness: 0.6 });
   function lotus(scale, tilt, extra) {
@@ -571,9 +592,9 @@ function lotusPond(x, z) {
     f.scale.setScalar(scale);
     return f;
   }
-  const f1 = lotus(1.0, 0.18); f1.position.set(0.1, 0.42, 0.05); g.add(f1);
-  const f2 = lotus(0.75, 0.3); f2.position.set(-0.38, 0.42, -0.32); g.add(f2);
-  const f3 = lotus(1.05, 0.55, true); f3.position.set(0.48, 0.42, -0.12); g.add(f3);
+  const f1 = lotus(1.0, 0.18); f1.position.set(0.1, 0.48, 0.05); g.add(f1);
+  const f2 = lotus(0.75, 0.3); f2.position.set(-0.38, 0.48, -0.32); g.add(f2);
+  const f3 = lotus(1.05, 0.55, true); f3.position.set(0.48, 0.48, -0.12); g.add(f3);
   scene.add(g); return g;
 }
 lotusPond(-6.4, 0.5); lotusPond(6.4, 0.5); lotusPond(-6.4, -10.5); lotusPond(6.4, -10.5);
@@ -2182,7 +2203,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.9.3';
+const PT3D_VER = '2.10.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
