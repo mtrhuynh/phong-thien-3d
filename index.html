@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.11.0">
+<meta name="pt3d-ver" content="2.11.1">
 <title>Phòng Thiền 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
@@ -42,6 +42,9 @@
   .zbtn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66);
     color:#ffe1a8; font-size:22px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px); }
   .zbtn:active { background:rgba(90,64,25,.8); }
+  #camModes { position:fixed; right:12px; bottom:118px; display:flex; gap:6px; z-index:30; }
+  .cmode { padding:8px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66); color:#ffe9bd; font-size:13px; cursor:pointer; }
+  .cmode.on { background:rgba(146,96,28,.9); color:#fff; }
 
   /* Action bar */
   #actions { bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:7px; max-width:97vw; overflow-x:auto; padding-bottom:2px; }
@@ -136,6 +139,11 @@
   <button class="zbtn" id="zoomIn">+</button>
   <button class="zbtn" id="zoomOut">−</button>
 </div>
+<div class="ui" id="camModes">
+  <button class="cmode" data-m="cao">📷 Cao</button>
+  <button class="cmode" data-m="mat">👁️ Tầm mắt</button>
+  <button class="cmode" data-m="top">🗺️ Top</button>
+</div>
 
 <div class="ui" id="toast"></div>
 <div id="musicBar">
@@ -157,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.11.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.11.1</div>
 <div class="ui" id="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -788,15 +796,15 @@ function makeMeritBoard(w, h, x, y, z, rotY) {
   [-w / 3, w / 3].forEach(dx => { const leg = box(0.16, 2.4, 0.16, MAT.woodDark, dx, -h / 2 - 1.0, -0.4, grp); leg.rotation.x = 0.35; });
   return grp;
 }
-makeMeritBoard(3.0, 3.2, -5.95, 2.72, -18.55, 1.02);
+makeMeritBoard(3.2, 3.0, -6.05, 2.85, -16.3, 1.5708);
 drawMeritBase();
-framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 3.0, 2.6, 5.95, 2.55, -18.55, -1.02);
+framedBoard(['CHÚ QUAN ÂM', 'ÁN MA NI', 'BÁT DI HỒNG', 'Lục Tự Đại Minh Chân Ngôn'], 3.2, 2.4, 6.05, 2.75, -16.3, -1.5708);
 const hallCushions = [];
 [-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -14.7); c.position.y = 1.12; hallCushions.push(c); });
 [-4.6, -2.6, 2.6, 4.6].forEach(dx => { const c = cushion(dx, -17.0); c.position.y = 1.12; hallCushions.push(c); });
 const hallSmokes = [];
 function hallBurner() {
-  const b = new THREE.Group(); b.position.set(-5.0, 1.12, -18.5); scene.add(b);
+  const b = new THREE.Group(); b.position.set(-5.3, 1.12, -19.3); scene.add(b);
   cyl(0.7, 0.55, 0.85, MAT.bronze, 0, 0.55, 0, b);
   cyl(0.84, 0.84, 0.13, MAT.bronze, 0, 1.0, 0, b);
   for (let i = 0; i < 5; i++) {
@@ -828,7 +836,7 @@ function setHallLit(on) {
 setHallLit(false);
 
 /* ============ Fortune-stick jar (xin xam) ============ */
-const xamGroup = new THREE.Group(); xamGroup.position.set(5.0, 1.12, -18.5); scene.add(xamGroup);
+const xamGroup = new THREE.Group(); xamGroup.position.set(5.3, 1.12, -19.3); scene.add(xamGroup);
 box(0.74, 0.5, 0.74, MAT.woodDark, 0, 0.25, 0, xamGroup);
 const bambooMat = new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.55 });
 const jar = new THREE.Group(); jar.position.y = 0.5; xamGroup.add(jar);
@@ -1302,7 +1310,7 @@ btnMala.addEventListener('click', () => {
 btnIncense.addEventListener('click', () => {
   if (room === 'hall') {
     if (hallLit) { toast('Nhang trong chánh điện đang cháy, còn khoảng ' + Math.ceil(hallLeft) + ' giây nữa'); return; }
-    const frontH = new THREE.Vector3(-5.0, 0, -17.2);
+    const frontH = new THREE.Vector3(-5.3, 0, -18.15);
     if (player.position.distanceTo(frontH) < 0.7) lightIncense();
     else { if (P.mode === 'seated') standUp(); setWalkTarget(frontH, null, true); }
     return;
@@ -1510,6 +1518,28 @@ try {
 } catch (e) {}
 applyZoneUI();
 
+const CAM_MODES = {
+  cao: { min: 0.12, max: 0.49, polar: 0.30, dist: 11 },
+  mat: { min: 0.36, max: 0.495, polar: 0.46, dist: 5.5 },
+  top: { min: 0.0, max: 0.17, polar: 0.08, dist: 12 },
+};
+let camMode = 'cao';
+try { camMode = localStorage.getItem('pt3d-cam') || 'cao'; } catch (e) {}
+function applyCamMode(snap) {
+  const m = CAM_MODES[camMode] || CAM_MODES.cao;
+  controls.minPolarAngle = m.min * Math.PI;
+  controls.maxPolarAngle = m.max * Math.PI;
+  document.querySelectorAll('.cmode').forEach(b => b.classList.toggle('on', b.dataset.m === camMode));
+  if (snap) {
+    const az = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+    const pr = m.polar * Math.PI;
+    const off = new THREE.Vector3(Math.sin(az) * Math.sin(pr), Math.cos(pr), Math.cos(az) * Math.sin(pr));
+    camera.position.copy(controls.target).addScaledVector(off, m.dist);
+  }
+  try { localStorage.setItem('pt3d-cam', camMode); } catch (e) {}
+}
+document.querySelectorAll('.cmode').forEach(b => b.addEventListener('click', () => { camMode = b.dataset.m; applyCamMode(true); }));
+applyCamMode(false);
 document.getElementById('zoomIn').addEventListener('click', () => dolly(0.8));
 document.getElementById('zoomOut').addEventListener('click', () => dolly(1.25));
 function dolly(f) {
@@ -1742,11 +1772,18 @@ function animate() {
   }
 
   /* camera follow */
-  desiredTarget.set(player.position.x, 1.05, player.position.z);
+  desiredTarget.set(player.position.x, player.position.y + 1.05, player.position.z);
   camDelta.copy(desiredTarget).sub(controls.target).multiplyScalar(0.07);
   controls.target.add(camDelta);
   camera.position.add(camDelta);
   controls.update();
+  const cgy = groundY(camera.position.x, camera.position.z) + 0.5;
+  if (camera.position.y < cgy) camera.position.y = cgy;
+  if (room === 'hall') {
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -6.3, 6.3);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -20.3, -12.3);
+    if (camera.position.y > 4.5) camera.position.y = 4.5;
+  }
 
   renderer.render(scene, camera);
   if (firstFrame) {
@@ -2030,7 +2067,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.11.0';
+const PT3D_VER = '2.11.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
