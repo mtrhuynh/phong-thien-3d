@@ -65,6 +65,9 @@
   #musName { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
+  #gainFx { position:fixed; left:18px; top:98px; z-index:35; pointer-events:none; }
+  #gainFx span { position:absolute; left:0; top:0; font-weight:900; font-size:17px; color:#ffd968; text-shadow:0 1px 4px rgba(60,30,0,.65); animation:gainUp 1.6s ease-out forwards; white-space:nowrap; }
+  @keyframes gainUp { 0% { opacity:0; transform:translateY(6px); } 15% { opacity:1; } 100% { opacity:0; transform:translateY(-38px); } }
   .xam-inner { width:min(92vw, 430px); max-height:84vh; overflow-y:auto; padding:22px 24px; border-radius:18px; text-align:center;
     background:linear-gradient(160deg, rgba(64,42,18,0.97), rgba(38,24,10,0.97)); border:1px solid rgba(240,199,106,0.55);
     box-shadow:0 18px 50px rgba(0,0,0,0.55); color:#fdf3d8; }
@@ -133,6 +136,7 @@
   <button id="musNext" title="Bài tiếp">⏭</button>
 </div>
 <audio id="musAudio" preload="none"></audio>
+<div id="gainFx"></div>
 <div id="xamCard">
   <div class="xam-inner">
     <div class="xam-cap" id="xamCap">🎋 Quẻ số 1 · Thượng</div>
@@ -776,12 +780,31 @@ function framedBoard(lines, w, h, x, y, z, rotY) {
   });
   return grp;
 }
-/* merit ledger: per-person counts, kept on this device, shared live via presence */
-let stats = { sw: 0, ma: 0, bw: 0, ic: 0, fl: 0, sen: 0 };
+/* merit ledger: DAILY counts + phước đức points, kept on this device, shared live via presence.
+   Xin xăm unlocks at XAM_GATE phước đức earned today. Lifetime lotus seeds live in `stats`. */
+let stats = { sen: 0 };
 try { Object.assign(stats, JSON.parse(localStorage.getItem('pt3d-stats') || '{}')); } catch (e) {}
-let meritDirty = true, meritLastDraw = 0;
 function saveStats() { try { localStorage.setItem('pt3d-stats', JSON.stringify(stats)); } catch (e) {} }
-function bumpStat(k) { stats[k]++; saveStats(); meritDirty = true; ptTrack(false); }
+const XAM_GATE = 30;
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+let daily = { date: todayStr(), ma: 0, bw: 0, ic: 0, fl: 0, swPids: [], pts: 0 };
+try { const sv = JSON.parse(localStorage.getItem('pt3d-daily') || 'null'); if (sv && sv.date === todayStr()) daily = Object.assign(daily, sv); } catch (e) {}
+function saveDaily() { try { localStorage.setItem('pt3d-daily', JSON.stringify(daily)); } catch (e) {} }
+function xamOpen() { return daily.pts >= XAM_GATE; }
+let meritDirty = true, meritLastDraw = 0;
+function bumpDaily(k) { daily[k]++; saveDaily(); meritDirty = true; ptTrack(false); }
+function gainFx(n) {
+  const box = document.getElementById('gainFx'); if (!box) return;
+  const s = document.createElement('span'); s.textContent = '+' + n + ' phước đức 🪷';
+  s.style.left = (Math.random() * 24) + 'px';
+  box.appendChild(s); setTimeout(() => s.remove(), 1700);
+}
+setInterval(() => {
+  if (daily.date !== todayStr()) {
+    daily = { date: todayStr(), ma: 0, bw: 0, ic: 0, fl: 0, swPids: [], pts: 0 };
+    saveDaily(); meritDirty = true; updateJarTag(); ptTrack(true);
+  }
+}, 30000);
 const meritCv = document.createElement('canvas'); meritCv.width = 768; meritCv.height = 940;
 const meritCtx = meritCv.getContext('2d');
 const meritTex = new THREE.CanvasTexture(meritCv);
@@ -796,25 +819,31 @@ function drawMeritBase() {
   c.fillStyle = '#8a2b12'; c.font = '900 56px "Segoe UI", sans-serif';
   c.fillText('BẢNG VÀNG CÔNG ĐỨC', W / 2, 118);
   c.fillStyle = '#6b4a12'; c.font = '600 29px "Segoe UI", sans-serif';
-  c.fillText('Công quả của người đang trong chùa', W / 2, 168);
+  c.fillText('Công quả hôm nay — tích phước mở xin xăm', W / 2, 168);
   meritTex.needsUpdate = true;
 }
 function drawMerit() {
   drawMeritBase();
   const c = meritCtx, W = 768;
-  const people = [{ name: (typeof myName !== 'undefined' && myName) || 'Hành giả', me: true, st: stats }];
-  if (typeof remotes !== 'undefined') remotes.forEach(r => { if (r.st) people.push({ name: r.name, me: false, st: r.st }); });
-  let y = 258;
+  const people = [{ name: (typeof myName !== 'undefined' && myName) || 'Hành giả', me: true, d: { pts: daily.pts, ma: daily.ma, bw: daily.bw, ic: daily.ic, swD: daily.swPids.length, fl: daily.fl, open: xamOpen() } }];
+  if (typeof remotes !== 'undefined') remotes.forEach(r => {
+    if (Array.isArray(r.st)) people.push({ name: r.name, me: false, d: { pts: r.st[0] || 0, ma: r.st[1] || 0, bw: r.st[2] || 0, ic: r.st[3] || 0, swD: r.st[4] || 0, fl: r.st[5] || 0, open: !!r.st[6] } });
+  });
+  let y = 252;
   people.slice(0, 4).forEach(p => {
-    const s = Array.isArray(p.st) ? { sw: p.st[0] || 0, ma: p.st[1] || 0, bw: p.st[2] || 0, ic: p.st[3] || 0, fl: p.st[4] || 0, sen: p.st[5] || 0 } : p.st;
+    const s = p.d;
     c.textAlign = 'left';
-    c.fillStyle = '#5a3410'; c.font = '900 38px "Segoe UI", sans-serif';
+    c.fillStyle = '#5a3410'; c.font = '900 37px "Segoe UI", sans-serif';
     c.fillText('🪷 ' + p.name + (p.me ? ' (bạn)' : ''), 56, y);
-    c.fillStyle = '#4a2f0d'; c.font = '600 31px "Segoe UI", sans-serif';
-    c.fillText('🧹 Quét sân ×' + s.sw + '    📿 Tràng hạt ×' + s.ma, 56, y + 48);
-    c.fillText('🙏 Lạy Phật ×' + s.bw + '    🕯 Đốt nhang ×' + s.ic, 56, y + 92);
-    c.fillText('🌼 Hứng hoa ×' + s.fl + '    🪷 Hạt sen ' + s.sen, 56, y + 136);
-    y += 176;
+    c.fillStyle = '#8a2b12'; c.font = '900 33px "Segoe UI", sans-serif';
+    c.textAlign = 'right';
+    c.fillText(s.pts + ' phước', 712, y);
+    c.textAlign = 'left';
+    c.fillStyle = '#4a2f0d'; c.font = '600 30px "Segoe UI", sans-serif';
+    c.fillText('📿 Tràng hạt ' + Math.min(s.ma, 108) + '/108 · 🙏 Lạy ×' + s.bw, 56, y + 46);
+    c.fillText('🧹 Quét lá: còn ' + Math.max(0, 11 - s.swD) + ' cụm · 🕯 Nhang ×' + s.ic, 56, y + 88);
+    c.fillText('🌼 Hứng hoa ×' + s.fl + (s.open ? ' · 🎋 Đã mở xin xăm' : ''), 56, y + 130);
+    y += 172;
   });
   c.textAlign = 'center';
   if (people.length === 1) { c.fillStyle = '#7a5a1a'; c.font = 'italic 600 28px "Segoe UI", sans-serif'; c.fillText('Bạn bè vào chùa cùng, công quả', W / 2, y + 6); c.fillText('sẽ cùng hiện lên bảng này', W / 2, y + 44); }
@@ -905,6 +934,12 @@ box(0.74, 0.5, 0.74, MAT.woodDark, 0, 0.25, 0, xamGroup);
 const bambooMat = new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.55 });
 const jar = new THREE.Group(); jar.position.y = 0.5; xamGroup.add(jar);
 const xtag = nameTag('Hũ xin xăm', 'bấm vào hũ để lắc quẻ'); xtag.position.y = 1.62; xamGroup.add(xtag);
+function updateJarTag() {
+  const sub = xamOpen() ? 'bấm vào hũ để lắc quẻ' : 'cần ' + XAM_GATE + ' phước đức hôm nay để mở';
+  const nt = nameTag('Hũ xin xăm', sub);
+  xtag.material.map = nt.material.map; xtag.material.needsUpdate = true;
+}
+updateJarTag();
 cyl(0.30, 0.24, 0.62, bambooMat, 0, 0.31, 0, jar, 18);
 const jarRim = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.028, 8, 22), MAT.woodDark);
 jarRim.rotation.x = Math.PI / 2; jarRim.position.y = 0.62; jar.add(jarRim);
@@ -925,6 +960,7 @@ let xamAnimT = -1, xamPending = null;
 const xamCard = document.getElementById('xamCard');
 function drawXam() {
   if (xamAnimT >= 0) return;
+  if (!xamOpen()) { toast('🎋 Xin xăm cần ' + XAM_GATE + ' phước đức hôm nay — bạn đang có ' + daily.pts + '. Quét lá, lần hạt, lạy Phật, đốt nhang để tích phước nhé 🙏', 4200); return; }
   if (!window.XAM_DATA || !window.XAM_DATA.length) { toast('Chưa nạp được dữ liệu quẻ, thử lại sau nhé'); return; }
   xamPending = window.XAM_DATA[Math.floor(Math.random() * window.XAM_DATA.length)];
   xamAnimT = 0;
@@ -1252,7 +1288,15 @@ const malaCntEl = document.getElementById('malaCnt');
 const senEl = document.getElementById('pSen');
 let mala = 0, sen = stats.sen || 0, malaPulse = 0;
 if (senEl) senEl.textContent = sen;
-function addSen(n) { sen += n; senEl.textContent = sen; stats.sen = sen; saveStats(); meritDirty = true; }
+function addSen(n) {
+  sen += n; senEl.textContent = sen; stats.sen = sen; saveStats();
+  if (n > 0) {
+    const was = xamOpen();
+    daily.pts += n; saveDaily(); gainFx(n);
+    if (!was && xamOpen()) { toast('🎋 Đủ ' + XAM_GATE + ' phước đức hôm nay — hũ xin xăm đã mở!', 4000); updateJarTag(); }
+  }
+  meritDirty = true;
+}
 
 btnSit.addEventListener('click', () => {
   if (P.mode === 'seated') { standUp(); return; }
@@ -1267,10 +1311,10 @@ btnSit.addEventListener('click', () => {
     if (bestD < 0.6) sitDown(best); else setWalkTarget(p, best);
   } else sitDown(null);
 });
-btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpStat('bw'); ptSend({ k: 'bow' }); } });
+btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpDaily('bw'); ptSend({ k: 'bow' }); } });
 btnMala.addEventListener('click', () => {
   malaPulse = 0.35;
-  mala++; addSen(1); bumpStat('ma');
+  mala++; addSen(1); bumpDaily('ma');
   malaCntEl.textContent = mala + '/108';
   if (mala >= 108) {
     toast('🎉 Đã tròn một chuỗi 108 hạt! Công đức viên mãn 🪷', 3600);
@@ -1293,7 +1337,7 @@ btnIncense.addEventListener('click', () => {
 const incenseLb = document.querySelector('#btnIncense .lb');
 let incenseShown = '';
 function lightIncense() {
-  bumpStat('ic');
+  bumpDaily('ic');
   ptSend({ k: 'inc', r: room }); ptTrack(true);
   if (room === 'hall') {
     setHallLit(true); hallLeft = 180;
@@ -1654,10 +1698,11 @@ function animate() {
     if (k >= 1) {
       scene.remove(pl);
       leafPiles.splice(leafPiles.indexOf(pl), 1);
-      sweeping = null; addSen(2); bumpStat('sw'); updateLeafBtn();
+      sweeping = null; addSen(2); updateLeafBtn();
+      if (!daily.swPids.includes(pl.userData.pid)) { daily.swPids.push(pl.userData.pid); saveDaily(); meritDirty = true; }
       leafGoneAt.set(pl.userData.pid, performance.now());
       ptSend({ k: 'leaf', id: pl.userData.pid });
-      toast('🍂 Quét sạch một đống lá đa (+2 🪷) — còn ' + leafPiles.length + ' đống', 2200);
+      toast('🍂 Quét sạch một đống lá đa (+2 phước đức) — còn ' + leafPiles.length + ' đống', 2200);
     }
   }
   for (let i = remoteSweeps.length - 1; i >= 0; i--) {
@@ -1698,7 +1743,7 @@ function animate() {
       u.t += dt / 0.45;
       const dest = player.position.clone(); dest.y = 1.25;
       sala.position.lerpVectors(sala.userData.from, dest, Math.min(1, u.t));
-      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); bumpStat('fl'); toast('🌼 Hứng được hoa sala! (+3 🪷)', 2400); }
+      if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); bumpDaily('fl'); toast('🌼 Hứng được hoa sala! (+3 phước đức)', 2400); }
     }
   }
 
@@ -1757,7 +1802,7 @@ try {
 function ptState() {
   return { name: myName || 'Hành giả', x: +player.position.x.toFixed(0), z: +player.position.z.toFixed(0),
            ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C,
-           st: [stats.sw, stats.ma, stats.bw, stats.ic, stats.fl, stats.sen],
+           st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
            at: Date.now() };
