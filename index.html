@@ -1755,7 +1755,7 @@ try {
 }
 
 function ptState() {
-  return { name: myName || 'Hành giả', x: +player.position.x.toFixed(1), z: +player.position.z.toFixed(1),
+  return { name: myName || 'Hành giả', x: +player.position.x.toFixed(0), z: +player.position.z.toFixed(0),
            ry: +player.rotation.y.toFixed(2), sit: P.mode === 'seated' ? 1 : 0, room, c: MY_C,
            st: [stats.sw, stats.ma, stats.bw, stats.ic, stats.fl, stats.sen],
            inc: [incenseLit ? Math.ceil(incenseLeft) : 0, hallLit ? Math.ceil(hallLeft) : 0],
@@ -1767,8 +1767,8 @@ function ptTrack(force) {
   const s = ptState();
   const key = [s.name, s.x, s.z, s.sit, s.room, s.c, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
   const now = performance.now();
-  if (!force && now - ptLastAt < 350) return;
-  if (!force && key === ptLastSent && now - ptLastAt < 10000) return;
+  if (!force && now - ptLastAt < 1000) return;
+  if (!force && key === ptLastSent) return;
   ptLastSent = key; ptLastAt = now;
   ptChannel.track(s).catch(() => {});
 }
@@ -1843,9 +1843,8 @@ function ptSweep() {
   const now = performance.now();
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
-    const ghost = r.atLocal && now - r.atLocal > 25000;
-    if (st[key] && !ghost) { r.lastSeen = now; return; }
-    if (ghost || now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
+    if (st[key]) { r.lastSeen = now; return; }
+    if (now - r.lastSeen > 12000) { scene.remove(r.g); remotes.delete(key); }
   });
 }
 let ptPrev = performance.now();
