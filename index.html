@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.42.1">
+<meta name="pt3d-ver" content="2.43.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -40,11 +40,6 @@
 
   /* Title */
 
-  /* Zoom buttons */
-  #zoomBtns { left:12px; top:45%; display:flex; flex-direction:column; gap:10px; }
-  .zbtn { width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66);
-    color:#ffe1a8; font-size:22px; font-weight:700; cursor:pointer; backdrop-filter:blur(4px); }
-  .zbtn:active { background:rgba(90,64,25,.8); }
   #camModes { position:fixed; right:12px; bottom:118px; display:flex; flex-direction:column; gap:6px; z-index:30; }
   .cmode { padding:8px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66); color:#ffe9bd; font-size:13px; cursor:pointer; }
   .cmode.on { background:rgba(146,96,28,.9); color:#fff; }
@@ -140,16 +135,13 @@
 <div class="ui" id="onlinePill"><span class="dot"></span><span data-i18n="onlineWait">Đang nối online…</span></div>
 
 
-<div class="ui" id="zoomBtns">
-  <button class="zbtn" id="zoomIn">+</button>
-  <button class="zbtn" id="zoomOut">−</button>
-</div>
 <div class="ui" id="camModes">
   <button class="cmode" data-m="cao" data-i18n="camHigh">📷 Cao</button>
   <button class="cmode" data-m="mat" data-i18n="camEye">👁️ Tầm mắt</button>
   <button class="cmode" data-m="top">🗺️ Top</button>
   <button class="cmode" id="btnDN">🌙 Giờ thật</button>
   <button class="cmode" id="btnLang">🌐 EN</button>
+  <button class="cmode" id="btnLayout">🔧 Layout</button>
   <button class="cmode" id="btnMenu">☰ Menu</button>
 </div>
 
@@ -173,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.42.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.43.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -265,6 +257,71 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const bootMark = window.bootMark || function () {};
 bootMark('imports-ok');
+
+/* ============ Layout editor core (v2.43.0) ============
+   Big yard pieces register their parts here; a saved layout (localStorage)
+   shifts every part + its colliders by the anchor delta. Rotation applies
+   to single pieces only (the shrine moves as a cluster, unrotated). */
+const LAYOUT_KEY = 'pt3d-layout-v1';
+const LAYOUT_ANCHORS = {
+  falls:  { x: -13.6, z: -1.5, ry: Math.PI / 2, rot: true },
+  clock:  { x: -10.8, z: 4.0,  ry: 0, rot: true },
+  shrine: { x: 11.6,  z: 0.5,  ry: -Math.PI / 2, rot: false },
+  burner: { x: 0,     z: -8.6, ry: 0, rot: true }
+};
+const LAYOUT_COLS = {
+  falls:  [{ x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 }],
+  clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
+  shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }, { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 }],
+  burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }]
+};
+let layoutStore = {};
+try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
+const layoutParts = [];
+const layoutCur = {};
+let layoutInitDone = false;
+function regPart(id, obj, anchor) {
+  layoutParts.push({ id, obj, bx: obj.position.x, bz: obj.position.z, anchor: !!anchor });
+  if (layoutInitDone) applyLayoutId(id);
+}
+function layoutEntry(id) {
+  const a = LAYOUT_ANCHORS[id], sv = layoutStore[id];
+  return sv ? { x: sv.x, z: sv.z, ry: (sv.ry !== undefined ? sv.ry : a.ry) } : { x: a.x, z: a.z, ry: a.ry };
+}
+function resolveLayoutCols() {
+  for (const id in LAYOUT_COLS) for (const spec of LAYOUT_COLS[id]) {
+    if (spec.entry !== undefined) continue;
+    spec.entry = COLLIDERS.find(c => Math.abs(c.x0 - spec.x0) < 0.01 && Math.abs(c.x1 - spec.x1) < 0.01 && Math.abs(c.z0 - spec.z0) < 0.01 && Math.abs(c.z1 - spec.z1) < 0.01) || null;
+    const a = LAYOUT_ANCHORS[id];
+    spec.rel = { x0: spec.x0 - a.x, x1: spec.x1 - a.x, z0: spec.z0 - a.z, z1: spec.z1 - a.z };
+  }
+}
+function applyLayoutId(id) {
+  const a = LAYOUT_ANCHORS[id], cur = layoutCur[id] || layoutEntry(id);
+  layoutCur[id] = cur;
+  const dx = cur.x - a.x, dz = cur.z - a.z;
+  for (const p of layoutParts) if (p.id === id) {
+    p.obj.position.x = p.bx + dx; p.obj.position.z = p.bz + dz;
+    if (p.anchor) p.obj.rotation.y = cur.ry;
+  }
+  const swapped = Math.abs(Math.sin(cur.ry - a.ry)) > 0.7;
+  for (const spec of (LAYOUT_COLS[id] || [])) {
+    if (!spec.entry || !spec.rel) continue;
+    const r = spec.rel;
+    if (swapped) { spec.entry.x0 = cur.x + r.z0; spec.entry.x1 = cur.x + r.z1; spec.entry.z0 = cur.z + r.x0; spec.entry.z1 = cur.z + r.x1; }
+    else { spec.entry.x0 = cur.x + r.x0; spec.entry.x1 = cur.x + r.x1; spec.entry.z0 = cur.z + r.z0; spec.entry.z1 = cur.z + r.z1; }
+  }
+}
+function saveLayoutId(id) {
+  const cur = layoutCur[id]; if (!cur) return;
+  layoutStore[id] = { x: Math.round(cur.x * 100) / 100, z: Math.round(cur.z * 100) / 100, ry: Math.round(cur.ry * 1000) / 1000 };
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+}
+function initLayout() {
+  resolveLayoutCols();
+  for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); }
+  layoutInitDone = true;
+}
 
 /* ============ Renderer / Scene / Camera ============ */
 const container = document.getElementById('scene');
@@ -732,6 +789,7 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
    are re-added over its pool. v2.29.0: back INSIDE the yard at the west-mid
    (Anita corrected the v2.28.0 outside-the-fence reading - they belong in
    the yard, out from beside the hall); yaw +90 deg, cascade faces east. */
+regPart('falls', fallsGrp, true);
 new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
@@ -750,7 +808,7 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   wrap.scale.setScalar(7.6 / size.x);
   wrap.position.set(-13.6, 0, -1.5);
   wrap.rotation.y = Math.PI / 2;
-  scene.add(wrap);
+  scene.add(wrap); regPart('falls', wrap, true);
   if (fallsGrp) fallsGrp.visible = false;
 });
 
@@ -782,7 +840,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -818,7 +876,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -1004,6 +1062,7 @@ function lanternPole(x, z) {
 
 /* ============ Incense burner + smoke ============ */
 const burner = new THREE.Group(); burner.position.set(0, 0, -8.6); scene.add(burner);
+regPart('burner', burner, true);
 const urnPts = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
 const urn = new THREE.Mesh(new THREE.LatheGeometry(urnPts, 22), MAT.bronze);
 urn.castShadow = true; urn.receiveShadow = true; burner.add(urn);
@@ -1274,21 +1333,21 @@ let shrineGrp = null;
   const bamM = new THREE.MeshStandardMaterial({ color: 0x5d8a4a, roughness: 0.9 });
   for (let i = 0; i < 13; i++) {
     const bz = -2.2 + i * 0.47 + (i % 3) * 0.06, bh = 3.1 + (i % 4) * 0.35;
-    const stalk = cyl(0.045, 0.055, bh, bamM, 14.9 + (i % 2) * 0.22, bh / 2, bz, scene);
+    const stalk = cyl(0.045, 0.055, bh, bamM, 14.9 + (i % 2) * 0.22, bh / 2, bz, scene); regPart('shrine', stalk, false);
     stalk.rotation.z = (i % 3 - 1) * 0.02;
-    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(14.95 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
+    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(14.95 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); regPart('shrine', lf, false); }
   }
-  [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
-  const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag;
+  [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('shrine', c, false); });
+  const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag; regPart('shrine', stag, false);
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
-  shrineLight.position.set(10.6, 1.7, pz); scene.add(shrineLight);
+  shrineLight.position.set(10.6, 1.7, pz); scene.add(shrineLight); regPart('shrine', shrineLight, false); regPart('shrine', shrineBurner, false);
   new GLTFLoader().load('models/temple.glb?v=100', (gltf) => {
     const m = gltf.scene;
     m.rotation.y = -Math.PI / 2;
     m.scale.setScalar(7.3);
     m.position.set(px, 0, pz);
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    scene.add(m); shrineGrp = m;
+    scene.add(m); shrineGrp = m; regPart('shrine', m, true);
   });
 }
 
@@ -1541,6 +1600,7 @@ let floatRod = null;
   }
   floatRod = box(0.05, 0.62, 0.05, MAT.woodDark, 0.18, 0.80, 0, clockG);
   const ctag = nameTag('Đồng hồ nước', 'lậu hồ · tính canh giờ'); ctag.position.y = 2.55; clockG.add(ctag);
+  regPart('clock', clockG, true);
 }
 
 /* ============ Cong qua: sweep bodhi leaves + catch sala flowers ============ */
@@ -1948,6 +2008,7 @@ const pointer = new THREE.Vector2();
 let downX = 0, downY = 0, downT = 0;
 renderer.domElement.addEventListener('pointerdown', (e) => { downX = e.clientX; downY = e.clientY; downT = performance.now(); });
 renderer.domElement.addEventListener('pointerup', (e) => {
+  if (window.__layoutEdit) return;
   if (Math.hypot(e.clientX - downX, e.clientY - downY) > 7 || performance.now() - downT > 450) return;
   pointer.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointer, camera);
@@ -2274,8 +2335,6 @@ function applyCamMode(snap) {
 }
 document.querySelectorAll('.cmode[data-m]').forEach(b => b.addEventListener('click', () => { camMode = b.dataset.m; applyCamMode(true); }));
 applyCamMode(false);
-document.getElementById('zoomIn').addEventListener('click', () => dolly(0.8));
-document.getElementById('zoomOut').addEventListener('click', () => dolly(1.25));
 function dolly(f) {
   const off = camera.position.clone().sub(controls.target);
   const len = THREE.MathUtils.clamp(off.length() * f, controls.minDistance, controls.maxDistance);
@@ -2919,6 +2978,216 @@ try {
 const _applyNamePt = applyName;
 applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
 
+/* ============ Layout edit mode UI (v2.43.0) ============ */
+initLayout();
+let layoutEdit = false, layoutSel = null, layoutDragId = null;
+const layoutProxies = new Map();
+const layoutRay = new THREE.Raycaster();
+const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const layoutHitP = new THREE.Vector3();
+let layoutRing = null;
+const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner' };
+const layoutPanel = document.createElement('div');
+layoutPanel.id = 'layoutPanel';
+layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
+layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-size:14px;margin-bottom:4px"></div>'
+  + '<div id="layoutHintTxt" style="font-size:11.5px;opacity:.85;margin-bottom:8px"></div>'
+  + '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">'
+  + '<button class="laybtn" id="layRotL">⟲ 15°</button>'
+  + '<button class="laybtn" id="layRotR">15° ⟳</button>'
+  + '<button class="laybtn" id="layCode"></button>'
+  + '<button class="laybtn" id="layReset"></button>'
+  + '<button class="laybtn" id="layLock"></button></div>';
+document.body.appendChild(layoutPanel);
+const layStyle = document.createElement('style');
+layStyle.textContent = '.laybtn{padding:7px 11px;border-radius:999px;border:1px solid rgba(255,205,120,.5);background:rgba(52,34,16,.9);color:#ffe9bd;font-size:12.5px;cursor:pointer}.laybtn:active{background:rgba(146,96,28,.9)}'
+  + '.uiGrip{display:flex;align-items:center;justify-content:center;color:rgba(255,225,168,.85);font-size:15px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:3px 6px;flex:0 0 auto}';
+document.head.appendChild(layStyle);
+
+function layoutProxySize(id) {
+  const specs = LAYOUT_COLS[id] || [], a = LAYOUT_ANCHORS[id];
+  if (!specs.length) return { w: 2.5, d: 2.5, cx: 0, cz: 0, h: 2.5 };
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+  for (const sp of specs) {
+    const r = sp.rel || { x0: sp.x0 - a.x, x1: sp.x1 - a.x, z0: sp.z0 - a.z, z1: sp.z1 - a.z };
+    x0 = Math.min(x0, r.x0); x1 = Math.max(x1, r.x1); z0 = Math.min(z0, r.z0); z1 = Math.max(z1, r.z1);
+  }
+  return { w: Math.max(1.6, x1 - x0), d: Math.max(1.6, z1 - z0), cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, h: id === 'falls' ? 5 : 3 };
+}
+function buildLayoutProxies() {
+  clearLayoutProxies();
+  if (!layoutRing) {
+    layoutRing = new THREE.Mesh(new THREE.RingGeometry(0.88, 1, 48), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false }));
+    layoutRing.rotation.x = -Math.PI / 2; layoutRing.renderOrder = 5; layoutRing.visible = false;
+    scene.add(layoutRing);
+  }
+  for (const id in LAYOUT_ANCHORS) {
+    const sz = layoutProxySize(id);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(sz.w, sz.h, sz.d), new THREE.MeshBasicMaterial({ visible: false }));
+    m.userData.layoutId = id; m.userData.sz = sz;
+    scene.add(m); layoutProxies.set(id, m);
+    syncLayoutProxy(id);
+  }
+}
+function clearLayoutProxies() {
+  for (const m of layoutProxies.values()) { scene.remove(m); m.geometry.dispose(); }
+  layoutProxies.clear();
+  if (layoutRing) layoutRing.visible = false;
+}
+function syncLayoutProxy(id) {
+  const m = layoutProxies.get(id); if (!m) return;
+  const cur = layoutCur[id] || layoutEntry(id), sz = m.userData.sz;
+  m.position.set(cur.x + sz.cx, sz.h / 2, cur.z + sz.cz);
+  if (layoutSel === id && layoutRing) {
+    layoutRing.position.set(cur.x + sz.cx, 0.07, cur.z + sz.cz);
+    const r = Math.max(sz.w, sz.d) * 0.62;
+    layoutRing.scale.set(r, r, 1);
+    layoutRing.visible = true;
+  }
+}
+function layoutSelect(id) {
+  layoutSel = id;
+  const nameEl = document.getElementById('layoutSelName');
+  const hintEl = document.getElementById('layoutHintTxt');
+  const rot = id && LAYOUT_ANCHORS[id].rot;
+  document.getElementById('layRotL').style.display = rot ? '' : 'none';
+  document.getElementById('layRotR').style.display = rot ? '' : 'none';
+  nameEl.textContent = id ? L()[LAYOUT_NAMES[id]] : '🔧 Layout';
+  hintEl.textContent = L().layoutHint;
+  if (id) syncLayoutProxy(id);
+  else if (layoutRing) layoutRing.visible = false;
+}
+function setLayoutEdit(on) {
+  layoutEdit = on; window.__layoutEdit = on;
+  controls.enabled = !on;
+  layoutPanel.style.display = on ? 'block' : 'none';
+  document.getElementById('btnLayout').classList.toggle('on', on);
+  if (on) {
+    document.getElementById('layCode').textContent = L().layoutCode;
+    document.getElementById('layReset').textContent = L().layoutReset;
+    document.getElementById('layLock').textContent = L().layoutLock;
+    buildLayoutProxies();
+    layoutSelect(null);
+    toast(L().layoutHint);
+  } else {
+    layoutDragId = null;
+    clearLayoutProxies();
+    layoutSel = null;
+  }
+}
+document.getElementById('btnLayout').addEventListener('click', () => setLayoutEdit(!layoutEdit));
+document.getElementById('layLock').addEventListener('click', () => setLayoutEdit(false));
+function layoutRotate(dir) {
+  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].rot) return;
+  layoutCur[layoutSel].ry += dir * Math.PI / 12;
+  applyLayoutId(layoutSel);
+  syncLayoutProxy(layoutSel);
+  saveLayoutId(layoutSel);
+}
+document.getElementById('layRotL').addEventListener('click', () => layoutRotate(-1));
+document.getElementById('layRotR').addEventListener('click', () => layoutRotate(1));
+document.getElementById('layCode').addEventListener('click', () => {
+  const curCode = JSON.stringify(layoutStore);
+  const t = prompt(L().layoutCodePrompt, curCode);
+  if (t === null) return;
+  const v = t.trim();
+  if (!v || v === curCode) return;
+  try {
+    const o = JSON.parse(v);
+    if (!o || typeof o !== 'object') return;
+    layoutStore = o;
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+    for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
+    toast('✓ Layout');
+  } catch (e) { /* invalid code pasted: ignore */ }
+});
+document.getElementById('layReset').addEventListener('click', () => {
+  if (!confirm(L().layoutResetQ)) return;
+  layoutStore = {};
+  try { localStorage.removeItem(LAYOUT_KEY); } catch (e) {}
+  for (const id in LAYOUT_ANCHORS) { const a = LAYOUT_ANCHORS[id]; layoutCur[id] = { x: a.x, z: a.z, ry: a.ry }; applyLayoutId(id); syncLayoutProxy(id); }
+});
+let layoutGrabDX = 0, layoutGrabDZ = 0;
+function layoutPointerGround(e) {
+  const nd = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  layoutRay.setFromCamera(nd, camera);
+  return layoutRay.ray.intersectPlane(layoutPlane, layoutHitP) ? layoutHitP : null;
+}
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (!layoutEdit) return;
+  const nd = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  layoutRay.setFromCamera(nd, camera);
+  const hits = layoutRay.intersectObjects([...layoutProxies.values()], false);
+  if (hits.length) {
+    const id = hits[0].object.userData.layoutId;
+    layoutSelect(id);
+    const p = layoutPointerGround(e), cur = layoutCur[id];
+    if (p && cur) { layoutGrabDX = cur.x - p.x; layoutGrabDZ = cur.z - p.z; }
+    layoutDragId = id;
+  } else layoutSelect(null);
+});
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (!layoutEdit || !layoutDragId) return;
+  const p = layoutPointerGround(e); if (!p) return;
+  const cur = layoutCur[layoutDragId];
+  cur.x = Math.max(-16.6, Math.min(16.6, p.x + layoutGrabDX));
+  cur.z = Math.max(-11.6, Math.min(13.4, p.z + layoutGrabDZ));
+  applyLayoutId(layoutDragId);
+  syncLayoutProxy(layoutDragId);
+});
+window.addEventListener('pointerup', () => {
+  if (layoutDragId) { saveLayoutId(layoutDragId); layoutDragId = null; }
+});
+
+/* ============ Draggable UI panels (v2.43.0) ============
+   Anita: the panels clutter the view - let her drag them aside by the
+   grip (⠿), position persists; double-tap the grip to reset. */
+function makePanelDraggable(el, key) {
+  if (!el) return;
+  const grip = document.createElement('div');
+  grip.className = 'uiGrip'; grip.textContent = '⠿';
+  grip.title = 'Kéo để dời vị trí · chạm 2 lần để về chỗ cũ';
+  if (el.id === 'actions') { grip.style.position = 'sticky'; grip.style.left = '0'; grip.style.zIndex = '2'; grip.style.background = 'rgba(24,17,9,.88)'; grip.style.borderRadius = '8px'; }
+  el.prepend(grip);
+  try {
+    const p = JSON.parse(localStorage.getItem(key) || 'null');
+    if (p && isFinite(p.x) && isFinite(p.y)) {
+      el.style.left = Math.max(0, Math.min(p.x, innerWidth - 60)) + 'px';
+      el.style.top = Math.max(0, Math.min(p.y, innerHeight - 40)) + 'px';
+      el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = 'none';
+    }
+  } catch (e) {}
+  let drag = false, sx = 0, sy = 0, ox = 0, oy = 0;
+  grip.addEventListener('pointerdown', (e) => {
+    const r = el.getBoundingClientRect();
+    el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+    el.style.right = 'auto'; el.style.bottom = 'auto'; el.style.transform = 'none';
+    sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top; drag = true;
+    try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+    e.preventDefault(); e.stopPropagation();
+  });
+  grip.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    let nx = ox + (e.clientX - sx), ny = oy + (e.clientY - sy);
+    nx = Math.max(2, Math.min(nx, innerWidth - el.offsetWidth - 2));
+    ny = Math.max(2, Math.min(ny, innerHeight - el.offsetHeight - 2));
+    el.style.left = nx + 'px'; el.style.top = ny + 'px';
+  });
+  const endDrag = () => {
+    if (!drag) return; drag = false;
+    const r = el.getBoundingClientRect();
+    try { localStorage.setItem(key, JSON.stringify({ x: Math.round(r.left), y: Math.round(r.top) })); } catch (e) {}
+  };
+  grip.addEventListener('pointerup', endDrag);
+  grip.addEventListener('pointercancel', endDrag);
+  grip.addEventListener('dblclick', () => {
+    try { localStorage.removeItem(key); } catch (e) {}
+    el.style.left = ''; el.style.top = ''; el.style.right = ''; el.style.bottom = ''; el.style.transform = '';
+  });
+}
+makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions');
+makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
+
 /* ============ Session resume + build freshness (v2.4.1) ============
    A plain reload (F5) resumes exactly where you were: same room, same spot,
    incense still burning with its remaining time, swept leaf piles still gone,
@@ -2926,7 +3195,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.42.1';
+const PT3D_VER = '2.43.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
