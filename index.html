@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.27.0">
+<meta name="pt3d-ver" content="2.28.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.27.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.28.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -624,7 +624,7 @@ function tree(x, z, s = 1) {
   scene.add(g); treeProcs.push(g); return g;
 }
 tree(-12.5, -23.5, 0.9); tree(16.8, -20.5, 1.0); tree(-15.8, -7.5, 1.15);
-tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1);
+tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.3, 1.5, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
 /* real papercut tree (v2.23.0): a true 3D model Anita generated on Tripo
    from her reference photo, vertex-painted + simplified by Cuu - when it
    loads it replaces the procedural disc trees; if it fails, they stay */
@@ -678,7 +678,7 @@ const fallsTex = canvasTexture(256, 256, (g) => {
 fallsTex.wrapS = fallsTex.wrapT = THREE.RepeatWrapping; fallsTex.repeat.set(1, 2);
 const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide });
 {
-  const wf = new THREE.Group(); wf.position.set(37, 0, -4); wf.rotation.y = -0.9; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
+  const wf = new THREE.Group(); wf.position.set(-26, 0, -12); wf.rotation.y = Math.PI / 2; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
   /* papercut boulder falls (v2.21.0, from Anita's waterfall reference): a LOW
      cluster of faceted warm-grey + sand boulders with a two-step cascade -
      not a terraced tower */
@@ -707,9 +707,9 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
 }
 /* v2.26.0: Anita's Tripo waterfall (textured) replaces the procedural boulder
    falls; the old group stays as fallback until the model loads. Mist sprites
-   are re-added over its pool. v2.27.0: moved from the far east into the yard,
-   west of the hall (reference layout) — yaw +90 deg so the cascade (local +Z)
-   faces east into the yard. */
+   are re-added over its pool. v2.28.0: back outside the fence, west side,
+   full size (Anita's call after seeing the v2.27.0 layout); yaw +90 deg so
+   the cascade (local +Z) faces east toward the yard. */
 new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
@@ -725,8 +725,8 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
     m.add(mist);
   }
   const wrap = new THREE.Group(); wrap.add(m);
-  wrap.scale.setScalar(8.2 / size.x);
-  wrap.position.set(-14.6, 0, -16.0);
+  wrap.scale.setScalar(11.5 / size.x);
+  wrap.position.set(-26, 0, -12);
   wrap.rotation.y = Math.PI / 2;
   scene.add(wrap);
   if (fallsGrp) fallsGrp.visible = false;
@@ -1093,7 +1093,7 @@ function lotusPond(x, z) {
   const f3 = lotus(1.05, 0.55, true); f3.position.set(0.48, 0.48, -0.12); g.add(f3);
   scene.add(g); return g;
 }
-const pondL = lotusPond(-8.8, 3.4); pondL.scale.setScalar(1.6); const pondR = lotusPond(8.8, 3.4); pondR.scale.setScalar(1.6);
+/* v2.28.0: yard lotus bowls removed on Anita's call - the pond lives on the tha-den race page. */
 function stoneLantern(x, z) {
   /* papercut toro (v2.21.0, from Anita's lantern reference): warm cream stone -
      square base, tapered square pillar, glowing firebox with corner posts,
@@ -1153,25 +1153,25 @@ function cushion(x, z) {
 const cushionSpots = [];
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
-/* Dien Tho (v2.25.0): Anita's Tripo temple as a small look-in shrine in the
-   east yard, replacing the Thien Xa pavilion. The model stays UNCUT - its own
-   white Buddha remains inside as the shrine's Buddha. The door faces west
-   toward the yard; the bamboo grove now stands behind it; sittable cushions
-   rest on the grass in front of the door. */
+/* Dien Tho (v2.25.0): Anita's Tripo temple as a small look-in shrine,
+   replacing the Thien Xa pavilion. The model stays UNCUT - its own white
+   Buddha remains inside as the shrine's Buddha. v2.28.0: moved outside the
+   east fence as scenery (Anita's call); door faces west toward the yard,
+   bamboo grove behind it, no sittable cushions (outside the walk area). */
 let shrineGrp = null;
 {
-  const px = 13.9, pz = -13.0;
+  const px = 23.5, pz = 3.0;
   const bamM = new THREE.MeshStandardMaterial({ color: 0x5d8a4a, roughness: 0.9 });
   for (let i = 0; i < 13; i++) {
-    const bz = -15.7 + i * 0.47 + (i % 3) * 0.06, bh = 3.1 + (i % 4) * 0.35;
-    const stalk = cyl(0.045, 0.055, bh, bamM, 17.3 + (i % 2) * 0.22, bh / 2, bz, scene);
+    const bz = 0.3 + i * 0.47 + (i % 3) * 0.06, bh = 3.1 + (i % 4) * 0.35;
+    const stalk = cyl(0.045, 0.055, bh, bamM, 26.5 + (i % 2) * 0.22, bh / 2, bz, scene);
     stalk.rotation.z = (i % 3 - 1) * 0.02;
-    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(17.35 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
+    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(26.55 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
   }
-  [[10.2, -14.8, 1.0], [10.2, -13.2, 1.0], [11.05, -10.0, 0]].forEach(([cx, cz, cy]) => { const c = cushion(cx, cz); c.position.y = cy; c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
+  /* v2.28.0: no shrine cushions - the shrine stands outside the fence. */
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag;
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
-  shrineLight.position.set(12.9, 1.7, pz); scene.add(shrineLight);
+  shrineLight.position.set(22.5, 1.7, pz); scene.add(shrineLight);
   new GLTFLoader().load('models/temple.glb?v=100', (gltf) => {
     const m = gltf.scene;
     m.rotation.y = -Math.PI / 2;
@@ -1751,11 +1751,6 @@ const COLLIDERS = [
   { x0: 5.8, x1: 8.6, z0: -13.2, z1: -12.7 },
   { x0: -8.6, x1: 8.6, z0: -24.65, z1: -24.1 },    // back wall
   { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
-  { x0: -10.8, x1: -6.8, z0: 1.4, z1: 5.4 },       // lotus ponds (front pair, v2.27.0)
-  { x0: 6.8, x1: 10.8, z0: 1.4, z1: 5.4 },
-  { x0: 11.75, x1: 16.05, z0: -16.7, z1: -9.3 },   // dien tho shrine (v2.27.0: east of the hall)
-  { x0: 17.05, x1: 17.75, z0: -16.3, z1: -9.7 },   // bamboo grove (behind the shrine)
-  { x0: -17.6, x1: -11.3, z0: -20.3, z1: -11.7 },  // waterfall rock (v2.27.0: west of the hall)
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -2781,7 +2776,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.27.0';
+const PT3D_VER = '2.28.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
