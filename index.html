@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.21.0">
+<meta name="pt3d-ver" content="2.22.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.21.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.22.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -549,15 +549,60 @@ carpet.receiveShadow = true; scene.add(carpet);
 
 
 /* ============ Trees + fence ============ */
+/* painted paper textures (v2.22.0): Anita rejected v2.21.0 outright - flat
+   colours only matched the silhouettes, nothing looked like her images. The
+   papercut feel lives in the SURFACE: mottled, hand-painted paper. These
+   canvas textures carry that surface onto the light code geometry. */
+const leafTex = canvasTexture(256, 256, (g) => {
+  g.fillStyle = '#e6edc9'; g.fillRect(0, 0, 256, 256);
+  const cols = ['#b9d97c', '#a3cc62', '#cde79a', '#8fbf57', '#d8eda8'];
+  for (let i = 0; i < 900; i++) {
+    g.fillStyle = cols[i % cols.length]; g.globalAlpha = 0.25 + Math.random() * 0.4;
+    const r = 4 + Math.random() * 11;
+    g.beginPath(); g.arc(Math.random() * 256, Math.random() * 256, r, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+});
+leafTex.wrapS = leafTex.wrapT = THREE.RepeatWrapping;
+const stoneTex = canvasTexture(256, 256, (g) => {
+  g.fillStyle = '#ddd3ba'; g.fillRect(0, 0, 256, 256);
+  const cols = ['#cbbd9d', '#e8dfc8', '#b7a888', '#d9c9a3', '#c2b294'];
+  for (let i = 0; i < 700; i++) {
+    g.fillStyle = cols[i % cols.length]; g.globalAlpha = 0.2 + Math.random() * 0.3;
+    const r = 5 + Math.random() * 14;
+    g.beginPath(); g.arc(Math.random() * 256, Math.random() * 256, r, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1; g.fillStyle = 'rgba(120,105,80,0.25)';
+  for (let i = 0; i < 500; i++) g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+});
+stoneTex.wrapS = stoneTex.wrapT = THREE.RepeatWrapping;
+const shingleTex = canvasTexture(512, 512, (g) => {
+  g.fillStyle = '#9c5a2c'; g.fillRect(0, 0, 512, 512);
+  const sw = 64, sh = 46;
+  for (let row = 0, y = -sh; y < 512 + sh; y += sh, row++) {
+    for (let x = -sw; x < 512 + sw; x += sw) {
+      const cx = x + (row % 2 ? sw / 2 : 0);
+      g.fillStyle = row % 2 ? '#a86434' : '#b06e38';
+      g.beginPath(); g.arc(cx, y, sw / 2, 0, Math.PI); g.fill();
+      g.strokeStyle = 'rgba(84,40,12,0.55)'; g.lineWidth = 5;
+      g.beginPath(); g.arc(cx, y, sw / 2 - 2, 0, Math.PI); g.stroke();
+      g.fillStyle = 'rgba(255,190,120,0.16)';
+      g.beginPath(); g.arc(cx, y - 5, sw / 4, 0, Math.PI); g.fill();
+    }
+  }
+});
+shingleTex.wrapS = shingleTex.wrapT = THREE.RepeatWrapping; shingleTex.repeat.set(6, 2);
+const canopyMats = [0x7fae4c, 0x9cc465, 0xc2dd85].map(c => new THREE.MeshStandardMaterial({ map: leafTex, color: c, roughness: 0.85 }));
+const toroMat = new THREE.MeshStandardMaterial({ map: stoneTex, color: 0xf7efdd, roughness: 0.8 });
 /* papercut scallop disc (v2.21.0): a flat cylinder whose rim wobbles like a
    cut-paper cloud edge - stacked in layers these read as paper foliage */
 const leafLight = new THREE.MeshStandardMaterial({ color: 0xb9d94e, roughness: 0.8 });
 function scallopDisc(r, mat, phase = 0) {
-  const geo = new THREE.CylinderGeometry(r, r, 0.14, 42);
+  const geo = new THREE.CylinderGeometry(r, r, Math.max(0.16, r * 0.24), 42);
   const pa = geo.attributes.position;
   for (let i = 0; i < pa.count; i++) {
     const x = pa.getX(i), z = pa.getZ(i), rad = Math.hypot(x, z);
-    if (rad > r * 0.5) { const a = Math.atan2(z, x), k = 1 + 0.075 * Math.sin(a * 9 + phase); pa.setX(i, x * k); pa.setZ(i, z * k); }
+    if (rad > r * 0.5) { const a = Math.atan2(z, x), k = 1 + 0.10 * Math.sin(a * 8 + phase); pa.setX(i, x * k); pa.setZ(i, z * k); }
   }
   geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m;
@@ -568,11 +613,11 @@ function tree(x, z, s = 1) {
   const branch = cyl(0.05, 0.08, 1.1, MAT.trunk, 0.45, 1.95, 0.1, g, 7); branch.rotation.z = -0.5;
   /* papercut canopy (v2.21.0): three stacked scalloped paper discs per
      cluster, dark green -> green -> yellow-green, like Anita's tree image */
-  const clusters = [[0, 2.75, 0, 1.35], [0.9, 2.2, 0.25, 0.9], [-0.85, 2.3, -0.2, 0.95], [0.15, 3.3, -0.3, 0.8]];
+  const clusters = [[0, 2.6, 0, 1.55], [1.0, 2.25, 0.3, 1.05], [-0.95, 2.35, -0.25, 1.1], [0.2, 3.05, -0.35, 0.95]];
   clusters.forEach(([bx, by, bz, br], ci) => {
-    [[MAT.leaf, 0], [MAT.leaf2, 0.15], [leafLight, 0.3]].forEach(([m, dy], li) => {
-      const d = scallopDisc(br * (1 - li * 0.16), m, ci * 1.7 + li * 0.9);
-      d.position.set(bx, by + dy, bz); g.add(d);
+    canopyMats.forEach((m, li) => {
+      const d = scallopDisc(br * (1 - li * 0.15), m, ci * 1.7 + li * 0.9);
+      d.position.set(bx + li * 0.05, by + li * 0.13, bz); d.rotation.y = ci + li * 0.8; g.add(d);
     });
   });
   scene.add(g); return g;
@@ -619,16 +664,16 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
   /* papercut boulder falls (v2.21.0, from Anita's waterfall reference): a LOW
      cluster of faceted warm-grey + sand boulders with a two-step cascade -
      not a terraced tower */
-  const rockTones = [0x8d867a, 0xa8a091, 0xd9b77c, 0x7b7568];
+  const rockTones = [0xd8cfb8, 0xe6dcc4, 0xf0d49a, 0xcabfa8];
   const rock = (r, tone, x, y, z, sy = 0.82) => {
-    const q = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), new THREE.MeshStandardMaterial({ color: tone, roughness: 1, flatShading: true }));
+    const q = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), new THREE.MeshStandardMaterial({ map: stoneTex, color: tone, roughness: 1, flatShading: true }));
     q.position.set(x, y, z); q.scale.y = sy; q.rotation.y = x * 1.7 + z; q.castShadow = true; wf.add(q); return q;
   };
   rock(2.2, rockTones[0], 0.2, 1.7, -1.5); rock(1.9, rockTones[1], -2.3, 1.4, -1.2); rock(1.7, rockTones[0], 2.4, 1.3, -1.1);
   rock(1.25, rockTones[1], -1.5, 0.75, 0.7); rock(1.15, rockTones[3], 1.7, 0.7, 0.8);
   rock(1.0, rockTones[2], -3.1, 0.5, 2.3); rock(0.95, rockTones[1], 3.2, 0.45, 2.4); rock(0.7, rockTones[0], 0.1, 0.3, 3.6); rock(0.55, rockTones[2], -1.9, 0.25, 3.3);
-  const f1 = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.9), fallsMat); f1.position.set(0, 2.35, 0.15); f1.rotation.x = 0.1; wf.add(f1);
-  const f2 = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.6), fallsMat); f2.position.set(0, 0.85, 1.35); f2.rotation.x = -0.35; wf.add(f2);
+  const f1 = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.9), fallsMat); f1.position.set(0, 2.35, 0.15); f1.rotation.x = 0.1; wf.add(f1);
+  const f2 = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.6), fallsMat); f2.position.set(0, 0.85, 1.35); f2.rotation.x = -0.35; wf.add(f2);
   const pool = new THREE.Mesh(new THREE.CircleGeometry(3.1, 22), new THREE.MeshStandardMaterial({ color: 0x3d7a99, roughness: 0.3 }));
   pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.05, 3.1); pool.scale.set(1, 0.82, 1); wf.add(pool);
   const foamM = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
@@ -1010,20 +1055,20 @@ function stoneLantern(x, z) {
      square base, tapered square pillar, glowing firebox with corner posts,
      curved pagoda cap and an onion finial, all in cream paper-stone */
   const g = new THREE.Group(); g.position.set(x, 0, z);
-  box(0.72, 0.16, 0.72, MAT.stone, 0, 0.08, 0, g);
-  const pillar = cyl(0.17, 0.27, 0.6, MAT.stone, 0, 0.46, 0, g, 4); pillar.rotation.y = Math.PI / 4;
-  box(0.64, 0.1, 0.64, MAT.stone, 0, 0.81, 0, g);
+  box(0.72, 0.16, 0.72, toroMat, 0, 0.08, 0, g);
+  const pillar = cyl(0.17, 0.27, 0.6, toroMat, 0, 0.46, 0, g, 4); pillar.rotation.y = Math.PI / 4;
+  box(0.64, 0.1, 0.64, toroMat, 0, 0.81, 0, g);
   const lampMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffa04a, emissiveIntensity: 1.5 });
   box(0.34, 0.3, 0.34, lampMat, 0, 1.06, 0, g);
-  [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]].forEach(([ox, oz]) => box(0.09, 0.36, 0.09, MAT.stone, ox, 1.06, oz, g));
-  box(0.52, 0.07, 0.52, MAT.stone, 0, 1.27, 0, g);
+  [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]].forEach(([ox, oz]) => box(0.09, 0.36, 0.09, toroMat, ox, 1.06, oz, g));
+  box(0.52, 0.07, 0.52, toroMat, 0, 1.27, 0, g);
   const capPts = [[0.55, 0], [0.52, 0.05], [0.36, 0.17], [0.2, 0.27], [0.17, 0.31]].map(p => new THREE.Vector2(p[0], p[1]));
-  const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 4), MAT.stone);
+  const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 4), toroMat);
   cap.rotation.y = Math.PI / 4; cap.position.y = 1.3; cap.castShadow = true; g.add(cap);
-  cyl(0.11, 0.11, 0.05, MAT.stone, 0, 1.64, 0, g, 10);
-  const onion = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), MAT.stone);
+  cyl(0.11, 0.11, 0.05, toroMat, 0, 1.64, 0, g, 10);
+  const onion = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), toroMat);
   onion.scale.y = 1.3; onion.position.y = 1.76; g.add(onion);
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.12, 8), MAT.stone); tip.position.y = 1.9; g.add(tip);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.12, 8), toroMat); tip.position.y = 1.9; g.add(tip);
   scene.add(g);
 }
 stoneLantern(-2.4, -1.2); stoneLantern(2.4, -1.2); stoneLantern(-2.4, 5.2); stoneLantern(2.4, 5.2);
@@ -1093,12 +1138,12 @@ const cushionSpots = [];
      four-sided shingle pyramid, cream paper edge, pointed finial, bamboo
      blinds under the side eaves, a hanging paper lantern, low side rails */
   const pCreamM = new THREE.MeshStandardMaterial({ color: 0xefe3c8, roughness: 0.95 });
-  const pRoofM = new THREE.MeshStandardMaterial({ color: 0xc9713a, roughness: 0.85, flatShading: true });
-  const edge = new THREE.Mesh(new THREE.ConeGeometry(5.05, 0.55, 4), pCreamM);
-  edge.rotation.y = Math.PI / 4; edge.scale.set(1.15, 1, 0.85); edge.position.set(px, 3.12, pz); scene.add(edge);
-  const proof = new THREE.Mesh(new THREE.ConeGeometry(4.9, 1.95, 4), pRoofM);
-  proof.rotation.y = Math.PI / 4; proof.scale.set(1.15, 1, 0.85); proof.position.set(px, 3.95, pz); proof.castShadow = true; scene.add(proof);
-  const pfin = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pCreamM); pfin.scale.y = 1.5; pfin.position.set(px, 5.05, pz); scene.add(pfin);
+  const pRoofM = new THREE.MeshStandardMaterial({ map: shingleTex, roughness: 0.9 });
+  const edge = new THREE.Mesh(new THREE.ConeGeometry(5.5, 0.5, 4), pCreamM);
+  edge.rotation.y = Math.PI / 4; edge.scale.set(1.15, 1, 0.85); edge.position.set(px, 3.08, pz); scene.add(edge);
+  const proof = new THREE.Mesh(new THREE.ConeGeometry(5.3, 1.55, 4), pRoofM);
+  proof.rotation.y = Math.PI / 4; proof.scale.set(1.15, 1, 0.85); proof.position.set(px, 3.72, pz); proof.castShadow = true; scene.add(proof);
+  const pfin = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pCreamM); pfin.scale.y = 1.5; pfin.position.set(px, 4.62, pz); scene.add(pfin);
   const blindM = new THREE.MeshStandardMaterial({ color: 0xd9b878, roughness: 1 });
   [-1, 1].forEach(sd => { box(3.6, 0.8, 0.05, blindM, px, 2.42, pz + sd * 1.92, scene); });
   const plampM = new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffa04a, emissiveIntensity: 1.1, roughness: 0.6 });
@@ -2739,7 +2784,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.21.0';
+const PT3D_VER = '2.22.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
