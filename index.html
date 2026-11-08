@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.79.0">
+<meta name="pt3d-ver" content="2.79.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -175,7 +175,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.79.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.79.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1589,10 +1589,11 @@ function cushion(x, z) {
   scene.add(g); cushions.push(g); return g;
 }
 const cushionSpots = [];
-/* v2.31.0: yard cushions in 2 rows along the red carpet - west row faces
-   the hall, east row faces the shrine (kneel for one, turn for the other). */
+/* v2.31.0: yard cushions in 2 rows along the red carpet. v2.79.1 (Anita):
+   BOTH rows face the main hall when meditating - only the shrine's own
+   cushions face the shrine, and the pavilion cushion faces out its steps. */
 [-7.0, -4.4, -1.8, 0.8].forEach(z => { cushionSpots.push(cushion(-3.6, z)); });
-[-7.0, -4.4, -1.8, 0.8].forEach(z => { const c = cushion(3.6, z); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
+[-7.0, -4.4, -1.8, 0.8].forEach(z => { cushionSpots.push(cushion(3.6, z)); });
 /* Dien Tho (v2.25.0): Anita's Tripo temple as a small look-in shrine,
    replacing the Thien Xa pavilion. The model stays UNCUT - its own white
    Buddha remains inside as the shrine's Buddha. v2.29.0: east-mid of the
@@ -3984,7 +3985,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.79.0';
+const PT3D_VER = '2.79.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
