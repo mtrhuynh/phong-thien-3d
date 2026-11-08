@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.83.3">
+<meta name="pt3d-ver" content="2.83.4">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -183,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.83.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.83.4</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -296,7 +296,6 @@ const chatBubbles = new Map();
 const __chatV = new THREE.Vector3();
 const LAYOUT_ANCHORS = {
   falls:  { x: -13.6, z: -1.5, ry: Math.PI / 2, rot: true },
-  clock:  { x: -10.8, z: 4.0,  ry: 0, rot: true },
   well:   { x: 13.2,  z: 5.6,  ry: -Math.PI / 2, rot: true },
   rockfalls: { x: -14.6, z: -8.0, ry: Math.PI / 2, rot: true },
   shrine: { x: 11.6,  z: 0.5,  ry: -Math.PI / 2, rot: false },
@@ -317,7 +316,6 @@ const LAYOUT_ANCHORS = {
 const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dominant up-facing surface sits at 0.057 of model height; x5.864 scale = 0.33 m, NO sinking (the v2.56.0 guess of 0.145 + a 0.30 sink buried the plinth and floated the cushions - Anita's screenshot caught both)
 const LAYOUT_COLS = {
   falls:  [{ x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 }],
-  clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   well:   [{ x0: 11.9, x1: 14.5, z0: 4.3, z1: 6.9 }],
   rockfalls: [{ x0: -17.2, x1: -12.0, z0: -10.2, z1: -5.8 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }], // v2.63.1: bamboo collider gone with the grove
@@ -1316,7 +1314,6 @@ function refreshTags() {
     const sub = df.subKey ? bacSub(df.subKey) : (df.sub || '');
     if (df.name && n.userData.tag) { n.userData.tag.material.map = nameTag(df.name, sub).material.map; n.userData.tag.material.needsUpdate = true; }
   });
-  if (window.__ctag) { window.__ctag.material.map = nameTag(L().clockName, L().clockSub).material.map; window.__ctag.material.needsUpdate = true; }
   if (window.__paviTag) { window.__paviTag.material.map = nameTag(L().paviName, L().paviSub).material.map; window.__paviTag.material.needsUpdate = true; }
 }
 function pt3dBootLang() {
@@ -1953,36 +1950,6 @@ document.getElementById('xamAgain').addEventListener('click', () => { xamCard.cl
 
 
 
-/* ============ Dong ho nuoc (lau ho) — ancient water clock in the yard ============ */
-const waterDrops = [];
-let floatRod = null;
-{
-  const clockG = new THREE.Group(); clockG.position.set(-10.8, 0, 4.0); clockG.rotation.y = 0; scene.add(clockG);
-  box(1.5, 0.25, 1.1, MAT.stone, 0, 0.12, 0, clockG);
-  [[-0.6, -0.4], [0.6, -0.4], [-0.6, 0.4], [0.6, 0.4]].forEach(([px, pz]) => box(0.09, 1.55, 0.09, MAT.woodDark, px, 0.95, pz, clockG));
-  box(1.45, 0.09, 1.0, MAT.woodDark, 0, 1.78, 0, clockG);
-  const potPts = [[0.0, 0.0], [0.62, 0.0], [0.78, 0.18], [0.92, 0.45], [0.85, 0.72], [0.66, 0.9], [0.72, 1.0]].map(p => new THREE.Vector2(p[0], p[1]));
-  function clockPot(r, h, baseY) {
-    const m = new THREE.Mesh(new THREE.LatheGeometry(potPts, 16), MAT.bronze);
-    m.scale.set(r, h, r); m.position.y = baseY; m.castShadow = true; clockG.add(m);
-  }
-  clockPot(0.30, 0.40, 1.30); clockPot(0.24, 0.32, 0.86); clockPot(0.42, 0.30, 0.27);
-  const clockRoof = new THREE.Mesh(new THREE.ConeGeometry(1.02, 0.38, 4), MAT.roofRidge);
-  clockRoof.rotation.y = Math.PI / 4; clockRoof.position.y = 1.99; clockRoof.castShadow = true; clockG.add(clockRoof);
-  const clockFin = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold);
-  clockFin.position.y = 2.22; clockG.add(clockFin);
-  const wmat = new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.1 });
-  cyl(0.37, 0.37, 0.03, wmat, 0, 0.56, 0, clockG);
-  const dmat = new THREE.MeshBasicMaterial({ color: 0xbfe6f5, transparent: true, opacity: 0.85 });
-  cyl(0.012, 0.012, 0.26, dmat, 0, 0.72, 0, clockG);
-  for (let i = 0; i < 3; i++) {
-    const dm = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), new THREE.MeshBasicMaterial({ color: 0xbfe6f5, transparent: true, opacity: 0.9 }));
-    dm.position.set(0, 0.88, 0); dm.userData.ph = i / 3; clockG.add(dm); waterDrops.push(dm);
-  }
-  floatRod = box(0.05, 0.62, 0.05, MAT.woodDark, 0.18, 0.80, 0, clockG);
-  const ctag = nameTag('Đồng hồ nước', 'lậu hồ · tính canh giờ'); ctag.position.y = 2.55; clockG.add(ctag);
-  regPart('clock', clockG, true);
-}
 
 /* ============ Cong qua: sweep bodhi leaves + catch sala flowers ============ */
 const leafPiles = [];
@@ -3042,14 +3009,6 @@ function animate() {
     }
   }
 
-  /* water clock: dripping + float gauge */
-  waterDrops.forEach((d) => {
-    d.userData.ph += dt * 0.85;
-    if (d.userData.ph > 1) d.userData.ph -= 1;
-    d.position.y = 0.88 - d.userData.ph * 0.3;
-    d.material.opacity = Math.sin(d.userData.ph * Math.PI) * 0.9;
-  });
-  if (floatRod) floatRod.position.y = 0.72 + ((t % 300) / 300) * 0.22;
 
   /* cong qua: sweeping + sala in the yard */
   if (sweeping) {
@@ -3581,7 +3540,7 @@ const layoutRay = new THREE.Raycaster();
 const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
-const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper', well: 'objWell', rockfalls: 'objRock' };
+const LAYOUT_NAMES = { falls: 'objFalls', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper', well: 'objWell', rockfalls: 'objRock' };
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -4108,7 +4067,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.83.3';
+const PT3D_VER = '2.83.4';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
