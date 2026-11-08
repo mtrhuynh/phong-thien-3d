@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.85.0">
+<meta name="pt3d-ver" content="2.85.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -184,7 +184,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.85.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.85.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2072,7 +2072,20 @@ function loadSkyProtos(cb) {
     new GLTFLoader().load(u, (gltf) => {
       const sc = gltf.scene;
       const bb = new THREE.Box3().setFromObject(sc);
-      skyProtos[i] = { sc, h: Math.max(0.1, bb.max.y - bb.min.y), y0: bb.min.y };
+      const P = { sc, h: Math.max(0.1, bb.max.y - bb.min.y), y0: bb.min.y, q: new THREE.Quaternion(), rx: (bb.min.x + bb.max.x) / 2, rz: (bb.min.z + bb.max.z) / 2 };
+      try {
+        sc.updateMatrixWorld(true);
+        let big = null, bn = 0;
+        sc.traverse(o => { if (o.isMesh && o.geometry && o.geometry.attributes.position && o.geometry.attributes.position.count > bn) { bn = o.geometry.attributes.position.count; big = o; } });
+        if (big) {
+          const pa = big.geometry.attributes.position, vv = new THREE.Vector3();
+          const rim = new THREE.Vector3(), top = new THREE.Vector3(); let rc = 0, tc = 0;
+          const yLo = bb.min.y + (bb.max.y - bb.min.y) * 0.08, yHi = bb.min.y + (bb.max.y - bb.min.y) * 0.85;
+          for (let vi = 0; vi < pa.count; vi++) { vv.fromBufferAttribute(pa, vi).applyMatrix4(big.matrixWorld); if (vv.y <= yLo) { rim.add(vv); rc++; } else if (vv.y >= yHi) { top.add(vv); tc++; } }
+          if (rc > 10 && tc > 10) { rim.divideScalar(rc); top.divideScalar(tc); const ax = top.sub(rim).normalize(); if (ax.lengthSq() > 0.5) P.q.setFromUnitVectors(ax, new THREE.Vector3(0, 1, 0)); P.rx = rim.x; P.rz = rim.z; }
+        }
+      } catch (e) {}
+      skyProtos[i] = P;
       if (++done === SKY_URLS.length) { skyReady = true; skyWaiters.splice(0).forEach(f => { try { f(); } catch (e) {} }); }
     }, undefined, () => { if (++done === SKY_URLS.length) { skyReady = true; skyWaiters.splice(0).forEach(f => { try { f(); } catch (e) {} }); } });
   });
@@ -2084,17 +2097,18 @@ function spawnSky(x, z, b, wish, name) {
   if (P) {
     const m = P.sc.clone(true);
     m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; mats.push(o.material); o.castShadow = false; } });
-    const sc = 1.05 / P.h; m.scale.setScalar(sc); m.position.y = -P.y0 * sc;
-    g.add(m);
+    const tg = new THREE.Group(); tg.quaternion.copy(P.q || new THREE.Quaternion());
+    const sc = 1.05 / P.h; m.scale.setScalar(sc); m.position.set(-(P.rx || 0) * sc, -P.y0 * sc, -(P.rz || 0) * sc);
+    tg.add(m); g.add(tg);
   }
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffbe78, transparent: true, opacity: 0.8, depthWrite: false }));
   glow.scale.set(2.6, 2.6, 1); glow.position.y = 0.5; g.add(glow);
   let tag = null;
   if (name) { tag = nameTag(name, wish ? wish.slice(0, 30) : ''); tag.scale.set(1.7, 0.53, 1); tag.position.y = -0.62; g.add(tag); }
   g.position.set(x, 1.0, z);
-  g.userData.sky = { t: 0, seed: Math.random() * 10, wx: (Math.random() - 0.5) * 0.22, wz: (Math.random() - 0.5) * 0.22, mats, glow, tag };
+  g.userData.sky = { t: 0, seed: Math.random() * 10, mats, glow, tag, x0: x, z0: z, cx: 0, cz: -2, R: 10 + Math.random() * 6, H: 14 + Math.random() * 6, ang: Math.atan2(z + 2, x), w: (Math.PI * 2) / 115, life: 240 + Math.random() * 60 };
   scene.add(g); skyLanterns.push(g);
-  if (skyLanterns.length > 10) { const old = skyLanterns.shift(); scene.remove(old); }
+  if (skyLanterns.length > 12) { const old = skyLanterns.shift(); scene.remove(old); }
   return g;
 }
 function askSky() {
@@ -3134,18 +3148,22 @@ function animate() {
     }
   }
 
-  /* sky lanterns rise, drift and fade (v2.85.0) */
+  /* sky lanterns: rise into a slow orbit over the yard, hover for minutes, then climb away (v2.85.1, Anita: they vanished in seconds and leaned) */
   for (let i = skyLanterns.length - 1; i >= 0; i--) {
     const g = skyLanterns[i], u = g.userData.sky; u.t += dt;
-    g.position.y += (u.t < 6 ? 0.32 : 0.85) * dt;
-    g.position.x += (Math.sin(u.t * 0.7 + u.seed) * 0.12 + u.wx) * dt;
-    g.position.z += (Math.cos(u.t * 0.6 + u.seed * 1.7) * 0.12 + u.wz) * dt;
-    g.rotation.y += dt * 0.15;
-    const fade = Math.max(0, Math.min(1, (34 - u.t) / 10));
+    const DEP = u.life - 22, ang = u.ang + u.t * u.w;
+    const ox = u.cx + Math.cos(ang) * u.R, oz = u.cz + Math.sin(ang) * u.R;
+    let px, pz, py;
+    if (u.t < 22) { const k = u.t / 22, e = 1 - (1 - k) * (1 - k); px = u.x0 + (ox - u.x0) * e; pz = u.z0 + (oz - u.z0) * e; py = 1 + (u.H - 1) * e; }
+    else if (u.t < DEP) { px = ox; pz = oz; py = u.H + Math.sin(u.t * 0.5 + u.seed) * 0.7; }
+    else { const k = (u.t - DEP) / 22; px = ox + Math.cos(ang) * k * 7; pz = oz + Math.sin(ang) * k * 7; py = u.H + k * k * 15; }
+    g.position.set(px, py, pz);
+    g.rotation.y += dt * 0.1;
+    const fade = u.t < DEP ? 1 : Math.max(0, 1 - (u.t - DEP) / 22);
     u.mats.forEach(m => { m.opacity = fade; });
     if (u.glow) u.glow.material.opacity = 0.8 * Math.min(1, fade + 0.2);
-    if (u.tag) u.tag.material.opacity = Math.max(0, Math.min(1, (20 - u.t) / 6));
-    if (u.t > 36 || g.position.y > 34) { scene.remove(g); skyLanterns.splice(i, 1); }
+    if (u.tag) u.tag.material.opacity = Math.max(0, Math.min(1, (33 - u.t) / 8)) * fade;
+    if (u.t >= u.life) { scene.remove(g); skyLanterns.splice(i, 1); }
   }
 
   /* camera follow */
@@ -4157,7 +4175,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.85.0';
+const PT3D_VER = '2.85.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
