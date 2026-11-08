@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.79.2">
+<meta name="pt3d-ver" content="2.79.3">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -175,7 +175,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.79.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.79.3</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3305,8 +3305,9 @@ function addChatLine(name, text) {
   const b = document.createElement('b'); b.textContent = name;
   line.append(b, document.createTextNode(': ' + text));
   log.appendChild(line);
-  while (log.children.length > 8) log.removeChild(log.firstChild);
-  setTimeout(() => { line.style.opacity = '0'; setTimeout(() => line.remove(), 900); }, 30000);
+  while (log.children.length > 10) log.removeChild(log.firstChild);
+  /* v2.79.3: lines STAY (Anita missed replies because they faded after
+     30 s while she was looking at her other device). No auto-fade. */
 }
 function showBubble(gid, text) {
   let bb = chatBubbles.get(gid);
@@ -3985,7 +3986,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.79.2';
+const PT3D_VER = '2.79.3';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
