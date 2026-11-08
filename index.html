@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.84.0">
+<meta name="pt3d-ver" content="2.85.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -159,6 +159,7 @@
 <div class="ui" id="utilBar">
   <a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
   <button class="cmode" id="btnHall"><span class="ic">🏛️</span><span class="lb"></span></button>
+  <button class="cmode" id="btnSky"><span class="ic">🏮</span><span class="lb"></span></button>
   <button class="cmode" id="btnLang">🌐 EN</button>
 </div>
 
@@ -183,7 +184,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.84.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.85.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -291,6 +292,7 @@ bootMark('imports-ok');
    shifts every part + its colliders by the anchor delta. Rotation applies
    to single pieces only (the shrine moves as a cluster, unrotated). */
 const LAYOUT_KEY = 'pt3d-layout-v1';
+const skyLanterns = []; const skyProtos = [null, null, null]; let skyLoading = false, skyReady = false, skyLastSent = 0; const skyWaiters = []; const skyLastFrom = new Map();
 const chatLastFrom = new Map(); // v2.79.2: chat state lives up top - animate() runs during eval, late consts are TDZ traps
 const chatBubbles = new Map();
 const __chatV = new THREE.Vector3();
@@ -1077,7 +1079,7 @@ const I18N = {
     nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
     nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
     pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
-    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa',
+    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé',
     aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
     xamAgain: '🎋 Xin quẻ khác', xamClose: 'Đóng', xamCap: (n, g) => '🎋 Quẻ số ' + n + ' · ' + g,
     gain: n => '+' + n + ' phước đức 🪷', merit: 'phước đức', phuc: 'phước',
@@ -1113,7 +1115,7 @@ const I18N = {
     nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
     nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
     pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
-    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom',
+    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another',
     aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
     xamAgain: '🎋 Draw again', xamClose: 'Close', xamCap: (n, g) => '🎋 Fortune ' + n + ' · ' + g,
     gain: n => '+' + n + ' merit 🪷', merit: 'merit', phuc: 'merit',
@@ -1248,6 +1250,7 @@ function setActionLabels() {
   const set = (id, txt) => { const b = document.getElementById(id); if (b && b.querySelector('.lb')) b.querySelector('.lb').textContent = txt; };
   set('btnSit', sitting ? d.aStand : d.aSit); set('btnBow', d.aBow); set('btnMala', d.aMala); set('btnXam', d.aXam); set('btnSala', d.aSala);
   set('btnHall', room === 'hall' ? d.aHallOut : d.aHallIn);
+  set('btnSky', d.skyBtn);
   set('btnSweep', d.aSweep + ' (' + leafPiles.length + ')');
 }
 function applyLang() {
@@ -1685,7 +1688,7 @@ try { Object.assign(stats, JSON.parse(localStorage.getItem('pt3d-stats') || '{}'
 function saveStats() { try { localStorage.setItem('pt3d-stats', JSON.stringify(stats)); } catch (e) {} }
 const XAM_GATE = 30;
 function todayStr() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
-let daily = { date: todayStr(), ma: 0, bw: 0, ic: 0, fl: 0, swPids: [], pts: 0 };
+let daily = { date: todayStr(), ma: 0, bw: 0, ic: 0, fl: 0, sk: 0, swPids: [], pts: 0 };
 try { const sv = JSON.parse(localStorage.getItem('pt3d-daily') || 'null'); if (sv && sv.date === todayStr()) daily = Object.assign(daily, sv); } catch (e) {}
 function saveDaily() { try { localStorage.setItem('pt3d-daily', JSON.stringify(daily)); } catch (e) {} }
 function xamOpen() { return daily.pts >= XAM_GATE; }
@@ -1705,7 +1708,7 @@ function gainFx(n) {
 }
 setInterval(() => {
   if (daily.date !== todayStr()) {
-    daily = { date: todayStr(), ma: 0, bw: 0, ic: 0, fl: 0, swPids: [], pts: 0 };
+    daily = { date: todayStr(), ma: 0, bw: 0, ic: 0, fl: 0, sk: 0, swPids: [], pts: 0 };
     saveDaily(); meritDirty = true; updateJarTag(); ptTrack(true);
   }
 }, 30000);
@@ -2054,6 +2057,92 @@ function spawnSala(shared) {
   g.userData.sala = { vy: 0.5 + Math.random() * 0.2, sway: Math.random() * 10, state: 'fall', t: 0 };
   scene.add(g); sala = g;
 }
+
+/* ============ Sky wish lanterns (v2.85.0) — release a paper lantern that rises
+   over the yard for everyone to see; the blessing word is baked into each model:
+   0 = Hạnh Phúc, 1 = Bình An, 2 = Như Ý. Models load lazily on first use. ============ */
+const SKY_URLS = ['models/sky-hanhphuc.glb?v=100', 'models/sky-binhan.glb?v=100', 'models/sky-nhuy.glb?v=100'];
+function loadSkyProtos(cb) {
+  if (skyReady) { cb(); return; }
+  skyWaiters.push(cb);
+  if (skyLoading) return;
+  skyLoading = true;
+  let done = 0;
+  SKY_URLS.forEach((u, i) => {
+    new GLTFLoader().load(u, (gltf) => {
+      const sc = gltf.scene;
+      const bb = new THREE.Box3().setFromObject(sc);
+      skyProtos[i] = { sc, h: Math.max(0.1, bb.max.y - bb.min.y), y0: bb.min.y };
+      if (++done === SKY_URLS.length) { skyReady = true; skyWaiters.splice(0).forEach(f => { try { f(); } catch (e) {} }); }
+    }, undefined, () => { if (++done === SKY_URLS.length) { skyReady = true; skyWaiters.splice(0).forEach(f => { try { f(); } catch (e) {} }); } });
+  });
+}
+function spawnSky(x, z, b, wish, name) {
+  const P = skyProtos[b] || skyProtos.find(q => q);
+  const g = new THREE.Group();
+  const mats = [];
+  if (P) {
+    const m = P.sc.clone(true);
+    m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; mats.push(o.material); o.castShadow = false; } });
+    const sc = 1.05 / P.h; m.scale.setScalar(sc); m.position.y = -P.y0 * sc;
+    g.add(m);
+  }
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffbe78, transparent: true, opacity: 0.8, depthWrite: false }));
+  glow.scale.set(2.6, 2.6, 1); glow.position.y = 0.5; g.add(glow);
+  let tag = null;
+  if (name) { tag = nameTag(name, wish ? wish.slice(0, 30) : ''); tag.scale.set(1.7, 0.53, 1); tag.position.y = -0.62; g.add(tag); }
+  g.position.set(x, 1.0, z);
+  g.userData.sky = { t: 0, seed: Math.random() * 10, wx: (Math.random() - 0.5) * 0.22, wz: (Math.random() - 0.5) * 0.22, mats, glow, tag };
+  scene.add(g); skyLanterns.push(g);
+  if (skyLanterns.length > 10) { const old = skyLanterns.shift(); scene.remove(old); }
+  return g;
+}
+function askSky() {
+  return new Promise(res => {
+    const d = L();
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,6,3,.66);z-index:200;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = '<div style="background:#2b1d10;border:1px solid rgba(255,205,120,.55);border-radius:14px;padding:18px 20px;width:min(340px,88vw);color:#ffe9bd;font-family:inherit">'
+      + '<div style="font-weight:700;margin-bottom:10px">' + d.skyTitle + '</div>'
+      + '<div id="skyChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
+      + d.skyNames.map((n, i) => '<button data-b="' + i + '" class="laybtn" style="flex:1;white-space:nowrap' + (i === 0 ? ';outline:2px solid #ffcf7a' : '') + '">' + n + '</button>').join('')
+      + '</div>'
+      + '<input id="skyWish" type="text" maxlength="60" autocomplete="off" placeholder="' + d.skyWishPh + '" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,205,120,.4);background:#1d1208;color:#ffe9bd;font-size:16px">'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
+      + '<button id="skyCancel" class="laybtn">✕</button><button id="skyOk" class="laybtn">' + d.skyGo + '</button></div></div>';
+    document.body.appendChild(ov);
+    let b = 0;
+    ov.querySelectorAll('#skyChips button').forEach(btn => btn.addEventListener('click', () => {
+      b = +btn.dataset.b;
+      ov.querySelectorAll('#skyChips button').forEach(x => x.style.outline = '');
+      btn.style.outline = '2px solid #ffcf7a';
+    }));
+    const inp = ov.querySelector('#skyWish');
+    setTimeout(() => inp.focus(), 30);
+    const done = v => { ov.remove(); res(v); };
+    ov.querySelector('#skyOk').addEventListener('click', () => done({ b, w: inp.value.trim() }));
+    ov.querySelector('#skyCancel').addEventListener('click', () => done(null));
+    ov.addEventListener('click', e => { if (e.target === ov) done(null); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Escape') done(null); });
+  });
+}
+const btnSky = document.getElementById('btnSky');
+if (btnSky) btnSky.addEventListener('click', () => {
+  if (room !== 'yard') return;
+  const now = performance.now();
+  if (now - skyLastSent < 45000) { toast(L().skyCool); return; }
+  if (!skyReady) toast(L().skyLoad);
+  loadSkyProtos(async () => {
+    const r = await askSky();
+    if (!r) return;
+    skyLastSent = performance.now();
+    spawnSky(player.position.x, player.position.z, r.b, r.w, myName);
+    ptSend({ k: 'sky', b: r.b, w: r.w, x: +player.position.x.toFixed(2), z: +player.position.z.toFixed(2) });
+    bumpDaily('sk'); if ((daily.sk || 0) <= 3) addSen(2);
+    toast(L().skySent);
+  });
+});
+
 function catchSala() {
   if (!sala || sala.userData.sala.state === 'fly') return;
   sala.userData.sala.state = 'fly'; sala.userData.sala.t = 0;
@@ -2729,6 +2818,7 @@ let pendingAfterZone = null;
 function applyZoneUI() {
   syncCongQuaBtns();
   btnHall.querySelector('.lb').textContent = room === 'hall' ? L().aHallOut : L().aHallIn;
+  const bsEl = document.getElementById('btnSky'); if (bsEl) bsEl.style.display = room === 'yard' ? '' : 'none';
   btnHall.classList.toggle('on', room === 'hall');
   controls.maxDistance = room === 'hall' ? 16 : 30;
   roofParts.forEach(m => { if (m) m.visible = room === 'yard'; });
@@ -3042,6 +3132,20 @@ function animate() {
       sala.position.lerpVectors(sala.userData.from, dest, Math.min(1, u.t));
       if (u.t >= 1) { scene.remove(sala); sala = null; addSen(3); bumpDaily('fl'); toast(L().tSalaCaught, 2400); }
     }
+  }
+
+  /* sky lanterns rise, drift and fade (v2.85.0) */
+  for (let i = skyLanterns.length - 1; i >= 0; i--) {
+    const g = skyLanterns[i], u = g.userData.sky; u.t += dt;
+    g.position.y += (u.t < 6 ? 0.32 : 0.85) * dt;
+    g.position.x += (Math.sin(u.t * 0.7 + u.seed) * 0.12 + u.wx) * dt;
+    g.position.z += (Math.cos(u.t * 0.6 + u.seed * 1.7) * 0.12 + u.wz) * dt;
+    g.rotation.y += dt * 0.15;
+    const fade = Math.max(0, Math.min(1, (34 - u.t) / 10));
+    u.mats.forEach(m => { m.opacity = fade; });
+    if (u.glow) u.glow.material.opacity = 0.8 * Math.min(1, fade + 0.2);
+    if (u.tag) u.tag.material.opacity = Math.max(0, Math.min(1, (20 - u.t) / 6));
+    if (u.t > 36 || g.position.y > 34) { scene.remove(g); skyLanterns.splice(i, 1); }
   }
 
   /* camera follow */
@@ -3451,6 +3555,14 @@ function ptWorld(pl) {
     }
   } else if (pl.k === 'salaCatch') {
     if (sala && sala.userData.salaId === pl.id && sala.userData.sala.state !== 'fly') { sala.userData.sala.state = 'gone'; sala.userData.sala.t = 0; }
+  } else if (pl.k === 'sky') {
+    const nw = performance.now();
+    if (nw - (skyLastFrom.get(pl.from) || 0) < 20000) return;
+    skyLastFrom.set(pl.from, nw);
+    const rr = remotes.get(pl.from);
+    const w = String(pl.w || '').replace(/[<>&"'`\u0000-\u001f]/g, '').slice(0, 60);
+    const bx = Math.max(-17, Math.min(17, +pl.x || 0)), bz = Math.max(-24, Math.min(14, +pl.z || 0));
+    loadSkyProtos(() => spawnSky(bx, bz, [0, 1, 2].includes(pl.b) ? pl.b : 0, w, rr ? rr.name : ''));
   } else if (pl.k === 'bow') {
     const r = remotes.get(pl.from); if (r) r.bowT = 0;
   } else if (pl.k === 'mv') {
@@ -4045,7 +4157,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.84.0';
+const PT3D_VER = '2.85.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
