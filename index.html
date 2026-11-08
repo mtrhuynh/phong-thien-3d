@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.22.0">
+<meta name="pt3d-ver" content="2.23.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.22.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.23.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -607,6 +607,7 @@ function scallopDisc(r, mat, phase = 0) {
   geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m;
 }
+const treeProcs = [];
 function tree(x, z, s = 1) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
   cyl(0.16, 0.24, 1.7, MAT.trunk, 0, 0.85, 0, g);
@@ -620,10 +621,26 @@ function tree(x, z, s = 1) {
       d.position.set(bx + li * 0.05, by + li * 0.13, bz); d.rotation.y = ci + li * 0.8; g.add(d);
     });
   });
-  scene.add(g); return g;
+  scene.add(g); treeProcs.push(g); return g;
 }
 tree(-12.5, -6.5, 1.15); tree(12.5, -6.5, 1.05); tree(-13.5, 4.5, 0.95);
 tree(13.5, 4.5, 1.2); tree(-13, -14, 0.9); tree(13, -14, 1.0); tree(-15.5, 9.5, 1.1); tree(15.5, 9.5, 0.95);
+/* real papercut tree (v2.23.0): a true 3D model Anita generated on Tripo
+   from her reference photo, vertex-painted + simplified by Cuu - when it
+   loads it replaces the procedural disc trees; if it fails, they stay */
+new GLTFLoader().load('models/tree.glb?v=100', (gltf) => {
+  gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) { o.material.vertexColors = true; o.material.roughness = 0.9; } } });
+  const TS = 3.7 / 1.958;
+  while (treeProcs.length) {
+    const p = treeProcs.shift();
+    const c = gltf.scene.clone();
+    c.scale.setScalar(TS * p.scale.x);
+    c.position.copy(p.position);
+    c.rotation.y = (p.position.x * 1.37 + p.position.z * 2.11) % (Math.PI * 2);
+    scene.add(c);
+    scene.remove(p);
+  }
+}, undefined, () => { /* model failed to load - procedural trees stay */ });
 function fenceRun(x, z, len, rotY) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rotY;
   const posts = Math.floor(len / 2.2);
@@ -2784,7 +2801,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.22.0';
+const PT3D_VER = '2.23.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
