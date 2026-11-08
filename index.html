@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.55.0">
+<meta name="pt3d-ver" content="2.56.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.55.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.56.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -270,12 +270,13 @@ const LAYOUT_ANCHORS = {
   burner: { x: 0,     z: -8.6, ry: 0, rot: true },
   pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true }
 };
+const PAVI_FLOOR_H = 0.55; // v2.56.0: open-pavilion terrace height (floor measured at 0.145 of model height; model scaled 5.6 m wide, base sunk 0.30 into the lawn)
 const LAYOUT_COLS = {
   falls:  [{ x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 }],
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }, { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 }],
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
-  pavilion: [{ x0: -14.5, x1: -7.5, z0: 5.5, z1: 12.5 }]
+  pavilion: [] // v2.56.0: open pavilion - no blocking collider; the terrace is walkable via groundY
 };
 let layoutStore = {};
 try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
@@ -309,8 +310,13 @@ function applyLayoutId(id) {
   const a = LAYOUT_ANCHORS[id], cur = layoutCur[id] || layoutEntry(id);
   layoutCur[id] = cur;
   const dx = cur.x - a.x, dz = cur.z - a.z;
+  const th = cur.ry - a.ry;
   for (const p of layoutParts) if (p.id === id) {
-    p.obj.position.x = p.bx + dx; p.obj.position.z = p.bz + dz;
+    if (!p.anchor && a.rot && th) {
+      const ox = p.bx - a.x, oz = p.bz - a.z, co = Math.cos(th), si = Math.sin(th);
+      p.obj.position.x = cur.x + ox * co + oz * si;
+      p.obj.position.z = cur.z - ox * si + oz * co;
+    } else { p.obj.position.x = p.bx + dx; p.obj.position.z = p.bz + dz; }
     if (p.anchor) p.obj.rotation.y = cur.ry;
     else if (a.rot) p.obj.rotation.y = p.bry + (cur.ry - a.ry);
     if (a.scalable) p.obj.scale.setScalar(p.bs * (cur.sc !== undefined ? cur.sc : 1));
@@ -863,7 +869,7 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
    planting it as a layout-movable cluster, like the shrine. Model is
    0.978 wide x 0.827 tall, ground-based; scaled to 7 m wide (~5.9 m tall).
    Default spot: front-west corner, door facing east toward the carpet. */
-new GLTFLoader().load('models/pavilion.glb?v=100', (gltf) => {
+new GLTFLoader().load('models/pavilion2.glb?v=100', (gltf) => { // v2.56.0: open two-tier pavilion (Anita's pick) replaces the closed ornate shell in the same layout slot
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -871,14 +877,14 @@ new GLTFLoader().load('models/pavilion.glb?v=100', (gltf) => {
   m.position.set(-ctr.x, -bb.min.y, -ctr.z);
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
   const wrap = new THREE.Group(); wrap.add(m);
-  wrap.scale.setScalar(7.0 / size.x);
-  wrap.position.set(-11.0, 0, 9.0);
+  wrap.scale.setScalar(5.6 / size.x);
+  wrap.position.set(-11.0, -0.30, 9.0); // base sunk 0.30 so the terrace is step-up-able
   wrap.rotation.y = Math.PI / 2;
   /* v2.55.0: Anita: the shell's inside was pitch black. A warm light inside
      the wrap (so it rides along when the pavilion is dragged) + DoubleSide
      walls make the doorway glow instead of reading as a black hole. */
   const paviLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
-  paviLight.position.set(0, 0.30, 0);
+  paviLight.position.set(0, 0.44, 0);
   wrap.add(paviLight);
   scene.add(wrap); regPart('pavilion', wrap, true);
 });
@@ -1409,6 +1415,9 @@ let shrineGrp = null;
     if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(14.95 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); regPart('shrine', lf, false); }
   }
   [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('shrine', c, false); });
+/* v2.56.0: three meditation cushions ON the open pavilion's terrace - they
+   ride along as 'pavilion' layout parts and orbit when it rotates. */
+[[-10.45, 9.0, -Math.PI / 2], [-11.55, 9.85, 2.57], [-11.55, 8.15, 0.57]].forEach(([cx, cz, fy]) => { const c = cushion(cx, cz); c.position.y = PAVI_FLOOR_H; c.userData.faceY = fy; cushionSpots.push(c); regPart('pavilion', c, false); });
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag; regPart('shrine', stag, false);
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
   shrineLight.position.set(10.6, 1.7, pz); scene.add(shrineLight); regPart('shrine', shrineLight, false); regPart('shrine', shrineBurner, false);
@@ -1992,6 +2001,12 @@ function groundY(x, z) {
     if (z < -12.25) return 1.0;
     if (z < -11.2) return 0.67;
     return 0.34;
+  }
+  const pc = layoutCur.pavilion;
+  if (pc) {
+    const pd = Math.hypot(x - pc.x, z - pc.z);
+    if (pd < 1.75) return PAVI_FLOOR_H;
+    if (pd < 2.5) return PAVI_FLOOR_H * (2.5 - pd) / 0.75;
   }
   return 0;
 }
@@ -3366,7 +3381,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.55.0';
+const PT3D_VER = '2.56.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
