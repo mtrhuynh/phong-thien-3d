@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.48.0">
+<meta name="pt3d-ver" content="2.49.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.48.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.49.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -473,12 +473,34 @@ scene.add(ground);
    Now a radial gradient (moss green under the yard -> the warm dark umber
    of the panorama's foreground at the edge) so the ground melts into the
    backdrop; plane shrunk 300 -> 130 (the backdrop ring sits at r=60). */
-const grassTex = canvasTexture(512, 512, (g, W, H) => {
+const grassTex = canvasTexture(1024, 1024, (g, W, H) => {
   const rg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W / 2);
   rg.addColorStop(0, '#5c6e3e'); rg.addColorStop(0.35, '#505f34');
   rg.addColorStop(0.62, '#4a452a'); rg.addColorStop(0.85, '#3e2f1e');
   rg.addColorStop(1, '#2e2015');
   g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  /* v2.49.0: papercut mottling so the ground is not dead flat - soft moss
+     patches + fallen-leaf flecks (denser toward the rim, under the autumn
+     backdrop). Drawn in code: zero download weight, stays in the game's
+     flat style (a photo grass texture would clash with it). */
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const tones = ['#65784a', '#47572e', '#5d6136', '#3f4a26', '#6b7748'];
+  for (let i = 0; i < 700; i++) {
+    const x = rnd() * W, y = rnd() * H, r = 6 + rnd() * 30;
+    g.globalAlpha = 0.05 + rnd() * 0.08;
+    g.fillStyle = tones[(rnd() * tones.length) | 0];
+    g.beginPath(); g.ellipse(x, y, r, r * (0.5 + rnd() * 0.6), rnd() * 3.2, 0, 6.3); g.fill();
+  }
+  const leaf = ['#a8622f', '#bf7a35', '#8f4f24', '#c98f3d'];
+  for (let i = 0; i < 900; i++) {
+    const x = rnd() * W, y = rnd() * H;
+    const d = Math.hypot(x - W / 2, y - H / 2) / (W / 2);
+    if (rnd() > 0.25 + d * 0.75) continue;
+    g.globalAlpha = 0.10 + rnd() * 0.16;
+    g.fillStyle = leaf[(rnd() * leaf.length) | 0];
+    g.beginPath(); g.ellipse(x, y, 1.5 + rnd() * 2.6, 1 + rnd() * 1.6, rnd() * 3.2, 0, 6.3); g.fill();
+  }
+  g.globalAlpha = 1;
 });
 const grass = new THREE.Mesh(new THREE.PlaneGeometry(130, 130),
   new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.95 }));
@@ -3337,7 +3359,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.48.0';
+const PT3D_VER = '2.49.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
