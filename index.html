@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.83.4">
+<meta name="pt3d-ver" content="2.83.5">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -183,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.83.4</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.83.5</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -297,7 +297,6 @@ const __chatV = new THREE.Vector3();
 const LAYOUT_ANCHORS = {
   falls:  { x: -13.6, z: -1.5, ry: Math.PI / 2, rot: true },
   well:   { x: 13.2,  z: 5.6,  ry: -Math.PI / 2, rot: true },
-  rockfalls: { x: -14.6, z: -8.0, ry: Math.PI / 2, rot: true },
   shrine: { x: 11.6,  z: 0.5,  ry: -Math.PI / 2, rot: false },
   burner: { x: 0,     z: -8.6, ry: 0, rot: true },
   pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true },
@@ -317,7 +316,6 @@ const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dom
 const LAYOUT_COLS = {
   falls:  [{ x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 }],
   well:   [{ x0: 11.9, x1: 14.5, z0: 4.3, z1: 6.9 }],
-  rockfalls: [{ x0: -17.2, x1: -12.0, z0: -10.2, z1: -5.8 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }], // v2.63.1: bamboo collider gone with the grove
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
   pavilion: [], // v2.69.0: railing enforced by the radial fence in collide() - exact at any rotation
@@ -1005,6 +1003,8 @@ new GLTFLoader().load('models/well.glb?v=100', (gltf) => {
   const ctr = bb.getCenter(new THREE.Vector3());
   m.position.set(-ctr.x, -bb.min.y, -ctr.z);
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const wellFloor = new THREE.Mesh(new THREE.CircleGeometry(0.235, 24), new THREE.MeshStandardMaterial({ color: 0x14424e, roughness: 1 }));
+  wellFloor.rotation.x = -Math.PI / 2; wellFloor.position.set(0.03, 0.082, 0.10); m.add(wellFloor); // v2.83.5: basin bottom - through the clearer water you could see the yard tiles (Anita)
   const wrap = new THREE.Group(); wrap.add(m);
   wrap.scale.setScalar(2.5 / size.y);
   wrap.position.set(13.2, 0, 5.6);
@@ -1018,35 +1018,6 @@ new GLTFLoader().load('models/well.glb?v=100', (gltf) => {
   });
 });
 
-/* v2.83.2: the library rock cascade, parked SMALL as a second falls on
-   the west strip (Anita: less beautiful than the waterfall garden, and
-   the main shader's streaks read oversized on it - this copy uses a
-   finer, softer flow). Movable/deletable in Layout like everything. */
-const rockFlowMat = new THREE.ShaderMaterial({
-  uniforms: { uTime: fallsFlowU },
-  transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-  vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 480.0 + sin(vX * 110.0) * 3.0); float w = sin(vY * 345.0 + uTime * 6.5 + sin(vX * 185.0) * 2.2 + sin(vY * 95.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.05 + streak * 0.45; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
-});
-new GLTFLoader().load('models/waterfall3.glb?v=100', (gltf) => {
-  const m = gltf.scene;
-  const bb = new THREE.Box3().setFromObject(m);
-  const size = bb.getSize(new THREE.Vector3());
-  const ctr = bb.getCenter(new THREE.Vector3());
-  m.position.set(-ctr.x, -bb.min.y, -ctr.z);
-  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  const wrap = new THREE.Group(); wrap.add(m);
-  wrap.scale.setScalar(5.2 / size.x);
-  wrap.position.set(-14.6, 0, -8.0);
-  wrap.rotation.y = Math.PI / 2;
-  scene.add(wrap); regPart('rockfalls', wrap, true);
-  new GLTFLoader().load('models/falls3-water.glb?v=100', (wg) => {
-    const wm = wg.scene;
-    wm.position.copy(m.position);
-    wm.traverse(o => { if (o.isMesh) { o.material = rockFlowMat; o.castShadow = false; o.receiveShadow = false; } });
-    wrap.add(wm);
-  });
-});
 
 /* ============ Pavilion (Tripo library 'ornate temple', v2.53.0) ============
    Anita downloaded it from the Tripo community library and approved
@@ -3540,7 +3511,7 @@ const layoutRay = new THREE.Raycaster();
 const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
-const LAYOUT_NAMES = { falls: 'objFalls', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper', well: 'objWell', rockfalls: 'objRock' };
+const LAYOUT_NAMES = { falls: 'objFalls', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper', well: 'objWell' };
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -4067,7 +4038,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.83.4';
+const PT3D_VER = '2.83.5';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
