@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.71.1">
+<meta name="pt3d-ver" content="2.71.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.71.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.71.2</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -924,7 +924,7 @@ new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Ani
      (extracted offline as falls-water.glb) with a shader running light
      streaks down the slope; the flat pool stays calm (slope-weighted).
      Same position offset as m, so it stays glued wherever Layout moves it. */
-  new GLTFLoader().load('models/falls2-water.glb?v=100', (wg) => { // v2.68.0: water surface of the NEW model
+  new GLTFLoader().load('models/falls2-water2.glb?v=100', (wg) => { // v2.71.2: STRICT re-extraction - the v1 mask's weak colour test (B>R+10) also caught light rock, so the flow painted the whole rockery (Anita); the new mask is water only, verified on a mask render
     const wm = wg.scene;
     wm.position.copy(m.position);
     wm.traverse(o => { if (o.isMesh) { o.material = fallsFlowMat; o.castShadow = false; o.receiveShadow = false; } });
@@ -3664,7 +3664,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.71.1';
+const PT3D_VER = '2.71.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
