@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.72.1">
+<meta name="pt3d-ver" content="2.73.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.72.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.73.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2472,7 +2472,7 @@ function openNameModal() {
 }
 function closeNameModal() {
   const v = (nameInput.value || '').trim().slice(0, 14);
-  const n = v || myName || 'Hành giả';
+  const n = cleanName(v || myName, 'Hành giả');
   try { localStorage.setItem(NAME_KEY, n); } catch (e) {}
   refreshKeeperGate();
   applyName(n);
@@ -3059,6 +3059,8 @@ function robeFor(key, c) {
   return new THREE.MeshStandardMaterial({ color: ROBE_COLORS[h % ROBE_COLORS.length], roughness: 0.55 });
 }
 if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
+/* v2.73.0: names are shown to other players - strip markup and control chars */
+function cleanName(v, fb) { const s = String(v == null ? '' : v).replace(/[<>&"'`]/g, '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 20); return s || fb; }
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
@@ -3083,9 +3085,9 @@ function ptSync() {
       const pm = pendingMv.get(key); if (pm) pendingMv.delete(key);
       const sx = pm ? pm.x : (typeof p.x === 'number' ? p.x : 0), sz = pm ? pm.z : (typeof p.z === 'number' ? p.z : 9.5);
       const sry = pm ? (pm.ry || 0) : (p.ry || 0), ssit = pm ? !!pm.sit : !!p.sit;
-      const g = buildAvatar({ name: p.name || L().guest, sub: [L().sects[p.sc] || '', bacSub(p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: p.bd || 0 });
+      const g = buildAvatar({ name: cleanName(p.name, L().guest), sub: [L().sects[p.sc] || '', bacSub(p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: (p.bd === 1 || p.bd === 2) ? p.bd : 0 });
       g.position.set(sx, ssit ? 0.24 : 0, sz);
-      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: p.name || L().guest, ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: p.bd || 0, sc: p.sc || 0, };
+      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: cleanName(p.name, L().guest), ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: (p.bd === 1 || p.bd === 2) ? p.bd : 0, sc: (p.sc >= 0 && p.sc <= 3) ? p.sc | 0 : 0, };
       remotes.set(key, r);
       if (ptBooted) toast(L().tJoined(r.name), 2000);
     }
@@ -3093,8 +3095,8 @@ function ptSync() {
     if (p.at && p.at !== r.at) { r.at = p.at; r.atLocal = performance.now(); }
     if (Array.isArray(p.st) && JSON.stringify(p.st) !== JSON.stringify(r.st)) { r.st = p.st; meritDirty = true; }
     if (Array.isArray(p.inc)) {
-      if (p.inc[0] > 0 && !incenseLit) { setIncenseLit(true); incenseLeft = p.inc[0] * 30; smokeBoost = Math.max(smokeBoost, 10); }
-      if (p.inc[1] > 0 && !hallLit) { setHallLit(true); hallLeft = p.inc[1] * 30; }
+      if (p.inc[0] > 0 && !incenseLit) { setIncenseLit(true); incenseLeft = Math.min(p.inc[0], 6) * 30; smokeBoost = Math.max(smokeBoost, 10); }
+      if (p.inc[1] > 0 && !hallLit) { setHallLit(true); hallLeft = Math.min(p.inc[1], 6) * 30; }
     }
     if (Array.isArray(p.lf) && !r.lfApplied) {
       r.lfApplied = true;
@@ -3187,6 +3189,8 @@ function ptSend(payload) {
 }
 function ptWorld(pl) {
   if (!pl || pl.from === myGid) return;
+  if ('x' in pl) pl.x = Number.isFinite(pl.x) ? Math.max(-22, Math.min(22, pl.x)) : 0; /* v2.73.0: never trust network numbers */
+  if ('z' in pl) pl.z = Number.isFinite(pl.z) ? Math.max(-30, Math.min(18, pl.z)) : 0;
   if (pl.k === 'layout') { fetchSharedLayout(); return; }
   if (pl.k === 'inc') {
     if (pl.r === 'hall') { if (!hallLit) { setHallLit(true); hallLeft = 180; } else hallLeft = Math.max(hallLeft, 170); }
@@ -3447,7 +3451,7 @@ document.getElementById('layReset').addEventListener('click', () => {
    the lock on load and live via the temple channel. Server side is installed once
    with pt3d-shared-layout.sql; until then every call below fails soft. */
 const LAYOUT_SHARED_KEY = 'pt3d-layout-shared';
-let layoutSharedLatest = null, layoutFetchBusy = false;
+let layoutSharedLatest = null, layoutFetchBusy = false, layoutFetchAt = 0;
 function layoutBaseline() { try { return localStorage.getItem(LAYOUT_SHARED_KEY) || JSON.stringify(LAYOUT_BAKED); } catch (e) { return JSON.stringify(LAYOUT_BAKED); } }
 function applyLayoutStore() {
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
@@ -3456,8 +3460,8 @@ function applyLayoutStore() {
   refreshTreeVisibility();
 }
 async function fetchSharedLayout() {
-  if (!sbClient || layoutFetchBusy) return;
-  layoutFetchBusy = true;
+  if (!sbClient || layoutFetchBusy || Date.now() - layoutFetchAt < 5000) return;
+  layoutFetchBusy = true; layoutFetchAt = Date.now();
   try {
     const { data, error } = await sbClient.from('pt3d_shared_layout').select('layout').eq('id', 1).maybeSingle();
     if (!error && data && data.layout) {
@@ -3732,7 +3736,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.72.1';
+const PT3D_VER = '2.73.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
