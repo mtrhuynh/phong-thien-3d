@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.28.0">
+<meta name="pt3d-ver" content="2.29.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.28.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.29.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -624,7 +624,7 @@ function tree(x, z, s = 1) {
   scene.add(g); treeProcs.push(g); return g;
 }
 tree(-12.5, -23.5, 0.9); tree(16.8, -20.5, 1.0); tree(-15.8, -7.5, 1.15);
-tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.3, 1.5, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
+tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.6, -7.6, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
 /* real papercut tree (v2.23.0): a true 3D model Anita generated on Tripo
    from her reference photo, vertex-painted + simplified by Cuu - when it
    loads it replaces the procedural disc trees; if it fails, they stay */
@@ -678,7 +678,7 @@ const fallsTex = canvasTexture(256, 256, (g) => {
 fallsTex.wrapS = fallsTex.wrapT = THREE.RepeatWrapping; fallsTex.repeat.set(1, 2);
 const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide });
 {
-  const wf = new THREE.Group(); wf.position.set(-26, 0, -12); wf.rotation.y = Math.PI / 2; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
+  const wf = new THREE.Group(); wf.position.set(-13.6, 0, 0.5); wf.rotation.y = Math.PI / 2; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
   /* papercut boulder falls (v2.21.0, from Anita's waterfall reference): a LOW
      cluster of faceted warm-grey + sand boulders with a two-step cascade -
      not a terraced tower */
@@ -703,13 +703,13 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
     const mist = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false }));
     mist.scale.set(3.6, 1.7, 1); mist.position.set((i - 1) * 1.1, 0.8, 3.4 + (i % 2) * 0.7); wf.add(mist);
   }
-  tree(-19.5, -22, 1.25); tree(-19.0, -10.5, 1.1); tree(-11.0, -22.8, 0.9);
+  tree(-18.6, -6.5, 1.25); tree(-18.9, 4.8, 1.1); tree(-11.0, -22.8, 0.9);
 }
 /* v2.26.0: Anita's Tripo waterfall (textured) replaces the procedural boulder
    falls; the old group stays as fallback until the model loads. Mist sprites
-   are re-added over its pool. v2.28.0: back outside the fence, west side,
-   full size (Anita's call after seeing the v2.27.0 layout); yaw +90 deg so
-   the cascade (local +Z) faces east toward the yard. */
+   are re-added over its pool. v2.29.0: back INSIDE the yard at the west-mid
+   (Anita corrected the v2.28.0 outside-the-fence reading - they belong in
+   the yard, out from beside the hall); yaw +90 deg, cascade faces east. */
 new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
@@ -725,8 +725,8 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
     m.add(mist);
   }
   const wrap = new THREE.Group(); wrap.add(m);
-  wrap.scale.setScalar(11.5 / size.x);
-  wrap.position.set(-26, 0, -12);
+  wrap.scale.setScalar(7.6 / size.x);
+  wrap.position.set(-13.6, 0, 0.5);
   wrap.rotation.y = Math.PI / 2;
   scene.add(wrap);
   if (fallsGrp) fallsGrp.visible = false;
@@ -1155,23 +1155,23 @@ const cushionSpots = [];
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
 /* Dien Tho (v2.25.0): Anita's Tripo temple as a small look-in shrine,
    replacing the Thien Xa pavilion. The model stays UNCUT - its own white
-   Buddha remains inside as the shrine's Buddha. v2.28.0: moved outside the
-   east fence as scenery (Anita's call); door faces west toward the yard,
-   bamboo grove behind it, no sittable cushions (outside the walk area). */
+   Buddha remains inside as the shrine's Buddha. v2.29.0: east-mid of the
+   yard (Anita: it belongs inside the yard, out from beside the hall); door
+   faces west, bamboo behind it, 3 sittable cushions in front of the door. */
 let shrineGrp = null;
 {
-  const px = 23.5, pz = 3.0;
+  const px = 13.6, pz = 0.5;
   const bamM = new THREE.MeshStandardMaterial({ color: 0x5d8a4a, roughness: 0.9 });
   for (let i = 0; i < 13; i++) {
-    const bz = 0.3 + i * 0.47 + (i % 3) * 0.06, bh = 3.1 + (i % 4) * 0.35;
-    const stalk = cyl(0.045, 0.055, bh, bamM, 26.5 + (i % 2) * 0.22, bh / 2, bz, scene);
+    const bz = -2.2 + i * 0.47 + (i % 3) * 0.06, bh = 3.1 + (i % 4) * 0.35;
+    const stalk = cyl(0.045, 0.055, bh, bamM, 16.9 + (i % 2) * 0.22, bh / 2, bz, scene);
     stalk.rotation.z = (i % 3 - 1) * 0.02;
-    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(26.55 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
+    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(16.95 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
   }
-  /* v2.28.0: no shrine cushions - the shrine stands outside the fence. */
+  [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(10.6, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag;
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
-  shrineLight.position.set(22.5, 1.7, pz); scene.add(shrineLight);
+  shrineLight.position.set(12.6, 1.7, pz); scene.add(shrineLight);
   new GLTFLoader().load('models/temple.glb?v=100', (gltf) => {
     const m = gltf.scene;
     m.rotation.y = -Math.PI / 2;
@@ -1445,7 +1445,7 @@ const leafGeo = (() => {
   return new THREE.ShapeGeometry(s, 6);
 })();
 /* leaf piles live at FIXED spots with ids, so every visitor's yard holds the same 11 piles and sweeping can be shared */
-const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-13.5, -1.5], [13.5, -1.5], [-11.8, 3.6], [11.8, 3.6], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [15.9, 12.6], [-5.5, -2.2]];
+const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-11.2, -6.9], [10.9, -6.9], [-8.6, 4.9], [9.7, 7.8], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [15.9, 12.6], [-5.5, -2.2]];
 const leafGoneAt = new Map();
 let remoteSweeps = [];
 function updateLeafBtn() {
@@ -1751,6 +1751,9 @@ const COLLIDERS = [
   { x0: 5.8, x1: 8.6, z0: -13.2, z1: -12.7 },
   { x0: -8.6, x1: 8.6, z0: -24.65, z1: -24.1 },    // back wall
   { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
+  { x0: 11.45, x1: 15.75, z0: -3.2, z1: 4.2 },     // dien tho shrine (v2.29.0: east-mid yard)
+  { x0: 16.7, x1: 17.35, z0: -2.5, z1: 3.6 },      // bamboo grove (behind the shrine)
+  { x0: -17.5, x1: -10.9, z0: -3.5, z1: 4.5 },     // waterfall rock (v2.29.0: west-mid yard)
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -2776,7 +2779,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.28.0';
+const PT3D_VER = '2.29.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
