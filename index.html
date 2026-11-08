@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.59.1">
+<meta name="pt3d-ver" content="2.60.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.59.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.60.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -874,6 +874,14 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
    (Anita corrected the v2.28.0 outside-the-fence reading - they belong in
    the yard, out from beside the hall); yaw +90 deg, cascade faces east. */
 regPart('falls', fallsGrp, true);
+const fallsFlowU = { value: 0 };
+let fallsMistMat = null;
+const fallsFlowMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: fallsFlowU },
+  transparent: true, depthWrite: false,
+  vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float w = sin(vY * 150.0 - uTime * 7.0 + sin(vX * 80.0) * 2.2); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.25, 0.65, vSlope); float a = 0.10 + streak * 0.38; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+});
 new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
@@ -893,6 +901,17 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   wrap.position.set(-13.6, 0, -1.5);
   wrap.rotation.y = Math.PI / 2;
   scene.add(wrap); regPart('falls', wrap, true);
+  fallsMistMat = mistMat;
+  /* v2.60.0: flowing water - an overlay of THIS model's own water surface
+     (extracted offline as falls-water.glb) with a shader running light
+     streaks down the slope; the flat pool stays calm (slope-weighted).
+     Same position offset as m, so it stays glued wherever Layout moves it. */
+  new GLTFLoader().load('models/falls-water.glb?v=100', (wg) => {
+    const wm = wg.scene;
+    wm.position.copy(m.position);
+    wm.traverse(o => { if (o.isMesh) { o.material = fallsFlowMat; o.castShadow = false; o.receiveShadow = false; } });
+    wrap.add(wm);
+  });
   if (fallsGrp) fallsGrp.visible = false;
 });
 
@@ -2513,6 +2532,8 @@ function animate() {
   dnTick(dt);
   fallsTex.offset.y = (fallsTex.offset.y - dt * 0.45) % 1;
   const t = clock.elapsedTime;
+  fallsFlowU.value = t;
+  if (fallsMistMat) fallsMistMat.opacity = 0.10 + 0.045 * Math.sin(t * 1.4);
 
   setZone(zoneOf(player.position.x, player.position.z));
   if (zoneDeadline && Date.now() > zoneDeadline.by && room !== zoneDeadline.zone) {
@@ -3465,7 +3486,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.59.1';
+const PT3D_VER = '2.60.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
