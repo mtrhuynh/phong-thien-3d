@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.76.0">
+<meta name="pt3d-ver" content="2.77.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -17,7 +17,7 @@
   canvas { display:block; }
 
   .ui { position:fixed; z-index:10; color:#fff; user-select:none; }
-  #gateDen { position:fixed; top:150px; right:10px; z-index:6; font-size:12.5px; color:#ffe9bb; text-decoration:none;
+  #gateDen { position:static; font-size:12.5px; color:#ffe9bb; text-decoration:none;
     background:rgba(20,26,22,.55); border:1px solid rgba(255,233,187,.35); padding:5px 10px; border-radius:999px; backdrop-filter:blur(6px); }
   #gateDen:active { transform:scale(.96); }
   #ribbon { top:0; left:0; right:0; text-align:center; font-size:12px; letter-spacing:.4px; color:#ffe9bb;
@@ -40,7 +40,11 @@
 
   /* Title */
 
-  #camModes { position:fixed; right:12px; bottom:118px; display:flex; flex-direction:column; gap:6px; z-index:30; }
+  #camModes { position:fixed; right:12px; bottom:56px; display:none; flex-direction:row; gap:6px; z-index:30; }
+  #camModes.open { display:flex; }
+  #utilBar { position:fixed; top:84px; right:12px; display:flex; align-items:center; gap:6px; z-index:30; flex-wrap:wrap; justify-content:flex-end; max-width:97vw; }
+  #utilBar .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
+  #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; gap:6px; z-index:30; }
   .cmode { padding:8px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66); color:#ffe9bd; font-size:13px; cursor:pointer; }
   .cmode.on { background:rgba(146,96,28,.9); color:#fff; }
 
@@ -122,7 +126,6 @@
 <div id="loading"><div class="spin">🪷</div><div data-i18n="loading">Đang dựng sân chùa…</div><div id="bootTrace" style="margin-top:10px;font-size:11px;color:#cbb27f;max-width:82vw;word-break:break-word"></div></div>
 
 <div class="ui" id="ribbon" data-i18n="ribbon">🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏</div>
-<a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
 
 <div class="ui" id="playerCard">
   <div class="ava">🧘</div>
@@ -135,22 +138,22 @@
 <div class="ui" id="onlinePill"><span class="dot"></span><span data-i18n="onlineWait">Đang nối online…</span></div>
 
 
+<div class="ui" id="utilBar">
+  <a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
+  <span class="musLbl">🎵 Music</span>
+  <button class="cmode" id="musPlay" data-i18n-title="musPlayT" title="Mở / tắt nhạc thiền">▶</button>
+  <button class="cmode" id="musNext" data-i18n-title="musNextT" title="Bài tiếp">⏭</button>
+  <button class="cmode" id="btnDN">🌙 Giờ thật</button>
+  <button class="cmode" id="btnLang">🌐 EN</button>
+</div>
+
 <div class="ui" id="camModes">
   <button class="cmode" data-m="cao" data-i18n="camHigh">📷 Cao</button>
   <button class="cmode" data-m="mat" data-i18n="camEye">👁️ Tầm mắt</button>
   <button class="cmode" data-m="top">🗺️ Top</button>
-  <button class="cmode" id="btnDN">🌙 Giờ thật</button>
-  <button class="cmode" id="btnLang">🌐 EN</button>
-  <button class="cmode" id="btnLayout">🔧 Layout</button>
-  <button class="cmode" id="btnMenu">☰ Menu</button>
 </div>
 
 <div class="ui" id="toast"></div>
-<div id="musicBar">
-  <button id="musPlay" data-i18n-title="musPlayT" title="Mở / tắt nhạc thiền">🎵 ▶</button>
-  <span id="musName" data-i18n="musIdle">Nhạc thiền</span>
-  <button id="musNext" data-i18n-title="musNextT" title="Bài tiếp">⏭</button>
-</div>
 <audio id="musAudio" preload="none"></audio>
 <div id="gainFx"></div>
 <div id="xamCard">
@@ -165,7 +168,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.76.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.77.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -210,6 +213,12 @@
   <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb"></span></button>
   <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb"></span></button>
   <button class="abtn" id="btnHall"><span class="ic">🏛️</span><span class="lb"></span></button>
+</div>
+
+<div class="ui" id="bottomCtl">
+  <button class="cmode" id="btnCam">📷 Camera</button>
+  <button class="cmode" id="btnLayout">🔧 Layout</button>
+  <button class="cmode" id="btnMenu">☰ Menu</button>
 </div>
 
 <script src="xam-data.js"></script>
@@ -1176,6 +1185,11 @@ const btnMenu = document.getElementById('btnMenu');
 btnMenu.addEventListener('click', () => {
   const open = document.getElementById('actions').classList.toggle('open');
   btnMenu.classList.toggle('on', open);
+});
+const btnCam = document.getElementById('btnCam');
+btnCam.addEventListener('click', () => {
+  const open = document.getElementById('camModes').classList.toggle('open');
+  btnCam.classList.toggle('on', open);
 });
 let sitting = false;
 function setActionLabels() {
@@ -2489,13 +2503,12 @@ let musIdx = 0, musStarted = false;
 function musLoad(i, autoplay) {
   musIdx = (i + MUS_TRACKS.length) % MUS_TRACKS.length;
   musAudio.src = 'music/' + MUS_TRACKS[musIdx][0];
-  document.getElementById('musName').textContent = MUS_TRACKS[musIdx][1];
-  if (autoplay) { musAudio.play().catch(() => {}); musStarted = true; document.getElementById('musPlay').textContent = '🎵 ⏸'; }
+  if (autoplay) { musAudio.play().catch(() => {}); musStarted = true; document.getElementById('musPlay').textContent = '⏸'; }
 }
 document.getElementById('musPlay').addEventListener('click', () => {
   if (!musStarted) { musLoad(musIdx, true); return; }
-  if (musAudio.paused) { musAudio.play().catch(() => {}); document.getElementById('musPlay').textContent = '🎵 ⏸'; }
-  else { musAudio.pause(); document.getElementById('musPlay').textContent = '🎵 ▶'; }
+  if (musAudio.paused) { musAudio.play().catch(() => {}); document.getElementById('musPlay').textContent = '⏸'; }
+  else { musAudio.pause(); document.getElementById('musPlay').textContent = '▶'; }
 });
 document.getElementById('musNext').addEventListener('click', () => musLoad(musIdx + 1, true));
 musAudio.addEventListener('ended', () => musLoad(musIdx + 1, true));
@@ -3869,8 +3882,7 @@ function makePanelDraggable(el, key) {
     el.style.left = ''; el.style.top = ''; el.style.right = ''; el.style.bottom = ''; el.style.transform = '';
   });
 }
-makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions');
-makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
+makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
 
 /* ============ Session resume + build freshness (v2.4.1) ============
    A plain reload (F5) resumes exactly where you were: same room, same spot,
@@ -3879,7 +3891,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.76.0';
+const PT3D_VER = '2.77.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
