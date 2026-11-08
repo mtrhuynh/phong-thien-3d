@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.46.0">
+<meta name="pt3d-ver" content="2.47.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.46.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.47.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -771,7 +771,7 @@ fenceRun(0, 14.5, 35, 0);
 /* ============ Forest panorama backdrop (2D ring) ============ */
 let bgRingMesh = null;
 {
-  const bgTex = new THREE.TextureLoader().load('bg/forest.jpg');
+  const bgTex = new THREE.TextureLoader().load('bg/autumn.jpg'); // v2.47.0 trial: Anita's red autumn forest (mirror-seamed panorama); bg/forest.jpg kept as the one-line fallback
   bgTex.colorSpace = THREE.SRGBColorSpace;
   const bgRing = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 30, 40, 1, true),
     new THREE.MeshBasicMaterial({ map: bgTex, side: THREE.BackSide, fog: false }));
@@ -3327,7 +3327,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.46.0';
+const PT3D_VER = '2.47.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
