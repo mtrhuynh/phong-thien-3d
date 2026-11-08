@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.79.1">
+<meta name="pt3d-ver" content="2.79.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -175,7 +175,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.79.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.79.2</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -292,6 +292,9 @@ bootMark('imports-ok');
    shifts every part + its colliders by the anchor delta. Rotation applies
    to single pieces only (the shrine moves as a cluster, unrotated). */
 const LAYOUT_KEY = 'pt3d-layout-v1';
+const chatLastFrom = new Map(); // v2.79.2: chat state lives up top - animate() runs during eval, late consts are TDZ traps
+const chatBubbles = new Map();
+const __chatV = new THREE.Vector3();
 const LAYOUT_ANCHORS = {
   falls:  { x: -13.6, z: -1.5, ry: Math.PI / 2, rot: true },
   clock:  { x: -10.8, z: 4.0,  ry: 0, rot: true },
@@ -3296,9 +3299,6 @@ function ptSend(payload) {
    Rides the same broadcast channel as movement. Text is plain-text only
    (built with textContent, never innerHTML), names come from presence
    records - never from the chat payload itself. */
-const chatLastFrom = new Map();
-const chatBubbles = new Map();
-const __chatV = new THREE.Vector3();
 function addChatLine(name, text) {
   const log = document.getElementById('chatLog'); if (!log) return;
   const line = document.createElement('div'); line.className = 'chatLine';
@@ -3985,7 +3985,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.79.1';
+const PT3D_VER = '2.79.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
