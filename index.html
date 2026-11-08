@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.62.0">
+<meta name="pt3d-ver" content="2.63.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.62.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.63.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -738,7 +738,10 @@ function scallopDisc(r, mat, phase = 0) {
 const treeProcs = [];
 let treeSeq = 0;
 let treeProto = null;
+const RETIRED_TREES = new Set(['tree3', 'tree14', 'tree15']); // v2.63.0: the east row behind the shrine - Anita removed them (she will plant palms herself). The ids stay consumed so no other tree renumbers.
 function tree(x, z, s = 1) {
+  const tid = 'tree' + treeSeq++;
+  if (RETIRED_TREES.has(tid)) return null;
   const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
   cyl(0.16, 0.24, 1.7, MAT.trunk, 0, 0.85, 0, g);
   const branch = cyl(0.05, 0.08, 1.1, MAT.trunk, 0.45, 1.95, 0.1, g, 7); branch.rotation.z = -0.5;
@@ -751,7 +754,7 @@ function tree(x, z, s = 1) {
       d.position.set(bx + li * 0.05, by + li * 0.13, bz); d.rotation.y = ci + li * 0.8; g.add(d);
     });
   });
-  scene.add(g); treeProcs.push(g); const tid = 'tree' + treeSeq++; g.userData.tid = tid; regPart(tid, g, false, { x: x, z: z, ry: 0, rot: true, wide: true, scalable: true }); return g;
+  scene.add(g); treeProcs.push(g); g.userData.tid = tid; regPart(tid, g, false, { x: x, z: z, ry: 0, rot: true, wide: true, scalable: true }); return g;
 }
 tree(-12.5, -23.5, 0.9); tree(16.8, -20.5, 1.0); tree(-15.8, -7.5, 1.15);
 tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.6, -7.6, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
@@ -3583,7 +3586,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.62.0';
+const PT3D_VER = '2.63.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
