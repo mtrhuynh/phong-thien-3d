@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.37.0">
+<meta name="pt3d-ver" content="2.38.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.37.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.38.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -650,7 +650,7 @@ tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8
 /* real papercut tree (v2.23.0): a true 3D model Anita generated on Tripo
    from her reference photo, vertex-painted + simplified by Cuu - when it
    loads it replaces the procedural disc trees; if it fails, they stay */
-new GLTFLoader().load('models/tree.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/tree.glb?v=102', (gltf) => {
   gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) { o.material.vertexColors = true; o.material.roughness = 0.9; } } });
   const TS = 3.7 / 1.958;
   while (treeProcs.length) {
@@ -1601,7 +1601,7 @@ function makeBroom() {
 let foxProto = null;
 const foxPets = new Set();
 function fillFox(g) { if (foxProto && !g.children.length) g.add(foxProto.clone()); }
-new THREE.GLTFLoader().load('models/fox.glb?v=100', (gltf) => {
+new GLTFLoader().load('models/fox.glb?v=100', (gltf) => {
   const m = gltf.scene;
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.9; } });
   const bb = new THREE.Box3().setFromObject(m);
@@ -2925,7 +2925,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.37.0';
+const PT3D_VER = '2.38.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
