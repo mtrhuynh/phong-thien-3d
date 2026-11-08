@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.52.0">
+<meta name="pt3d-ver" content="2.53.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.52.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.53.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -267,13 +267,15 @@ const LAYOUT_ANCHORS = {
   falls:  { x: -13.6, z: -1.5, ry: Math.PI / 2, rot: true },
   clock:  { x: -10.8, z: 4.0,  ry: 0, rot: true },
   shrine: { x: 11.6,  z: 0.5,  ry: -Math.PI / 2, rot: false },
-  burner: { x: 0,     z: -8.6, ry: 0, rot: true }
+  burner: { x: 0,     z: -8.6, ry: 0, rot: true },
+  pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true }
 };
 const LAYOUT_COLS = {
   falls:  [{ x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 }],
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }, { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 }],
-  burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }]
+  burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
+  pavilion: [{ x0: -14.5, x1: -7.5, z0: 5.5, z1: 12.5 }]
 };
 let layoutStore = {};
 try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
@@ -856,6 +858,25 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   if (fallsGrp) fallsGrp.visible = false;
 });
 
+/* ============ Pavilion (Tripo library 'ornate temple', v2.53.0) ============
+   Anita downloaded it from the Tripo community library and approved
+   planting it as a layout-movable cluster, like the shrine. Model is
+   0.978 wide x 0.827 tall, ground-based; scaled to 7 m wide (~5.9 m tall).
+   Default spot: front-west corner, door facing east toward the carpet. */
+new GLTFLoader().load('models/pavilion.glb?v=100', (gltf) => {
+  const m = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  const ctr = bb.getCenter(new THREE.Vector3());
+  m.position.set(-ctr.x, -bb.min.y, -ctr.z);
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const wrap = new THREE.Group(); wrap.add(m);
+  wrap.scale.setScalar(7.0 / size.x);
+  wrap.position.set(-11.0, 0, 9.0);
+  wrap.rotation.y = Math.PI / 2;
+  scene.add(wrap); regPart('pavilion', wrap, true);
+});
+
 /* ============ Language VI/EN (v2.19.0) ============
    UI chrome only - the fortune texts (xam) and chant texts stay Vietnamese,
    as agreed: they are the content layer. Strings live in I18N; elements with a
@@ -884,7 +905,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objTree: '🌳 Cây xanh', sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objTree: '🌳 Cây xanh', sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -920,7 +941,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objTree: '🌳 Tree', sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objTree: '🌳 Tree', sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3030,7 +3051,7 @@ const layoutRay = new THREE.Raycaster();
 const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
-const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner' };
+const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion' };
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -3335,7 +3356,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.52.0';
+const PT3D_VER = '2.53.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
