@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.36.0">
+<meta name="pt3d-ver" content="2.36.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.36.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.36.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -226,8 +226,7 @@
 <script>
 /* Safety net (v2.19.1): if the 3D module cannot start (broken script, blocked
    CDN, old cached page), never leave the visitor on the loading screen -
-   after 25 s show a reload hint on the loading card itself (25 s, not 12:
-   a slow connection + the 3D library can legitimately take that long). */
+   after 12 s show a reload hint on the loading card itself. */
 setTimeout(function () {
   var ld = document.getElementById('loading');
   if (ld) ld.innerHTML = '<div class="spin">🪷</div><div>Đang tải lâu hơn thường lệ…<br><button onclick="location.reload()" style="margin-top:12px;padding:10px 22px;border-radius:999px;border:0;background:#c9a45c;color:#241708;font-weight:700;font-size:15px">↻ Tải lại trang</button></div>';
@@ -334,7 +333,7 @@ const MAT = {
   leaf: new THREE.MeshStandardMaterial({ color: 0x54a047, roughness: 0.7 }),
   leaf2: new THREE.MeshStandardMaterial({ color: 0x6cb85a, roughness: 0.7 }),
   trunk: new THREE.MeshStandardMaterial({ color: 0x7d5738, roughness: 0.8 }),
-  bronze: new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide }), // DoubleSide: urn inner wall must render, else the burner is see-through over its rim
+  bronze: new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.4, metalness: 0.5 }),
   cushion: new THREE.MeshStandardMaterial({ color: 0xc08c46, roughness: 0.6 }),
   cushionTop: new THREE.MeshStandardMaterial({ color: 0xe0aa54, roughness: 0.55 }),
   matSide: new THREE.MeshStandardMaterial({ color: 0x6e2a20, roughness: 0.85 }),
@@ -418,10 +417,10 @@ const carpetTex = canvasTexture(256, 256, (g) => {
   g.fillStyle = 'rgba(217,164,65,0.35)';
   g.beginPath(); g.arc(128, 128, 34, 0, Math.PI * 2); g.fill();
 });
-carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping; carpetTex.repeat.set(1, 7);
-const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 21.1),
+carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping; carpetTex.repeat.set(1, 8);
+const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 24),
   new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.9 }));
-carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 3.15); // v2.34.0: carpet now spans z -7.4..13.7, ending before the yard burner at -8.6
+carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 1.7);
 carpet.receiveShadow = true; scene.add(carpet);
 /* ============ Chánh điện: open hall like the reference (white walls, red pillars, see the altar from the yard) ============ */
 {
@@ -761,7 +760,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -797,7 +796,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -1176,33 +1175,6 @@ for (let i = 0; i < 42; i++) {
   sp.scale.set(0.22, 0.22, 1);
   scene.add(sp); petals.push(sp);
 }
-/* v2.35.0: the drifting motes are DANDELION SEEDS now, drawn on canvas - a
-   filament parachute over a tiny seed, like the glowing one Anita zoomed
-   into in Second Life. */
-const seedTex = canvasTexture(128, 128, (g) => {
-  g.clearRect(0, 0, 128, 128);
-  const cx = 64, cy = 56;
-  for (let pass = 0; pass < 2; pass++) {
-    g.strokeStyle = pass ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.22)';
-    g.lineWidth = pass ? 1 : 2.6;
-    for (let i = 0; i < 44; i++) {
-      const f = i / 43, a = Math.PI * (1.06 + 0.88 * f);
-      const rnd = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
-      const len = 34 + rnd * 13;
-      g.beginPath();
-      g.moveTo(cx, cy);
-      g.quadraticCurveTo(cx + Math.cos(a) * len * 0.55, cy + Math.sin(a) * len * 0.55 - 2,
-        cx + Math.cos(a) * len, cy + Math.sin(a) * len);
-      g.stroke();
-    }
-  }
-  g.strokeStyle = 'rgba(255,250,235,0.9)'; g.lineWidth = 1.4;
-  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, 88); g.stroke();
-  g.fillStyle = 'rgba(255,255,255,1)';
-  g.beginPath(); g.arc(cx, cy, 2.6, 0, 7); g.fill();
-  g.fillStyle = 'rgba(238,226,196,0.95)';
-  g.beginPath(); g.ellipse(cx, 95, 3.2, 6, 0, 0, 7); g.fill();
-});
 /* v2.32.0: white motes drifting in the yard air - the floating seed sparkles
    Anita admired in Second Life. One Points cloud, sine-drifted, near-free. */
 const MOTES = 70;
@@ -1215,7 +1187,7 @@ for (let i = 0; i < MOTES; i++) {
 }
 const moteGeo = new THREE.BufferGeometry();
 moteGeo.setAttribute('position', new THREE.BufferAttribute(moteArr, 3));
-const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ map: seedTex, color: 0xffffff, size: 0.44, transparent: true, opacity: 0.95, depthWrite: false }));
+const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ map: smokeTex, color: 0xffffff, size: 0.3, transparent: true, opacity: 0.5, depthWrite: false }));
 scene.add(motes);
 
 /* ============ Cushions (đệm) ============ */
@@ -1573,33 +1545,11 @@ function makeBroom() {
   br.rotation.set(0.5, 0, -0.25);
   return br;
 }
-/* v2.33.0: Linh Ho - the nine-tailed fox Anita generated on Tripo (52k faces,
-   1.3 MB after the simplify pass). Loaded once; each fox pet group holds a
-   clone. foxPets tracks live fox groups so the loader can fill latecomers
-   and removals can unregister. */
-let foxProto = null;
-const foxPets = new Set();
-function fillFox(g) { if (foxProto && !g.children.length) g.add(foxProto.clone()); }
-new THREE.GLTFLoader().load('models/fox.glb?v=100', (gltf) => {
-  const m = gltf.scene;
-  m.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.9; } });
-  const bb = new THREE.Box3().setFromObject(m);
-  const size = bb.getSize(new THREE.Vector3());
-  const ctr = bb.getCenter(new THREE.Vector3());
-  m.position.set(-ctr.x, -bb.min.y, -ctr.z);
-  const wrap = new THREE.Group();
-  wrap.add(m);
-  wrap.scale.setScalar(0.55 / size.y);
-  foxProto = wrap;
-  foxPets.forEach(fillFox);
-}, undefined, () => {});
 /* linh thu (v2.16.0): a tiny chibi dragon from ~14 primitives - a few hundred
    triangles, so it costs almost nothing (the old deer model was heavy and went).
    It trails behind its owner, hops while they walk, idles with a gentle bob. */
-function makePet(type) {
+function makePet() {
   const g = new THREE.Group();
-  g.userData.type = type || 1;
-  if (g.userData.type === 2) { foxPets.add(g); fillFox(g); return g; }
   const bodyM = new THREE.MeshStandardMaterial({ color: 0xe8913a, roughness: 0.6 });
   const creamM = new THREE.MeshStandardMaterial({ color: 0xffe3b3, roughness: 0.7 });
   const darkM = new THREE.MeshStandardMaterial({ color: 0x33302c, roughness: 0.5 });
@@ -1634,9 +1584,8 @@ function petFollow(pet, ox, oz, ory, dt, now) {
 }
 let myPet = null;
 function syncPet() {
-  const want = look.pet | 0;
-  if (myPet && myPet.userData.type !== want) { scene.remove(myPet); foxPets.delete(myPet); myPet = null; }
-  if (want && !myPet) { myPet = makePet(want); myPet.position.copy(player.position); scene.add(myPet); }
+  if (look.pet && !myPet) { myPet = makePet(); myPet.position.copy(player.position); scene.add(myPet); }
+  if (!look.pet && myPet) { scene.remove(myPet); myPet = null; }
 }
 function startSweep(pile) {
   if (sweeping || !leafPiles.includes(pile)) return;
@@ -2611,7 +2560,7 @@ function ptState() {
   /* STATIC profile + world snapshots only. Positions used to ride in here, and re-tracking
      them ~1/s while walking got the realtime socket closed by the server (~20 s) - which is
      why visitors kept vanishing for each other. Movement now travels by broadcast (ptMove). */
-  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, pt: look.pet | 0, bc: bacOf(sen),
+  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, pt: look.pet ? 1 : 0, bc: bacOf(sen),
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft / 30) : 0, hallLit ? Math.ceil(hallLeft / 30) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -2739,9 +2688,8 @@ function ptSync() {
     if (typeof p.z === 'number') r.tz = p.z;
     if (typeof p.ry === 'number') r.try_ = p.ry;
     r.sit = !!p.sit;
-    const ptWant = p.pt | 0;
-    if (r.pet && r.pet.userData.type !== ptWant) { scene.remove(r.pet); foxPets.delete(r.pet); r.pet = null; }
-    if (ptWant && !r.pet) { r.pet = makePet(ptWant); r.pet.position.set(r.g.position.x, r.g.position.y, r.g.position.z); scene.add(r.pet); }
+    if (p.pt && !r.pet) { r.pet = makePet(); r.pet.position.set(r.g.position.x, r.g.position.y, r.g.position.z); scene.add(r.pet); }
+    if (!p.pt && r.pet) { scene.remove(r.pet); r.pet = null; }
     if ((p.bd || 0) !== r.bd) {
       r.bd = p.bd || 0;
       const bm = r.g.userData.beadMats;
@@ -2775,7 +2723,7 @@ function ptSweep() {
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
     if (st[key]) { r.lastSeen = now; return; }
-    if (now - r.lastSeen > 12000) { scene.remove(r.g); if (r.pet) { scene.remove(r.pet); foxPets.delete(r.pet); } remotes.delete(key); }
+    if (now - r.lastSeen > 12000) { scene.remove(r.g); if (r.pet) scene.remove(r.pet); remotes.delete(key); }
   });
 }
 let ptPrev = performance.now();
@@ -2902,7 +2850,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.36.0';
+const PT3D_VER = '2.36.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -3003,9 +2951,9 @@ function openProfile() {
     beadBox.appendChild(b);
   });
   const petBox = document.getElementById('pfPet'); petBox.innerHTML = '';
-  [[L().petNone, 0], [L().petDragon, 1], [L().petFox, 2]].forEach(([label, v]) => {
+  [[L().petNone, 0], [L().petDragon, 1]].forEach(([label, v]) => {
     const b = document.createElement('button');
-    b.className = 'pf-chip' + ((look.pet | 0) === v ? ' on' : ''); b.textContent = label;
+    b.className = 'pf-chip' + ((look.pet ? 1 : 0) === v ? ' on' : ''); b.textContent = label;
     b.addEventListener('click', () => { look.pet = v; saveLook(); syncPet(); ptTrack(true); openProfile(); });
     petBox.appendChild(b);
   });
