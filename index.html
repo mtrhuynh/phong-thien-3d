@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.78.1">
+<meta name="pt3d-ver" content="2.79.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -70,6 +70,14 @@
   #musicBar button { background:rgba(240,199,106,0.16); border:1px solid rgba(240,199,106,0.4); color:#ffe9a8;
     border-radius:999px; padding:4px 10px; font-size:13px; cursor:pointer; }
   #musName { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+  #chatLog { position:fixed; left:10px; bottom:74px; z-index:29; display:flex; flex-direction:column; gap:4px; max-width:min(340px,58vw); pointer-events:none; }
+  .chatLine { background:rgba(24,16,9,.78); border:1px solid rgba(255,205,120,.25); color:#f7ead0; font-size:12.5px; padding:4px 9px; border-radius:10px; width:max-content; max-width:100%; overflow-wrap:anywhere; transition:opacity .8s; }
+  .chatLine b { color:#ffd76e; font-weight:700; }
+  #chatRow { position:fixed; left:10px; bottom:26px; z-index:30; display:flex; gap:6px; width:min(340px,58vw); }
+  #chatInp { flex:1; min-width:0; padding:8px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.78); color:#ffe9bd; font-size:16px; outline:none; }
+  #chatSend { padding:8px 13px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(146,96,28,.85); color:#fff; font-size:14px; cursor:pointer; }
+  #bubbleLayer { position:fixed; inset:0; z-index:28; pointer-events:none; overflow:hidden; }
+  .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
   #gainFx { position:fixed; left:50%; bottom:122px; transform:translateX(-50%); z-index:35; pointer-events:none; }
@@ -167,7 +175,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.78.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.79.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -212,6 +220,13 @@
   <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb"></span></button>
   <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb"></span></button>
 </div>
+
+<div id="chatLog"></div>
+<div id="chatRow">
+  <input id="chatInp" type="text" maxlength="200" data-i18n-ph="chatPh" placeholder="Nói gì đó…" autocomplete="off">
+  <button id="chatSend" title="Gửi">➤</button>
+</div>
+<div id="bubbleLayer"></div>
 
 <div class="ui" id="bottomCtl">
   <div class="ctlRow">
@@ -1022,7 +1037,7 @@ try { LANG = localStorage.getItem('pt3d-lang') || 'vi'; } catch (e) {}
 const I18N = {
   vi: { loading: 'Đang dựng sân chùa…', ribbon: '🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏',
     gateDen: '🏮 Cổng thả đèn →', psubA: 'Hạt sen · bậc ', onlineWait: 'Đang nối online…', camHigh: '📷 Cao', camEye: '👁️ Tầm mắt',
-    musPlayT: 'Mở / tắt nhạc thiền', musNextT: 'Bài tiếp', musIdle: 'Nhạc thiền', hint: 'Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền',
+    musPlayT: 'Mở / tắt nhạc thiền', musNextT: 'Bài tiếp', musIdle: 'Nhạc thiền', chatPh: 'Nói gì đó…', hint: 'Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền',
     creditA: 'Tượng Phật: model 3D Tripo · v', nmTitle: '🪷 Chào mừng đến Phòng Thiền 3D',
     nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
     nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
@@ -1058,7 +1073,7 @@ const I18N = {
     tJoined: n => '🪷 ' + n + ' vừa vào chùa', tGateOpen: g => '🎋 Đủ ' + g + ' phước đức hôm nay — hũ xin xăm đã mở!', tPhoto: '📷 Đã lưu ảnh nhân vật', tPhotoFail: 'Chưa chụp được ảnh, thử lại nhé' },
   en: { loading: 'Building the temple yard…', ribbon: '🪷 A self-play meditation room — sit still, breathe softly, smile. If you can, a real temple is still better 🙏',
     gateDen: '🏮 Lantern gate →', psubA: 'Lotus seeds · rank ', onlineWait: 'Connecting…', camHigh: '📷 High', camEye: '👁️ Eye level',
-    musPlayT: 'Toggle meditation music', musNextT: 'Next track', musIdle: 'Meditation music', hint: 'Tap the ground to walk<br>Drag to look around<br>Tap an empty cushion to sit',
+    musPlayT: 'Toggle meditation music', musNextT: 'Next track', musIdle: 'Meditation music', chatPh: 'Say something…', hint: 'Tap the ground to walk<br>Drag to look around<br>Tap an empty cushion to sit',
     creditA: 'Buddha statue: Tripo 3D model · v', nmTitle: '🪷 Welcome to the 3D Meditation Room',
     nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
     nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
@@ -2883,7 +2898,7 @@ function animate() {
     const bs = f.g.userData.bs;
     f.g.scale.set(bs * (1 + Math.sin(t * 17 + f.seed * 9) * 0.07), bs * (1 + Math.sin(t * 15 + f.seed * 7) * 0.13), bs);
   });
-  updateCushionBtns();
+  updateCushionBtns(); updateChatBubbles();
 
   /* fortune jar shake */
   if (xamAnimT >= 0) {
@@ -3016,6 +3031,7 @@ function animate() {
 const keysHeld = new Set();
 let turnTarget = null, keyDriveT = 99;
 addEventListener('keydown', (e) => {
+  if (/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) return; // v2.79.0: typing (chat, name, PIN) never walks
   if (e.key.startsWith('Arrow')) {
     keysHeld.add(e.key);
     if (!e.repeat && P.mode === 'walk' && !/INPUT|TEXTAREA/.test((document.activeElement && document.activeElement.tagName) || '')) {
@@ -3275,11 +3291,80 @@ function ptSend(payload) {
   if (!ptChannel) return;
   try { ptChannel.send({ type: 'broadcast', event: 'world', payload: Object.assign({ from: myGid }, payload) }); } catch (e) {}
 }
+/* ============ Text chat (v2.79.0, Anita's ask) ============
+   Rides the same broadcast channel as movement. Text is plain-text only
+   (built with textContent, never innerHTML), names come from presence
+   records - never from the chat payload itself. */
+const chatLastFrom = new Map();
+const chatBubbles = new Map();
+const __chatV = new THREE.Vector3();
+function addChatLine(name, text) {
+  const log = document.getElementById('chatLog'); if (!log) return;
+  const line = document.createElement('div'); line.className = 'chatLine';
+  const b = document.createElement('b'); b.textContent = name;
+  line.append(b, document.createTextNode(': ' + text));
+  log.appendChild(line);
+  while (log.children.length > 8) log.removeChild(log.firstChild);
+  setTimeout(() => { line.style.opacity = '0'; setTimeout(() => line.remove(), 900); }, 30000);
+}
+function showBubble(gid, text) {
+  let bb = chatBubbles.get(gid);
+  if (!bb) {
+    const el = document.createElement('div'); el.className = 'chatBubble';
+    document.getElementById('bubbleLayer').appendChild(el);
+    bb = { el, until: 0 }; chatBubbles.set(gid, bb);
+  }
+  bb.el.textContent = text.slice(0, 90);
+  bb.until = performance.now() + 5000;
+  bb.el.style.display = '';
+}
+function updateChatBubbles() {
+  if (!chatBubbles.size) return;
+  const now = performance.now();
+  for (const [gid, bb] of chatBubbles) {
+    if (now > bb.until) { bb.el.remove(); chatBubbles.delete(gid); continue; }
+    const pos = gid === myGid ? player.position : (remotes.get(gid) ? remotes.get(gid).g.position : null);
+    if (!pos) { bb.el.style.display = 'none'; continue; }
+    __chatV.set(pos.x, pos.y + 1.68, pos.z).project(camera);
+    if (__chatV.z > 1 || __chatV.z < -1) { bb.el.style.display = 'none'; continue; }
+    bb.el.style.display = '';
+    bb.el.style.left = (__chatV.x * 0.5 + 0.5) * innerWidth + 'px';
+    bb.el.style.top = (-__chatV.y * 0.5 + 0.5) * innerHeight + 'px';
+  }
+}
+function onRemoteChat(pl) {
+  const now = performance.now();
+  if (now - (chatLastFrom.get(pl.from) || 0) < 600) return; // flood guard
+  chatLastFrom.set(pl.from, now);
+  const t = String(pl.t == null ? '' : pl.t).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200);
+  if (!t) return;
+  const r = remotes.get(pl.from);
+  addChatLine(r ? r.name : L().guest, t);
+  showBubble(pl.from, t);
+}
+let chatLastSent = 0;
+function sendChat() {
+  const inp = document.getElementById('chatInp');
+  const t = inp.value.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200);
+  if (!t) return;
+  const now = performance.now();
+  if (now - chatLastSent < 800) return;
+  chatLastSent = now;
+  inp.value = '';
+  ptSend({ k: 'chat', t });
+  addChatLine(myName, t);
+  showBubble(myGid, t);
+}
+document.getElementById('chatSend').addEventListener('click', sendChat);
+document.getElementById('chatInp').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); e.stopPropagation(); });
+document.getElementById('chatRow').addEventListener('pointerdown', (e) => e.stopPropagation());
+
 function ptWorld(pl) {
   if (!pl || pl.from === myGid) return;
   if ('x' in pl) pl.x = Number.isFinite(pl.x) ? Math.max(-22, Math.min(22, pl.x)) : 0; /* v2.73.0: never trust network numbers */
   if ('z' in pl) pl.z = Number.isFinite(pl.z) ? Math.max(-30, Math.min(18, pl.z)) : 0;
   if (pl.k === 'layout') { fetchSharedLayout(); return; }
+  if (pl.k === 'chat') { onRemoteChat(pl); return; }
   if (pl.k === 'inc') {
     if (pl.r === 'hall') { if (!hallLit) { setHallLit(true); hallLeft = 180; } else hallLeft = Math.max(hallLeft, 170); }
     else { if (!incenseLit) { setIncenseLit(true); incenseLeft = 180; smokeBoost = 30; } else incenseLeft = Math.max(incenseLeft, 170); }
@@ -3899,7 +3984,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.78.1';
+const PT3D_VER = '2.79.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
