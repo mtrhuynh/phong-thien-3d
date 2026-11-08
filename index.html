@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.65.0">
+<meta name="pt3d-ver" content="2.66.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.65.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.66.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1723,11 +1723,11 @@ function setHallLit(on) {
 setHallLit(false);
 
 /* ============ Fortune-stick jar (xin xam) ============ */
-const xamGroup = new THREE.Group(); xamGroup.position.set(5.3, 1.12, -23.3); scene.add(xamGroup);
-box(0.74, 0.5, 0.74, MAT.woodDark, 0, 0.25, 0, xamGroup);
+const xamGroup = new THREE.Group(); xamGroup.position.set(2.68, 2.07, -22.95); scene.add(xamGroup); // v2.66.0: on the altar table (right end)
+/* v2.66.0: the old wooden stand is gone - the Tripo set has its own tray. */
 const bambooMat = new THREE.MeshStandardMaterial({ color: 0xc9a86a, roughness: 0.55 });
-const jar = new THREE.Group(); jar.position.y = 0.5; xamGroup.add(jar);
-const xtag = nameTag('Hũ xin xăm', 'bấm vào hũ để lắc quẻ'); xtag.position.y = 1.62; xamGroup.add(xtag);
+const jar = new THREE.Group(); jar.position.y = 0; xamGroup.add(jar);
+const xtag = nameTag('Hũ xin xăm', 'bấm vào hũ để lắc quẻ'); xtag.position.y = 0.74; xamGroup.add(xtag);
 function updateJarTag() {
   const sub = xamOpen() ? 'bấm vào hũ để lắc quẻ' : 'cần ' + XAM_GATE + ' phước đức hôm nay để mở';
   const nt = nameTag('Hũ xin xăm', sub);
@@ -1750,6 +1750,20 @@ for (let i = 0; i < 9; i++) {
   jar.add(st); xamSticks.push(st);
 }
 const chosenStick = xamSticks[4];
+/* v2.66.0: Anita's Tripo fortune-stick set replaces the code-built jar
+   (she found the old set too big). It stands on the altar table in the
+   jar group, so the shake animation turns the whole set; the old parts
+   hide when the model lands. */
+new GLTFLoader().load('models/xam-set.glb?v=100', (gltf) => {
+  jar.children.slice().forEach(c => { c.visible = false; });
+  const m = gltf.scene;
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const bb = new THREE.Box3().setFromObject(m), sz = bb.getSize(new THREE.Vector3()), ct = bb.getCenter(new THREE.Vector3());
+  const wrap = new THREE.Group();
+  m.position.set(-ct.x, -bb.min.y, -ct.z);
+  wrap.add(m); wrap.scale.setScalar(0.40 / sz.y);
+  jar.add(wrap);
+});
 let xamAnimT = -1, xamPending = null;
 const xamCard = document.getElementById('xamCard');
 function drawXam() {
@@ -2151,7 +2165,6 @@ const COLLIDERS = [
   { x0: -3.3, x1: 3.3, z0: -24.15, z1: -22.2 },   // altar table
   { x0: -7.55, x1: -4.65, z0: -24.45, z1: -23.6 }, // merit board (back wall)
   { x0: 4.65, x1: 7.55, z0: -24.45, z1: -23.6 },   // mantra board (back wall)
-  { x0: 4.9, x1: 5.7, z0: -23.7, z1: -22.9 },      // xin xam jar
   { x0: -6.22, x1: -5.78, z0: -13.17, z1: -12.73 }, // pillars
   { x0: -4.12, x1: -3.68, z0: -13.17, z1: -12.73 },
   { x0: -1.52, x1: -1.08, z0: -13.17, z1: -12.73 },
@@ -3614,7 +3627,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.65.0';
+const PT3D_VER = '2.66.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
