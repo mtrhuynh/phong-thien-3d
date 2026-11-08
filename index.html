@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.75.1">
+<meta name="pt3d-ver" content="2.76.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.75.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.76.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -327,6 +327,7 @@ function resolveLayoutCols() {
   for (const id in LAYOUT_COLS) for (const spec of LAYOUT_COLS[id]) {
     if (spec.entry !== undefined) continue;
     spec.entry = COLLIDERS.find(c => Math.abs(c.x0 - spec.x0) < 0.01 && Math.abs(c.x1 - spec.x1) < 0.01 && Math.abs(c.z0 - spec.z0) < 0.01 && Math.abs(c.z1 - spec.z1) < 0.01) || null;
+    if (!spec.entry) { spec.entry = { x0: spec.x0, x1: spec.x1, z0: spec.z0, z1: spec.z1 }; COLLIDERS.push(spec.entry); } // v2.76.0: specs with no static twin (bridge rails, lamps) were silently dead - create their box
     const a = LAYOUT_ANCHORS[id];
     spec.rel = { x0: spec.x0 - a.x, x1: spec.x1 - a.x, z0: spec.z0 - a.z, z1: spec.z1 - a.z };
   }
@@ -363,7 +364,7 @@ function initLayout() {
   resolveLayoutCols();
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); }
   layoutInitDone = true;
-  refreshTreeVisibility();
+  refreshTreeVisibility(); refreshLampVisibility();
 }
 
 /* ============ Renderer / Scene / Camera ============ */
@@ -839,7 +840,7 @@ TREE_TYPES.forEach((tt, type) => {
     treeProtos[type] = gltf.scene;
     treeProto = gltf.scene;
     for (const id of [...new Set(layoutParts.filter(p => p.id.indexOf('tree') === 0).map(p => p.id))]) swapTreeModel(id);
-    rebuildDupTrees();
+    rebuildDupTrees(); rebuildDupLamps();
   }, undefined, () => { /* this type failed - its spots keep the fallback look */ });
 });
 function fenceRun(x, z, len, rotY) {
@@ -1024,7 +1025,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1060,7 +1061,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -1416,19 +1417,29 @@ function lotusPond(x, z) {
    6 paper-lantern posts + 4 rustic roofed posts, all layout parts
    (move/rotate in the editor; colliders follow via LAYOUT_COLS).
    Glows ride lampGlowMat, breathing with the day/night cycle. */
+for (const id in layoutStore) {
+  const e = layoutStore[id];
+  if (!e || !e.dup || !e.fam || LAYOUT_ANCHORS[id]) continue;
+  LAYOUT_ANCHORS[id] = { x: e.x, z: e.z, ry: e.ry || 0, rot: true };
+  const hw = e.fam === 'lp' ? 0.24 : 0.34;
+  LAYOUT_COLS[id] = [{ x0: e.x - hw, x1: e.x + hw, z0: e.z - hw, z1: e.z + hw }];
+}
 const lampPaperGroups = {};
 [['lp1', -3.2, -10.6], ['lp2', 3.2, -10.6], ['lp3', -3.0, 11.2], ['lp4', 3.0, 11.2], ['lp5', -3.0, 2.2], ['lp6', 3.0, 2.2]].forEach(([id, x, z]) => {
   const g = new THREE.Group(); g.position.set(x, 0, z);
   const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(1.15, 1.15, 1); glow.position.y = 2.32; g.add(glow);
   scene.add(g); lampPaperGroups[id] = g; regPart(id, g, true);
 });
+let lampPaperWrap = null, lampRusticWrap = null;
 new GLTFLoader().load('models/lamp-paper.glb?v=100', (gltf) => {
   const proto = gltf.scene;
   proto.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.85; } });
   const bb = new THREE.Box3().setFromObject(proto);
   proto.position.set(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
   const wrap0 = new THREE.Group(); wrap0.add(proto); wrap0.scale.setScalar(2.9);
+  lampPaperWrap = wrap0;
   Object.values(lampPaperGroups).forEach(g => g.add(wrap0.clone(true)));
+  rebuildDupLamps();
 });
 const lampRusticGroups = {};
 [['lamppost1', -2.7, 10.6], ['lamppost2', 2.7, 10.6], ['lamppost3', -3.0, 5.4], ['lamppost4', 3.0, 5.4]].forEach(([id, x, z]) => {
@@ -1442,8 +1453,30 @@ new GLTFLoader().load('models/lamp-rustic.glb?v=100', (gltf) => {
   const bb = new THREE.Box3().setFromObject(proto);
   proto.position.set(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
   const wrap0 = new THREE.Group(); wrap0.add(proto); wrap0.scale.setScalar(2.35);
+  lampRusticWrap = wrap0;
   Object.values(lampRusticGroups).forEach(g => g.add(wrap0.clone(true)));
+  rebuildDupLamps();
 });
+function rebuildDupLamps() {
+  for (const id in layoutStore) {
+    const e = layoutStore[id];
+    if (!e || !e.dup || !e.fam) continue;
+    if (!LAYOUT_NAMES[id]) LAYOUT_NAMES[id] = e.fam === 'lp' ? 'objLampPaper' : 'objLampPost';
+    if (layoutParts.some(p => p.id === id)) continue;
+    const g = new THREE.Group(); g.position.set(e.x, 0, e.z); g.rotation.y = e.ry || 0;
+    g.userData.dupCreated = true;
+    if (e.fam === 'lp') {
+      const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(1.15, 1.15, 1); glow.position.y = 2.32; g.add(glow);
+      lampPaperGroups[id] = g;
+      if (lampPaperWrap) g.add(lampPaperWrap.clone(true));
+    } else {
+      const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(0.85, 0.85, 1); glow.position.set(0.45, 1.62, 0); g.add(glow);
+      lampRusticGroups[id] = g;
+      if (lampRusticWrap) g.add(lampRusticWrap.clone(true));
+    }
+    scene.add(g); regPart(id, g, true);
+  }
+}
 
 const petalTex = canvasTexture(64, 64, (g) => {
   g.fillStyle = 'rgba(246,170,196,0.95)';
@@ -3398,7 +3431,9 @@ function layoutSelect(id) {
   document.getElementById('layRotL').style.display = rot ? '' : 'none';
   document.getElementById('layRotR').style.display = rot ? '' : 'none';
   const isTree = !!(id && LAYOUT_ANCHORS[id].scalable);
-  for (const b of ['laySizeDn', 'laySizeUp', 'layDup', 'layDel']) document.getElementById(b).style.display = isTree ? '' : 'none';
+  const isLamp = !!(id && /^(lp|lamppost)\d+$/.test(id));
+  for (const b of ['laySizeDn', 'laySizeUp']) document.getElementById(b).style.display = isTree ? '' : 'none';
+  for (const b of ['layDup', 'layDel']) document.getElementById(b).style.display = (isTree || isLamp) ? '' : 'none';
   nameEl.textContent = id ? L()[LAYOUT_NAMES[id] || 'objTree'] : '🔧 Layout';
   hintEl.textContent = L().layoutHint;
   if (id) syncLayoutProxy(id);
@@ -3472,7 +3507,7 @@ document.getElementById('layCode').addEventListener('click', () => {
     layoutStore = o;
     try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
     for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
-    refreshTreeVisibility();
+    refreshTreeVisibility(); refreshLampVisibility();
     toast('✓ Layout');
   } catch (e) { /* invalid code pasted: ignore */ }
 });
@@ -3484,8 +3519,8 @@ document.getElementById('layReset').addEventListener('click', () => {
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
-  rebuildDupTrees();
-  refreshTreeVisibility();
+  rebuildDupTrees(); rebuildDupLamps();
+  refreshTreeVisibility(); refreshLampVisibility();
 });
 /* v2.72.0: shared layout lock (Supabase table pt3d_shared_layout + PIN-guarded RPC).
    Anita saves once in the editor; devices that have not made personal edits adopt
@@ -3497,8 +3532,8 @@ function layoutBaseline() { try { return localStorage.getItem(LAYOUT_SHARED_KEY)
 function applyLayoutStore() {
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
-  rebuildDupTrees();
-  refreshTreeVisibility();
+  rebuildDupTrees(); rebuildDupLamps();
+  refreshTreeVisibility(); refreshLampVisibility();
 }
 async function fetchSharedLayout() {
   if (!sbClient || layoutFetchBusy || Date.now() - layoutFetchAt < 5000) return;
@@ -3570,6 +3605,8 @@ function layoutUndo() {
       layoutParts.splice(i, 1);
       delete LAYOUT_ANCHORS[p.id];
       delete layoutCur[p.id];
+      if (LAYOUT_COLS[p.id]) { for (const spec of LAYOUT_COLS[p.id]) if (spec.entry) { const ci = COLLIDERS.indexOf(spec.entry); if (ci >= 0) COLLIDERS.splice(ci, 1); } delete LAYOUT_COLS[p.id]; }
+      if (/^(lp|lamppost)/.test(p.id)) delete LAYOUT_NAMES[p.id];
     }
   }
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); }
@@ -3579,8 +3616,8 @@ function layoutUndo() {
   for (const p of [...layoutParts]) {
     if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.obj.parent && !(layoutStore[p.id] && layoutStore[p.id].del) && treeTypeOf(p.id) !== p.builtType) swapTreeModel(p.id);
   }
-  rebuildDupTrees();
-  refreshTreeVisibility();
+  rebuildDupTrees(); rebuildDupLamps();
+  refreshTreeVisibility(); refreshLampVisibility();
   if (layoutEdit) { buildLayoutProxies(); layoutSelect(layoutSel && LAYOUT_ANCHORS[layoutSel] ? layoutSel : null); for (const id in LAYOUT_ANCHORS) syncLayoutProxy(id); }
   toast(L().layoutUndoDone);
 }
@@ -3650,6 +3687,18 @@ function refreshTreeVisibility() {
     p.obj.visible = !(layoutStore[p.id] && layoutStore[p.id].del);
   }
 }
+function refreshLampVisibility() {
+  for (const p of layoutParts) {
+    if (!/^(lp|lamppost)/.test(p.id)) continue;
+    const del = !!(layoutStore[p.id] && layoutStore[p.id].del);
+    if (!p.obj.parent && !del) scene.add(p.obj);
+    if (p.obj.parent) p.obj.visible = !del;
+  }
+  for (const id in LAYOUT_COLS) {
+    if (!/^(lp|lamppost)/.test(id)) continue;
+    if (layoutStore[id] && layoutStore[id].del) for (const spec of LAYOUT_COLS[id]) if (spec.entry) { spec.entry.x0 = spec.entry.x1 = spec.entry.z0 = spec.entry.z1 = 999; }
+  }
+}
 function rebuildDupTrees() {
   for (const id in layoutStore) {
     const e = layoutStore[id];
@@ -3684,7 +3733,38 @@ function layoutResize(f) {
 document.getElementById('laySizeUp').addEventListener('click', () => layoutResize(1.15));
 document.getElementById('laySizeDn').addEventListener('click', () => layoutResize(1 / 1.15));
 document.getElementById('layDup').addEventListener('click', () => {
-  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  if (!layoutSel) return;
+  const lampFam = /^lp\d+$/.test(layoutSel) ? 'lp' : /^lamppost\d+$/.test(layoutSel) ? 'lamppost' : null;
+  if (lampFam) {
+    const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
+    if (!parts.length) return;
+    layoutSnapshot();
+    const src = parts[parts.length - 1].obj;
+    const cur = layoutCur[layoutSel];
+    let seq = 100; let nid = lampFam + seq++; while (layoutStore[nid] || LAYOUT_ANCHORS[nid]) nid = lampFam + seq++;
+    const nx = Math.max(-16, Math.min(16, cur.x + 1.4)), nz = Math.max(-11, Math.min(13, cur.z + 1.4));
+    LAYOUT_ANCHORS[nid] = { x: nx, z: nz, ry: cur.ry, rot: true };
+    const sspec = (LAYOUT_COLS[layoutSel] || [])[0];
+    const hw = sspec ? (sspec.x1 - sspec.x0) / 2 : 0.24, hd = sspec ? (sspec.z1 - sspec.z0) / 2 : 0.24;
+    const ent = { x0: nx - hw, x1: nx + hw, z0: nz - hd, z1: nz + hd };
+    COLLIDERS.push(ent);
+    LAYOUT_COLS[nid] = [{ x0: ent.x0, x1: ent.x1, z0: ent.z0, z1: ent.z1, entry: ent, rel: { x0: -hw, x1: hw, z0: -hd, z1: hd } }];
+    LAYOUT_NAMES[nid] = LAYOUT_NAMES[layoutSel] || 'objLampPaper';
+    layoutStore[nid] = { x: nx, z: nz, ry: cur.ry, sc: 1, dup: 1, fam: lampFam };
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+    const c = src.clone(true);
+    c.position.set(nx, 0, nz); c.rotation.y = cur.ry;
+    c.userData.dupCreated = true;
+    scene.add(c);
+    (lampFam === 'lp' ? lampPaperGroups : lampRusticGroups)[nid] = c;
+    layoutCur[nid] = layoutEntry(nid);
+    regPart(nid, c, true);
+    applyLayoutId(nid);
+    addLayoutProxy(nid);
+    layoutSelect(nid);
+    return;
+  }
+  if (!LAYOUT_ANCHORS[layoutSel].scalable) return;
   const srcType = treeTypeOf(layoutSel);
   if (!treeProtos[srcType]) { toast(L().layoutHint); return; }
   const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
@@ -3721,8 +3801,10 @@ document.getElementById('layType').addEventListener('click', () => {
   toast(L().treeTypeNames[nt]);
 });
 document.getElementById('layDel').addEventListener('click', () => {
-  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
-  if (!confirm(L().layoutDelQ)) return;
+  if (!layoutSel) return;
+  const isLampSel = /^(lp|lamppost)\d+$/.test(layoutSel);
+  if (!LAYOUT_ANCHORS[layoutSel].scalable && !isLampSel) return;
+  if (!confirm(isLampSel ? L().layoutDelQObj : L().layoutDelQ)) return;
   layoutSnapshot();
   const id = layoutSel;
   for (const p of layoutParts.filter(p => p.id === id)) {
@@ -3733,6 +3815,7 @@ document.getElementById('layDel').addEventListener('click', () => {
   }
   if (layoutStore[id] && layoutStore[id].dup) delete layoutStore[id];
   else layoutStore[id] = Object.assign({}, layoutStore[id], { del: 1 });
+  for (const spec of (LAYOUT_COLS[id] || [])) if (spec.entry) { spec.entry.x0 = spec.entry.x1 = spec.entry.z0 = spec.entry.z1 = 999; } // v2.76.0: a deleted lamp leaves no invisible wall
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
   delete layoutCur[id];
   const px = layoutProxies.get(id);
@@ -3796,7 +3879,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.75.1';
+const PT3D_VER = '2.76.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
