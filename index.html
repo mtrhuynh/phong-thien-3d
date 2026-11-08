@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.47.0">
+<meta name="pt3d-ver" content="2.48.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.47.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.48.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -469,9 +469,19 @@ ground.receiveShadow = true;
 ground.name = 'ground';
 scene.add(ground);
 
-/* grass rim */
-const grass = new THREE.Mesh(new THREE.PlaneGeometry(300, 300),
-  new THREE.MeshStandardMaterial({ color: 0x86c168, roughness: 0.9 }));
+/* grass rim - v2.48.0: Anita: the pale lime band fought the autumn sky.
+   Now a radial gradient (moss green under the yard -> the warm dark umber
+   of the panorama's foreground at the edge) so the ground melts into the
+   backdrop; plane shrunk 300 -> 130 (the backdrop ring sits at r=60). */
+const grassTex = canvasTexture(512, 512, (g, W, H) => {
+  const rg = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W / 2);
+  rg.addColorStop(0, '#5c6e3e'); rg.addColorStop(0.35, '#505f34');
+  rg.addColorStop(0.62, '#4a452a'); rg.addColorStop(0.85, '#3e2f1e');
+  rg.addColorStop(1, '#2e2015');
+  g.fillStyle = rg; g.fillRect(0, 0, W, H);
+});
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(130, 130),
+  new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.95 }));
 grass.rotation.x = -Math.PI / 2; grass.position.y = -0.03;
 scene.add(grass);
 
@@ -3327,7 +3337,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.47.0';
+const PT3D_VER = '2.48.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
