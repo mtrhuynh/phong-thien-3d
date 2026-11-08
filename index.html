@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.29.0">
+<meta name="pt3d-ver" content="2.30.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.29.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.30.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -493,10 +493,10 @@ carpet.receiveShadow = true; scene.add(carpet);
     });
     return g;
   }
-  const roof1 = pagodaTier(10.4, 2.4); roof1.scale.set(1.3, 1, 0.98); roof1.position.set(0, 5.22, -2.2); T.add(roof1);
-  const roof2 = pagodaTier(7.2, 1.9); roof2.scale.set(1.3, 1, 0.98); roof2.position.set(0, 7.02, -2.2); T.add(roof2);
-  const roof3 = pagodaTier(4.6, 1.5); roof3.scale.set(1.3, 1, 0.98); roof3.position.set(0, 8.48, -2.2); T.add(roof3);
-  const fin = new THREE.Group(); fin.position.set(0, 9.85, -2.2); T.add(fin);
+  const roof1 = pagodaTier(10.4, 2.4); roof1.scale.set(1.3, 0.65, 0.98); roof1.position.set(0, 5.22, -2.2); T.add(roof1); // v2.30.0: tiers squashed, eave unchanged
+  const roof2 = pagodaTier(7.2, 1.9); roof2.scale.set(1.3, 0.65, 0.98); roof2.position.set(0, 6.35, -2.2); T.add(roof2);
+  const roof3 = pagodaTier(4.6, 1.5); roof3.scale.set(1.3, 0.65, 0.98); roof3.position.set(0, 7.26, -2.2); T.add(roof3);
+  const fin = new THREE.Group(); fin.position.set(0, 8.11, -2.2); fin.scale.setScalar(0.85); T.add(fin);
   const finBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.44, 0.22, 10), crestMat); finBase.position.y = 0.05; fin.add(finBase);
   const finBall = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), crestMat); finBall.scale.y = 1.45; finBall.position.y = 0.42; fin.add(finBall);
   const finTip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.42, 10), crestMat); finTip.position.y = 0.82; fin.add(finTip);
@@ -2779,7 +2779,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.29.0';
+const PT3D_VER = '2.30.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
