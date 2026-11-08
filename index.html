@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.54.0">
+<meta name="pt3d-ver" content="2.55.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.54.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.55.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -869,11 +869,17 @@ new GLTFLoader().load('models/pavilion.glb?v=100', (gltf) => {
   const size = bb.getSize(new THREE.Vector3());
   const ctr = bb.getCenter(new THREE.Vector3());
   m.position.set(-ctr.x, -bb.min.y, -ctr.z);
-  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
   const wrap = new THREE.Group(); wrap.add(m);
   wrap.scale.setScalar(7.0 / size.x);
   wrap.position.set(-11.0, 0, 9.0);
   wrap.rotation.y = Math.PI / 2;
+  /* v2.55.0: Anita: the shell's inside was pitch black. A warm light inside
+     the wrap (so it rides along when the pavilion is dragged) + DoubleSide
+     walls make the doorway glow instead of reading as a black hole. */
+  const paviLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
+  paviLight.position.set(0, 0.30, 0);
+  wrap.add(paviLight);
   scene.add(wrap); regPart('pavilion', wrap, true);
 });
 
@@ -3163,6 +3169,7 @@ function layoutRotate(dir) {
   applyLayoutId(layoutSel);
   syncLayoutProxy(layoutSel);
   saveLayoutId(layoutSel);
+  unstickPlayer();
 }
 document.getElementById('layRotL').addEventListener('click', () => layoutRotate(-1));
 document.getElementById('layRotR').addEventListener('click', () => layoutRotate(1));
@@ -3220,8 +3227,11 @@ renderer.domElement.addEventListener('pointermove', (e) => {
   syncLayoutProxy(layoutDragId);
 });
 window.addEventListener('pointerup', () => {
-  if (layoutDragId) { saveLayoutId(layoutDragId); layoutDragId = null; }
+  if (layoutDragId) { saveLayoutId(layoutDragId); layoutDragId = null; unstickPlayer(); }
 });
+/* v2.55.0: if a dragged/rotated building lands on the avatar, push the
+   avatar out of the colliders instead of leaving it trapped inside. */
+function unstickPlayer() { try { collide(); collide(); } catch (e) { /* player not built yet */ } }
 
 
 /* ============ Tree tools for the layout editor (v2.46.0) ============ */
@@ -3356,7 +3366,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.54.0';
+const PT3D_VER = '2.55.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
