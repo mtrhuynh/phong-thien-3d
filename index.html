@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.60.0">
+<meta name="pt3d-ver" content="2.61.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.60.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.61.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1207,6 +1207,7 @@ function lanternPole(x, z) {
 
 
 /* ============ Incense burner + smoke ============ */
+const burnerBodies = []; // v2.61.0: groups whose code-built urn gets swapped for the Tripo bronze burner
 const burner = new THREE.Group(); burner.position.set(0, 0, -8.6); scene.add(burner);
 regPart('burner', burner, true);
 const urnPts = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
@@ -1267,6 +1268,7 @@ const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.pos
 const yardFx = { ember: burnerGlow, fl: burnerLight, seed: 3.7 };
 emberFx.push(yardFx);
 const yardFlameG = addFlame(burner, 0, 2.06, 0, 0.8);
+burnerBodies.push({ g: burner, flame: yardFlameG, glow: burnerGlow, light: burnerLight });
 let shrineFxRefs = null; // v2.31.0: shrine burner refs, filled in below
 let incenseLit = false, incenseLeft = 0;
 function setIncenseLit(on) {
@@ -1322,6 +1324,7 @@ const shrineFx = { ember: shrineGlow, fl: shrineBurnerLight, seed: 5.1 };
 emberFx.push(shrineFx);
 const shrineFlameG = addFlame(shrineBurner, 0, 2.06, 0, 0.8);
 shrineFxRefs = { glow: shrineGlow, flameG: shrineFlameG, fx: shrineFx, tips: shrineTips, light: shrineBurnerLight };
+burnerBodies.push({ g: shrineBurner, flame: shrineFlameG, glow: shrineGlow, light: shrineBurnerLight });
 shrineGlow.visible = false; shrineFlameG.visible = false; shrineFx.off = true; shrineTips.forEach(t => { t.visible = false; }); shrineBurnerLight.intensity = 0;
 
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
@@ -1661,8 +1664,40 @@ function hallBurner() {
   const hfx = { ember, fl, seed: Math.random() * 10 };
   emberFx.push(hfx); hallFxEntries.push(hfx);
   hallFlames.push(addFlame(b, 0, 1.88, 0, 0.78));
+  burnerBodies.push({ g: b, flame: hallFlames[hallFlames.length - 1], glow: ember, light: fl });
 }
 hallBurner();
+/* v2.61.0: Anita's Tripo bronze incense burner (ornate censer with its own
+   sticks + smoke curls) replaces the code-built urn in all three burners.
+   The old body parts are hidden by geometry/material match, the game's ash
+   disc is shrunk onto the model's ash bed (0.43 of height), and the flame /
+   glow / light are re-anchored to the model's stick tops. Model scale 1.9:
+   rim lands at 1.15 and stick tops at 1.90 - the old urn's own landmarks. */
+new GLTFLoader().load('models/burner.glb?v=100', (gltf) => {
+  const proto = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(proto);
+  const size = bb.getSize(new THREE.Vector3());
+  const ctr = bb.getCenter(new THREE.Vector3());
+  for (const rec of burnerBodies) {
+    rec.g.traverse(o => {
+      if (!o.isMesh) return;
+      const gt = o.geometry && o.geometry.type;
+      if (gt === 'LatheGeometry' || gt === 'TorusGeometry') o.visible = false;
+      else if (gt === 'CylinderGeometry' && o.material === stickMat) o.visible = false;
+      else if (gt === 'SphereGeometry' && (o.material === emberMat || o.material === MAT.bronze)) o.visible = false;
+      else if (gt === 'CircleGeometry') { o.scale.setScalar(0.83); o.position.y = 0.82; }
+    });
+    const c = proto.clone();
+    c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    c.position.set(-ctr.x, -bb.min.y, -ctr.z);
+    const wrap = new THREE.Group(); wrap.add(c);
+    wrap.scale.setScalar(1.9 / size.y);
+    rec.g.add(wrap);
+    if (rec.flame) rec.flame.position.y = 1.78;
+    if (rec.glow) rec.glow.position.y = 1.74;
+    if (rec.light) rec.light.position.y = 1.78;
+  }
+});
 let hallLit = false, hallLeft = 0;
 function setHallLit(on) {
   hallLit = on;
@@ -2636,7 +2671,7 @@ function animate() {
     sp.userData.ph += dt * 0.055 * (boost ? 1.7 : 1);
     if (sp.userData.ph > 1) sp.userData.ph -= 1;
     const ph = sp.userData.ph;
-    sp.position.set(Math.sin(ph * 9 + i * 2.4) * 0.22 * ph, 2.4 + ph * 3.1, Math.cos(ph * 7 + i) * 0.18 * ph);
+    sp.position.set(Math.sin(ph * 9 + i * 2.4) * 0.22 * ph, 2.05 + ph * 3.1, Math.cos(ph * 7 + i) * 0.18 * ph);
     const sc = 0.5 + ph * 1.9;
     sp.scale.set(sc, sc, 1);
     sp.material.opacity = Math.sin(ph * Math.PI) * (incenseLit ? (boost ? 0.75 : 0.45) : 0);
@@ -2666,7 +2701,7 @@ function animate() {
     sp.userData.ph += dt * 0.05;
     if (sp.userData.ph > 1) sp.userData.ph -= 1;
     const ph = sp.userData.ph;
-    sp.position.set(Math.sin(ph * 8 + i * 2.1) * 0.26 * ph, 2.1 + ph * 3.3, Math.cos(ph * 6 + i) * 0.2 * ph);
+    sp.position.set(Math.sin(ph * 8 + i * 2.1) * 0.26 * ph, 2.05 + ph * 3.3, Math.cos(ph * 6 + i) * 0.2 * ph);
     const sc = 0.5 + ph * 2.3;
     sp.scale.set(sc, sc, 1);
     sp.material.opacity = Math.sin(ph * Math.PI) * 0.72 * (hallLit ? 1 : 0);
@@ -3486,7 +3521,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.60.0';
+const PT3D_VER = '2.61.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
