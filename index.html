@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.30.0">
+<meta name="pt3d-ver" content="2.31.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.30.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.31.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1040,6 +1040,7 @@ const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.pos
 const yardFx = { ember: burnerGlow, fl: burnerLight, seed: 3.7 };
 emberFx.push(yardFx);
 const yardFlameG = addFlame(burner, 0, 2.06, 0, 0.8);
+let shrineFxRefs = null; // v2.31.0: shrine burner refs, filled in below
 let incenseLit = false, incenseLeft = 0;
 function setIncenseLit(on) {
   incenseLit = on;
@@ -1048,9 +1049,53 @@ function setIncenseLit(on) {
   yardFx.off = !on;
   emberTips.forEach(tip => { tip.visible = on; });
   if (!on) burnerLight.intensity = 0;
+  if (shrineFxRefs) { shrineFxRefs.glow.visible = on; shrineFxRefs.flameG.visible = on; shrineFxRefs.fx.off = !on; shrineFxRefs.tips.forEach(tip => { tip.visible = on; }); if (!on) shrineFxRefs.light.intensity = 0; }
 }
 setIncenseLit(false);
 const hallFxEntries = [], hallFlames = [], hallTips = [];
+/* v2.31.0: a copy of the yard burner in front of the shrine door (Anita's
+   call). It burns in sync with the yard burner via setIncenseLit - lighting
+   the main urn lights both. Full size, same local layout, so the shared
+   smoke/flame animation fits it unchanged. */
+const shrineBurner = new THREE.Group(); shrineBurner.position.set(10.3, 0, 0.5); scene.add(shrineBurner);
+{
+  const urn2 = new THREE.Mesh(new THREE.LatheGeometry(urnPts, 22), MAT.bronze);
+  urn2.castShadow = true; urn2.receiveShadow = true; shrineBurner.add(urn2);
+  const rim2 = new THREE.Mesh(new THREE.TorusGeometry(0.63, 0.045, 8, 22), MAT.bronze);
+  rim2.rotation.x = Math.PI / 2; rim2.position.y = 1.15; shrineBurner.add(rim2);
+  const ash2 = new THREE.Mesh(new THREE.CircleGeometry(0.58, 20), ash.material);
+  ash2.rotation.x = -Math.PI / 2; ash2.position.y = 1.04; shrineBurner.add(ash2);
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 + 0.5;
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), MAT.bronze);
+    foot.position.set(Math.cos(a) * 0.44, 0.05, Math.sin(a) * 0.44); foot.scale.y = 0.7; shrineBurner.add(foot);
+  }
+  for (const sx of [-1, 1]) {
+    const h = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.035, 8, 14, Math.PI), MAT.bronze);
+    h.position.set(sx * 0.74, 0.72, 0); h.rotation.z = -sx * Math.PI / 2; shrineBurner.add(h);
+  }
+}
+const shrineTips = [];
+for (let i = 0; i < 5; i++) {
+  const sx = (Math.random() - 0.5) * 0.8, sz = (Math.random() - 0.5) * 0.8;
+  cyl(0.016, 0.016, 0.85, stickMat, sx, 1.5, sz, shrineBurner, 6);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), emberMat);
+  tip.position.set(sx, 1.94, sz); shrineBurner.add(tip); shrineTips.push(tip);
+}
+for (let i = 0; i < 10; i++) {
+  const sm = new THREE.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false });
+  const sp = new THREE.Sprite(sm);
+  sp.userData.ph = i / 10;
+  shrineBurner.add(sp); smokes.push(sp);
+}
+const shrineGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
+shrineGlow.scale.set(1.55, 1.15, 1); shrineGlow.position.y = 2.02; shrineBurner.add(shrineGlow);
+const shrineBurnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); shrineBurnerLight.position.y = 2.05; shrineBurner.add(shrineBurnerLight);
+const shrineFx = { ember: shrineGlow, fl: shrineBurnerLight, seed: 5.1 };
+emberFx.push(shrineFx);
+const shrineFlameG = addFlame(shrineBurner, 0, 2.06, 0, 0.8);
+shrineFxRefs = { glow: shrineGlow, flameG: shrineFlameG, fx: shrineFx, tips: shrineTips, light: shrineBurnerLight };
+shrineGlow.visible = false; shrineFlameG.visible = false; shrineFx.off = true; shrineTips.forEach(t => { t.visible = false; }); shrineBurnerLight.intensity = 0;
 
 /* ============ Lotus ponds + stone lanterns + falling petals ============ */
 function lotusPond(x, z) {
@@ -1151,8 +1196,10 @@ function cushion(x, z) {
   scene.add(g); cushions.push(g); return g;
 }
 const cushionSpots = [];
-[-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
-[-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
+/* v2.31.0: yard cushions in 2 rows along the red carpet - west row faces
+   the hall, east row faces the shrine (kneel for one, turn for the other). */
+[-7.0, -4.4, -1.8, 0.8].forEach(z => { cushionSpots.push(cushion(-3.6, z)); });
+[-7.0, -4.4, -1.8, 0.8].forEach(z => { const c = cushion(3.6, z); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
 /* Dien Tho (v2.25.0): Anita's Tripo temple as a small look-in shrine,
    replacing the Thien Xa pavilion. The model stays UNCUT - its own white
    Buddha remains inside as the shrine's Buddha. v2.29.0: east-mid of the
@@ -1168,7 +1215,7 @@ let shrineGrp = null;
     stalk.rotation.z = (i % 3 - 1) * 0.02;
     if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(16.95 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
   }
-  [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(10.6, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
+  [-1.1, 2.1].forEach(cz => { const c = cushion(10.6, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag;
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
   shrineLight.position.set(12.6, 1.7, pz); scene.add(shrineLight);
@@ -1752,6 +1799,7 @@ const COLLIDERS = [
   { x0: -8.6, x1: 8.6, z0: -24.65, z1: -24.1 },    // back wall
   { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
   { x0: 11.45, x1: 15.75, z0: -3.2, z1: 4.2 },     // dien tho shrine (v2.29.0: east-mid yard)
+  { x0: 9.45, x1: 11.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
   { x0: 16.7, x1: 17.35, z0: -2.5, z1: 3.6 },      // bamboo grove (behind the shrine)
   { x0: -17.5, x1: -10.9, z0: -3.5, z1: 4.5 },     // waterfall rock (v2.29.0: west-mid yard)
 ];
@@ -2779,7 +2827,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.30.0';
+const PT3D_VER = '2.31.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
