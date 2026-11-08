@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.85.2">
+<meta name="pt3d-ver" content="2.85.3">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -184,7 +184,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.85.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.85.3</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2106,7 +2106,7 @@ function spawnSky(x, z, b, wish, name) {
   let tag = null;
   if (name) { tag = nameTag(name, wish ? wish.slice(0, 30) : ''); tag.scale.set(1.7, 0.53, 1); tag.position.y = -0.62; g.add(tag); }
   g.position.set(x, 1.0, z);
-  g.userData.sky = { t: 0, seed: Math.random() * 10, mats, glow, tag, x0: x, z0: z, cx: 0, cz: -2, R: 10 + Math.random() * 6, H: 14 + Math.random() * 6, ang: Math.atan2(z + 2, x), w: (Math.PI * 2) / 115, riseT: 180, depStart: 360, life: 400 };
+  g.userData.sky = { t: 0, seed: Math.random() * 10, mats, glow, tag, x0: x, z0: z, cx: 0, cz: -2, R: 10 + Math.random() * 6, H: 14 + Math.random() * 6, ang: Math.atan2(z + 2, x), w: (Math.PI * 2) / 115, riseT: 60, fadeStart: 270, life: 300 };
   scene.add(g); skyLanterns.push(g);
   if (skyLanterns.length > 12) { const old = skyLanterns.shift(); scene.remove(old); }
   return g;
@@ -3151,19 +3151,18 @@ function animate() {
   /* sky lanterns: rise into a slow orbit over the yard, hover for minutes, then climb away (v2.85.1, Anita: they vanished in seconds and leaned) */
   for (let i = skyLanterns.length - 1; i >= 0; i--) {
     const g = skyLanterns[i], u = g.userData.sky; u.t += dt;
-    const DEP = u.depStart, ang = u.ang + u.t * u.w;
+    const ang = u.ang + u.t * u.w;
     const ox = u.cx + Math.cos(ang) * u.R, oz = u.cz + Math.sin(ang) * u.R;
     let px, pz, py;
-    /* Anita's timing: 3 minutes rising slowly, 3 minutes hovering, then a gentle fade */
+    /* Anita's timing: 1 minute rising slowly, then hovering and still climbing gently until it fades out at 5 minutes */
     if (u.t < u.riseT) { const k = u.t / u.riseT, e = k * k * (3 - 2 * k); px = u.x0 + (ox - u.x0) * e; pz = u.z0 + (oz - u.z0) * e; py = 1 + (u.H - 1) * e; }
-    else if (u.t < DEP) { px = ox; pz = oz; py = u.H + Math.sin(u.t * 0.5 + u.seed) * 0.7; }
-    else { const k = (u.t - DEP) / (u.life - DEP); px = ox + Math.cos(ang) * k * 5; pz = oz + Math.sin(ang) * k * 5; py = u.H + k * k * 8; }
+    else { px = ox; pz = oz; py = u.H + ((u.t - u.riseT) / (u.life - u.riseT)) * 9 + Math.sin(u.t * 0.5 + u.seed) * 0.5; }
     g.position.set(px, py, pz);
     g.rotation.y += dt * 0.1;
-    const fade = u.t < DEP ? 1 : Math.max(0, 1 - (u.t - DEP) / (u.life - DEP));
+    const fade = u.t < u.fadeStart ? 1 : Math.max(0, 1 - (u.t - u.fadeStart) / (u.life - u.fadeStart));
     u.mats.forEach(m => { m.opacity = fade; });
     if (u.glow) u.glow.material.opacity = 0.8 * Math.min(1, fade + 0.2);
-    if (u.tag) u.tag.material.opacity = Math.max(0, Math.min(1, (33 - u.t) / 8)) * fade;
+    if (u.tag) u.tag.material.opacity = Math.max(0, Math.min(1, (33 - u.t) / 8)) * (u.t < u.fadeStart ? 1 : fade);
     if (u.t >= u.life) { scene.remove(g); skyLanterns.splice(i, 1); }
   }
 
@@ -4176,7 +4175,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.85.2';
+const PT3D_VER = '2.85.3';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
