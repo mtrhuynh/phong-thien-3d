@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.34.1">
+<meta name="pt3d-ver" content="2.35.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.34.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.35.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1176,6 +1176,33 @@ for (let i = 0; i < 42; i++) {
   sp.scale.set(0.22, 0.22, 1);
   scene.add(sp); petals.push(sp);
 }
+/* v2.35.0: the drifting motes are DANDELION SEEDS now, drawn on canvas - a
+   filament parachute over a tiny seed, like the glowing one Anita zoomed
+   into in Second Life. */
+const seedTex = canvasTexture(128, 128, (g) => {
+  g.clearRect(0, 0, 128, 128);
+  const cx = 64, cy = 56;
+  for (let pass = 0; pass < 2; pass++) {
+    g.strokeStyle = pass ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.22)';
+    g.lineWidth = pass ? 1 : 2.6;
+    for (let i = 0; i < 44; i++) {
+      const f = i / 43, a = Math.PI * (1.06 + 0.88 * f);
+      const rnd = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+      const len = 34 + rnd * 13;
+      g.beginPath();
+      g.moveTo(cx, cy);
+      g.quadraticCurveTo(cx + Math.cos(a) * len * 0.55, cy + Math.sin(a) * len * 0.55 - 2,
+        cx + Math.cos(a) * len, cy + Math.sin(a) * len);
+      g.stroke();
+    }
+  }
+  g.strokeStyle = 'rgba(255,250,235,0.9)'; g.lineWidth = 1.4;
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, 88); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,1)';
+  g.beginPath(); g.arc(cx, cy, 2.6, 0, 7); g.fill();
+  g.fillStyle = 'rgba(238,226,196,0.95)';
+  g.beginPath(); g.ellipse(cx, 95, 3.2, 6, 0, 0, 7); g.fill();
+});
 /* v2.32.0: white motes drifting in the yard air - the floating seed sparkles
    Anita admired in Second Life. One Points cloud, sine-drifted, near-free. */
 const MOTES = 70;
@@ -1188,7 +1215,7 @@ for (let i = 0; i < MOTES; i++) {
 }
 const moteGeo = new THREE.BufferGeometry();
 moteGeo.setAttribute('position', new THREE.BufferAttribute(moteArr, 3));
-const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ map: smokeTex, color: 0xffffff, size: 0.3, transparent: true, opacity: 0.5, depthWrite: false }));
+const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ map: seedTex, color: 0xffffff, size: 0.44, transparent: true, opacity: 0.95, depthWrite: false }));
 scene.add(motes);
 
 /* ============ Cushions (đệm) ============ */
@@ -2875,7 +2902,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.34.1';
+const PT3D_VER = '2.35.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
