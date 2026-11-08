@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.68.0">
+<meta name="pt3d-ver" content="2.69.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.68.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.69.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -203,7 +203,6 @@
 </div>
 
 <div class="ui" id="actions">
-  <button class="abtn" id="btnSit"><span class="ic">🧎</span><span class="lb"></span></button>
   <button class="abtn" id="btnBow"><span class="ic">🙏</span><span class="lb"></span></button>
   <button class="abtn" id="btnMala"><span class="ic">📿</span><span class="lb"></span><span class="cnt" id="malaCnt">0/108</span></button>
   <button class="abtn" id="btnIncense"><span class="ic">🕯️</span><span class="lb"></span></button>
@@ -277,7 +276,7 @@ const LAYOUT_COLS = {
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }], // v2.63.1: bamboo collider gone with the grove
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
-  pavilion: [{ x0: -13.9, x1: -7.9, z0: 6.15, z1: 7.05 }, { x0: -13.9, x1: -7.9, z0: 10.95, z1: 11.85 }, { x0: -13.85, x1: -12.95, z0: 7.05, z1: 10.95 }, { x0: -8.75, x1: -7.15, z0: 6.15, z1: 8.1 }, { x0: -8.75, x1: -7.15, z0: 9.9, z1: 11.85 }, { x0: -9.57, x1: -8.47, z0: 6.47, z1: 7.57 }, { x0: -13.53, x1: -12.43, z0: 6.47, z1: 7.57 }, { x0: -9.57, x1: -8.47, z0: 10.43, z1: 11.53 }, { x0: -13.53, x1: -12.43, z0: 10.43, z1: 11.53 }], // v2.65.0: railing ring (measured platform r ~2.0-2.25, steps east) - walk in via the steps gap only
+  pavilion: [], // v2.69.0: railing enforced by the radial fence in collide() - exact at any rotation
   bridgescene: [{ x0: 4.55, x1: 5.42, z0: 7.1, z1: 12.9 }, { x0: 6.58, x1: 7.45, z0: 7.1, z1: 12.9 }] // bridge body flanking the corridor (capped at +-0.58 m; measured railing inner faces at +-0.80 m)
 };
 let layoutStore = {};
@@ -895,7 +894,7 @@ const fallsFlowMat = new THREE.ShaderMaterial({
   uniforms: { uTime: fallsFlowU },
   transparent: true, depthWrite: false,
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float col = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.0 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.25, 0.65, vSlope) * col; float a = 0.10 + streak * 0.34; // v2.68.0: flow clearly visible again (v2.64 was too faint) vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float col = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.5 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * col; float a = 0.06 + streak * 0.55; // v2.69.0: strong like the first version, still downward vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
 });
 new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin
   const m = gltf.scene;
@@ -1694,14 +1693,17 @@ new GLTFLoader().load('models/burner.glb?v=100', (gltf) => {
   const size = bb.getSize(new THREE.Vector3());
   const ctr = bb.getCenter(new THREE.Vector3());
   for (const rec of burnerBodies) {
+    const killTips = [];
     rec.g.traverse(o => {
       if (!o.isMesh) return;
       const gt = o.geometry && o.geometry.type;
       if (gt === 'LatheGeometry' || gt === 'TorusGeometry') o.visible = false;
       else if (gt === 'CylinderGeometry' && o.material === stickMat) o.visible = false;
-      else if (gt === 'SphereGeometry' && (o.material === emberMat || o.material === MAT.bronze)) o.visible = false;
+      else if (gt === 'SphereGeometry' && o.material === emberMat) killTips.push(o); // v2.69.0: remove, not hide - setIncenseLit kept switching them back on (floating orange balls over the model's sticks)
+      else if (gt === 'SphereGeometry' && o.material === MAT.bronze) o.visible = false;
       else if (gt === 'CircleGeometry') { o.scale.setScalar(0.83); o.position.y = 0.82; }
     });
+    killTips.forEach(o => { if (o.parent) o.parent.remove(o); });
     const c = proto.clone();
     c.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     c.position.set(-ctr.x, -bb.min.y, -ctr.z);
@@ -2177,15 +2179,6 @@ const COLLIDERS = [
   { x0: 5.8, x1: 8.6, z0: -13.2, z1: -12.7 },
   { x0: -8.6, x1: 8.6, z0: -24.65, z1: -24.1 },    // back wall
   { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
-  { x0: -13.9, x1: -7.9, z0: 6.15, z1: 7.05 },
-  { x0: -13.9, x1: -7.9, z0: 10.95, z1: 11.85 },
-  { x0: -13.85, x1: -12.95, z0: 7.05, z1: 10.95 },
-  { x0: -8.75, x1: -7.15, z0: 6.15, z1: 8.1 },
-  { x0: -8.75, x1: -7.15, z0: 9.9, z1: 11.85 },
-  { x0: -9.57, x1: -8.47, z0: 6.47, z1: 7.57 },
-  { x0: -13.53, x1: -12.43, z0: 6.47, z1: 7.57 },
-  { x0: -9.57, x1: -8.47, z0: 10.43, z1: 11.53 },
-  { x0: -13.53, x1: -12.43, z0: 10.43, z1: 11.53 }, // pavilion railing ring (v2.65.0)
   { x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 },     // dien tho shrine (v2.29.0: east-mid yard)
   { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
   { x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 },
@@ -2198,6 +2191,23 @@ function collide() {
       const dl = p.x - (c.x0 - R), dr = (c.x1 + R) - p.x, dn = p.z - (c.z0 - R), df = (c.z1 + R) - p.z;
       const m = Math.min(dl, dr, dn, df);
       if (m === dl) p.x = c.x0 - R; else if (m === dr) p.x = c.x1 + R; else if (m === dn) p.z = c.z0 - R; else p.z = c.z1 + R;
+    }
+  }
+  /* v2.69.0: pavilion railing fence - a radial check in the pavilion's own
+     frame, exact at ANY layout rotation (the v2.65 AABB ring misaligned
+     when Anita rotated the pavilion and fenced her out). The gap sector
+     faces the steps (anchor-space +X). */
+  const pc = layoutCur.pavilion, pa = LAYOUT_ANCHORS.pavilion;
+  if (pc && pa) {
+    const dx = p.x - pc.x, dz = p.z - pc.z;
+    const r = Math.hypot(dx, dz), FR = 2.02;
+    if (r > FR - R - 0.05 && r < FR + R + 0.05 && r > 0.001) {
+      const dl2 = pc.ry - pa.ry, cs = Math.cos(dl2), sn = Math.sin(dl2);
+      const lx = dx * cs - dz * sn, lz = dx * sn + dz * cs;
+      if (Math.abs(Math.atan2(lz, lx)) > 0.46) {
+        const target = (r >= FR) ? FR + R : FR - R;
+        p.x = pc.x + dx / r * target; p.z = pc.z + dz / r * target;
+      }
     }
   }
 }
@@ -2238,8 +2248,7 @@ function sitDown(cushion) {
   }
   player.rotation.y = faceY;
   player.userData.bodyG.scale.set(1.15, 0.78, 1.15);
-  btnSit.classList.add('on');
-  btnSit.querySelector('.lb').textContent = L().aStand; sitting = true;
+  sitting = true; setActionLabels();
   toast(cushion ? L().tSitCushion : L().tSitSpot);
 }
 function standUp() {
@@ -2247,8 +2256,56 @@ function standUp() {
   P.mode = 'idle';
   player.userData.bodyG.scale.set(1, 1, 1);
   player.position.y = groundY(player.position.x, player.position.z);
-  btnSit.classList.remove('on');
-  btnSit.querySelector('.lb').textContent = L().aSit; sitting = false;
+  sitting = false; setActionLabels();
+}
+
+/* ============ v2.69.0: Meditate buttons ON the cushions (Anita) ============
+   Each free cushion gets a small floating button right above it; tapping it
+   walks there and sits (same flow as tapping the cushion itself). While
+   seated, only the player's own cushion shows a Stand button. The old
+   menu-bar Sit button is removed. */
+const cushionBtnWrap = document.createElement('div');
+cushionBtnWrap.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden;';
+document.body.appendChild(cushionBtnWrap);
+let cushionBtns = null, cushionBtnLang = '';
+function buildCushionBtns() {
+  cushionBtns = activeCushions().map(c => {
+    const el = document.createElement('button');
+    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:1px solid rgba(255,210,120,.65);background:rgba(43,30,16,.78);color:#ffe9b0;border-radius:999px;padding:5px 11px;font-size:13px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;';
+    el.addEventListener('click', () => {
+      if (P.mode === 'seated') { if (P.seatedOn === c) standUp(); return; }
+      if (c.userData.occupied || c.userData.occupiedByPlayer) { toast(L().tOccupied); return; }
+      const p = c.position.clone();
+      if (player.position.distanceTo(p) < 0.6) sitDown(c); else setWalkTarget(p, c);
+    });
+    cushionBtnWrap.appendChild(el);
+    return { c, el };
+  });
+}
+const __cbv = new THREE.Vector3(), __cbv2 = new THREE.Vector3();
+function updateCushionBtns() {
+  if (!cushionBtns) buildCushionBtns();
+  if (cushionBtnLang !== LANG) { cushionBtnLang = LANG; cushionBtns.forEach(b => { b.el.textContent = '🧘 ' + L().aSit; }); }
+  const seated = P.mode === 'seated';
+  for (const b of cushionBtns) {
+    const c = b.c;
+    let show = false;
+    if (window.__layoutEdit) show = false;
+    else if (seated) {
+      if (P.seatedOn === c) { b.el.textContent = '🧍 ' + L().aStand; show = true; }
+    } else if (!c.userData.occupied && !c.userData.occupiedByPlayer) {
+      const inHall = c.position.z < -12.9 && Math.abs(c.position.x) < 10.6;
+      if ((room === 'hall') === inHall && player.position.distanceTo(c.position) < 11) show = true;
+    }
+    if (!show) { b.el.style.display = 'none'; continue; }
+    __cbv.copy(c.position); __cbv.y += 0.62;
+    __cbv2.copy(__cbv).applyMatrix4(camera.matrixWorldInverse);
+    if (__cbv2.z > -0.6) { b.el.style.display = 'none'; continue; }
+    __cbv.project(camera);
+    b.el.style.display = 'block';
+    b.el.style.left = ((__cbv.x * 0.5 + 0.5) * innerWidth) + 'px';
+    b.el.style.top = ((-__cbv.y * 0.5 + 0.5) * innerHeight) + 'px';
+  }
 }
 
 /* ============ Pointer: tap to walk / sit ============ */
@@ -2306,7 +2363,6 @@ function toast(msg, ms = 2600) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
 }
-const btnSit = document.getElementById('btnSit');
 const btnBow = document.getElementById('btnBow');
 const btnMala = document.getElementById('btnMala');
 const btnIncense = document.getElementById('btnIncense');
@@ -2325,19 +2381,7 @@ function addSen(n) {
   refreshBac();
 }
 
-btnSit.addEventListener('click', () => {
-  if (P.mode === 'seated') { standUp(); return; }
-  let best = null, bestD = 3.6;
-  activeCushions().forEach(c => {
-    if (c.userData.occupied || c.userData.occupiedByPlayer) return;
-    const d = player.position.distanceTo(c.position);
-    if (d < bestD) { bestD = d; best = c; }
-  });
-  if (best) {
-    const p = best.position.clone(); p.y = 0;
-    if (bestD < 0.6) sitDown(best); else setWalkTarget(p, best);
-  } else sitDown(null);
-});
+/* v2.69.0: the menu-bar Sit button is gone - meditating starts from the buttons on the cushions. */
 btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpDaily('bw'); ptSend({ k: 'bow' }); } });
 btnMala.addEventListener('click', () => {
   malaPulse = 0.35;
@@ -2764,6 +2808,7 @@ function animate() {
     const bs = f.g.userData.bs;
     f.g.scale.set(bs * (1 + Math.sin(t * 17 + f.seed * 9) * 0.07), bs * (1 + Math.sin(t * 15 + f.seed * 7) * 0.13), bs);
   });
+  updateCushionBtns();
 
   /* fortune jar shake */
   if (xamAnimT >= 0) {
@@ -3627,7 +3672,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.68.0';
+const PT3D_VER = '2.69.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
