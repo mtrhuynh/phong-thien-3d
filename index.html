@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.69.0">
+<meta name="pt3d-ver" content="2.69.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.69.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.69.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2271,7 +2271,7 @@ let cushionBtns = null, cushionBtnLang = '';
 function buildCushionBtns() {
   cushionBtns = activeCushions().map(c => {
     const el = document.createElement('button');
-    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:1px solid rgba(255,210,120,.65);background:rgba(43,30,16,.78);color:#ffe9b0;border-radius:999px;padding:5px 11px;font-size:13px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;';
+    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:1px solid rgba(255,210,120,.65);background:rgba(43,30,16,.78);color:#ffe9b0;border-radius:999px;padding:6px 9px;font-size:16px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;';
     el.addEventListener('click', () => {
       if (P.mode === 'seated') { if (P.seatedOn === c) standUp(); return; }
       if (c.userData.occupied || c.userData.occupiedByPlayer) { toast(L().tOccupied); return; }
@@ -2285,14 +2285,14 @@ function buildCushionBtns() {
 const __cbv = new THREE.Vector3(), __cbv2 = new THREE.Vector3();
 function updateCushionBtns() {
   if (!cushionBtns) buildCushionBtns();
-  if (cushionBtnLang !== LANG) { cushionBtnLang = LANG; cushionBtns.forEach(b => { b.el.textContent = '🧘 ' + L().aSit; }); }
+  if (cushionBtnLang !== LANG) { cushionBtnLang = LANG; cushionBtns.forEach(b => { b.el.textContent = '🧘'; }); }
   const seated = P.mode === 'seated';
   for (const b of cushionBtns) {
     const c = b.c;
     let show = false;
     if (window.__layoutEdit) show = false;
     else if (seated) {
-      if (P.seatedOn === c) { b.el.textContent = '🧍 ' + L().aStand; show = true; }
+      if (P.seatedOn === c) { b.el.textContent = '🧍'; show = true; }
     } else if (!c.userData.occupied && !c.userData.occupiedByPlayer) {
       const inHall = c.position.z < -12.9 && Math.abs(c.position.x) < 10.6;
       if ((room === 'hall') === inHall && player.position.distanceTo(c.position) < 11) show = true;
@@ -3672,7 +3672,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.69.0';
+const PT3D_VER = '2.69.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
