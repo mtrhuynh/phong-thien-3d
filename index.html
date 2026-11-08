@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.44.0">
+<meta name="pt3d-ver" content="2.45.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.44.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.45.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -586,6 +586,25 @@ carpet.receiveShadow = true; scene.add(carpet);
   const finBall = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), crestMat); finBall.scale.y = 1.45; finBall.position.y = 0.42; fin.add(finBall);
   const finTip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.42, 10), crestMat); finTip.position.y = 0.82; fin.add(finTip);
   roofParts.push(ceilMesh, eaveSlab, fascia1, fascia2, fascia3, roof1, roof2, roof3, fin);
+  /* Tripo roof (v2.45.0): Anita's generated 3-tier roof replaces the
+     procedural tiers when it loads; if it fails, the tiers stay. It joins
+     roofParts so the hall/yard room toggle hides it indoors like the rest.
+     Non-uniform scale: the model is proportionally tall + narrow, so it is
+     stretched to the eave footprint (x 19.5, z 14.4) and squashed to ~3.4
+     high, base on the unchanged eave line y=5.22. */
+  new GLTFLoader().load('models/roof.glb?v=100', (gltf) => {
+    const m = gltf.scene;
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const bb = new THREE.Box3().setFromObject(m);
+    const ctr = bb.getCenter(new THREE.Vector3());
+    m.position.set(-ctr.x, -bb.min.y, -ctr.z);
+    const wrap = new THREE.Group(); wrap.add(m);
+    wrap.scale.set(19.5, 7.4, 26.8);
+    wrap.position.set(0, 5.22, -2.2);
+    T.add(wrap); roofParts.push(wrap);
+    wrap.visible = room === 'yard';
+    T.remove(roof1); T.remove(roof2); T.remove(roof3); T.remove(fin);
+  }, undefined, () => {});
   /* interior, visible from the yard through the colonnade */
   box(9, 3.0, 0.1, MAT.woodDark, 0, 2.7, -7.62, T);                      // altar backdrop
   box(6.4, 0.95, 1.75, MAT.woodDark, 0, 1.6, -6.72, T);                  // altar table
@@ -3205,7 +3224,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.44.0';
+const PT3D_VER = '2.45.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
