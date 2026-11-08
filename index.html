@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.71.2">
+<meta name="pt3d-ver" content="2.72.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.71.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.72.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1004,7 +1004,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1040,7 +1040,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3186,6 +3186,7 @@ function ptSend(payload) {
 }
 function ptWorld(pl) {
   if (!pl || pl.from === myGid) return;
+  if (pl.k === 'layout') { fetchSharedLayout(); return; }
   if (pl.k === 'inc') {
     if (pl.r === 'hall') { if (!hallLit) { setHallLit(true); hallLeft = 180; } else hallLeft = Math.max(hallLeft, 170); }
     else { if (!incenseLit) { setIncenseLit(true); incenseLeft = 180; smokeBoost = 30; } else incenseLeft = Math.max(incenseLeft, 170); }
@@ -3237,7 +3238,7 @@ function ptConnect() {
   ptChannel.on('presence', { event: 'sync' }, () => { ptSync(); ptSetPill(); });
   ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
   ptChannel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); }
+    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); fetchSharedLayout(); [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); }
     else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { ptConnOk = false; ptSetPill(); ptScheduleReconnect(); }
   });
 }
@@ -3289,6 +3290,7 @@ layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-siz
   + '<button class="laybtn" id="layCode"></button>'
   + '<button class="laybtn" id="layUndo"></button>'
   + '<button class="laybtn" id="layReset"></button>'
+  + '<button class="laybtn" id="laySave"></button>'
   + '<button class="laybtn" id="layLock"></button></div>';
 document.body.appendChild(layoutPanel);
 const layStyle = document.createElement('style');
@@ -3370,6 +3372,7 @@ function setLayoutEdit(on) {
     document.getElementById('layCode').textContent = L().layoutCode;
     document.getElementById('layUndo').textContent = L().layUndo;
     document.getElementById('layReset').textContent = L().layoutReset;
+    document.getElementById('laySave').textContent = L().laySave;
     document.getElementById('layLock').textContent = L().layoutLock;
     buildLayoutProxies();
     layoutSelect(null);
@@ -3413,12 +3416,59 @@ document.getElementById('layCode').addEventListener('click', () => {
 document.getElementById('layReset').addEventListener('click', () => {
   if (!confirm(L().layoutResetQ)) return;
   layoutSnapshot();
-  layoutStore = JSON.parse(JSON.stringify(LAYOUT_BAKED)); // v2.71.0: Default restores the locked layout
+  layoutStore = JSON.parse(JSON.stringify(layoutSharedLatest || LAYOUT_BAKED)); // v2.72.0: Default restores the latest shared lock when known
+  try { localStorage.setItem(LAYOUT_SHARED_KEY, JSON.stringify(layoutStore)); } catch (e) {}
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
   rebuildDupTrees();
   refreshTreeVisibility();
+});
+/* v2.72.0: shared layout lock (Supabase table pt3d_shared_layout + PIN-guarded RPC).
+   Anita saves once in the editor; devices that have not made personal edits adopt
+   the lock on load and live via the temple channel. Server side is installed once
+   with pt3d-shared-layout.sql; until then every call below fails soft. */
+const LAYOUT_SHARED_KEY = 'pt3d-layout-shared';
+let layoutSharedLatest = null, layoutFetchBusy = false;
+function layoutBaseline() { try { return localStorage.getItem(LAYOUT_SHARED_KEY) || JSON.stringify(LAYOUT_BAKED); } catch (e) { return JSON.stringify(LAYOUT_BAKED); } }
+function applyLayoutStore() {
+  for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
+  layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
+  rebuildDupTrees();
+  refreshTreeVisibility();
+}
+async function fetchSharedLayout() {
+  if (!sbClient || layoutFetchBusy) return;
+  layoutFetchBusy = true;
+  try {
+    const { data, error } = await sbClient.from('pt3d_shared_layout').select('layout').eq('id', 1).maybeSingle();
+    if (!error && data && data.layout) {
+      layoutSharedLatest = data.layout;
+      const rowJson = JSON.stringify(data.layout);
+      if (JSON.stringify(layoutStore) === layoutBaseline() && rowJson !== JSON.stringify(layoutStore)) {
+        layoutStore = data.layout;
+        try { localStorage.setItem(LAYOUT_KEY, rowJson); localStorage.setItem(LAYOUT_SHARED_KEY, rowJson); } catch (e) {}
+        applyLayoutStore();
+        toast(L().layoutAdopted);
+      } else {
+        try { localStorage.setItem(LAYOUT_SHARED_KEY, JSON.stringify(layoutStore) === rowJson ? rowJson : localStorage.getItem(LAYOUT_SHARED_KEY) || ''); } catch (e) {}
+      }
+    }
+  } catch (e) {}
+  layoutFetchBusy = false;
+}
+document.getElementById('laySave').addEventListener('click', async () => {
+  const pin = prompt(L().layPinPrompt);
+  if (!pin) return;
+  if (!sbClient) { toast(L().laySaveErr); return; }
+  try {
+    const { data, error } = await sbClient.rpc('pt3d_set_layout', { p_pin: pin, p_layout: layoutStore });
+    if (error || data !== true) { toast(L().laySaveErr); return; }
+    layoutSharedLatest = JSON.parse(JSON.stringify(layoutStore));
+    try { localStorage.setItem(LAYOUT_SHARED_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+    ptSend({ k: 'layout' });
+    toast(L().laySaveOk);
+  } catch (e) { toast(L().laySaveErr); }
 });
 const layoutUndoStack = [];
 let layoutPendingSnap = null, layoutLastTap = null;
@@ -3664,7 +3714,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.71.2';
+const PT3D_VER = '2.72.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
