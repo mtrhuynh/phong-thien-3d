@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.83.0">
+<meta name="pt3d-ver" content="2.83.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -183,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.83.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.83.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1964,7 +1964,7 @@ const leafGeo = (() => {
   return new THREE.ShapeGeometry(s, 6);
 })();
 /* leaf piles live at FIXED spots with ids, so every visitor's yard holds the same 11 piles and sweeping can be shared */
-const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-11.2, -6.9], [10.9, -6.9], [-8.6, 4.9], [9.7, 7.8], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [15.9, 12.6], [-4.6, -5.6]];
+const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-11.2, -6.9], [10.9, -6.9], [-8.6, 4.9], [9.7, 7.8], [-4.5, 9.5], [4.5, 9.5], [-8.2, 12.4], [15.9, 12.6], [-4.6, -5.6]];
 const leafGoneAt = new Map();
 let remoteSweeps = [];
 function updateLeafBtn() {
@@ -2480,7 +2480,8 @@ let cushionBtns = null, cushionBtnLang = '';
 function buildCushionBtns() {
   cushionBtns = activeCushions().map(c => {
     const el = document.createElement('button');
-    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:none;background:none;color:#ffe9b0;padding:6px 9px;font-size:16px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55);';
+    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:none;background:none;color:#ffe9b0;padding:2px 6px;font-size:16px;font-family:inherit;cursor:pointer;display:none;flex-direction:column;align-items:center;gap:1px;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55);';
+    chipLines(el);
     el.addEventListener('click', () => {
       if (P.mode === 'seated') { if (P.seatedOn === c) standUp(); return; }
       if (c.userData.occupied || c.userData.occupiedByPlayer || c.userData.remoteOcc) { toast(L().tOccupied); return; }
@@ -2494,16 +2495,16 @@ function buildCushionBtns() {
 const __cbv = new THREE.Vector3(), __cbv2 = new THREE.Vector3();
 function updateCushionBtns() {
   if (!cushionBtns) buildCushionBtns();
-  if (cushionBtnLang !== LANG) { cushionBtnLang = LANG; cushionBtns.forEach(b => { b.el.textContent = '🧘'; }); }
+  if (cushionBtnLang !== LANG) cushionBtnLang = LANG;
   const seated = P.mode === 'seated';
   for (const b of cushionBtns) {
     const c = b.c;
     let show = false;
     if (window.__layoutEdit) show = false;
     else if (seated) {
-      if (P.seatedOn === c) { b.el.textContent = '🧍'; show = true; }
+      if (P.seatedOn === c) { setChip(b.el, '🧍 ' + L().aStand); show = true; }
     } else if (!c.userData.occupied && !c.userData.occupiedByPlayer && !c.userData.remoteOcc) {
-      b.el.textContent = '🧘'; // v2.75.0: never leave a stale stand icon behind
+      setChip(b.el, '🧘 ' + L().aSit); // v2.75.0: never leave a stale stand icon behind
       const inHall = c.position.z < -12.9 && Math.abs(c.position.x) < 10.6;
       if ((room === 'hall') === inHall && player.position.distanceTo(c.position) < 24) show = true; // v2.74.2: was 11 - too tight for a 35x40 yard, far cushions lost their buttons (Anita's screenshot)
     }
@@ -2512,7 +2513,7 @@ function updateCushionBtns() {
     __cbv2.copy(__cbv).applyMatrix4(camera.matrixWorldInverse);
     if (__cbv2.z > -0.6) { b.el.style.display = 'none'; continue; }
     __cbv.project(camera);
-    b.el.style.display = 'block';
+    b.el.style.display = 'flex';
     b.el.style.left = ((__cbv.x * 0.5 + 0.5) * innerWidth) + 'px';
     b.el.style.top = ((-__cbv.y * 0.5 + 0.5) * innerHeight) + 'px';
   }
@@ -4075,7 +4076,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.83.0';
+const PT3D_VER = '2.83.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
