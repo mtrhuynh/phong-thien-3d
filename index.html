@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.57.0">
+<meta name="pt3d-ver" content="2.57.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.57.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.57.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1445,9 +1445,10 @@ let shrineGrp = null;
     if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(14.95 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); regPart('shrine', lf, false); }
   }
   [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('shrine', c, false); });
-/* v2.56.0: three meditation cushions ON the open pavilion's terrace - they
-   ride along as 'pavilion' layout parts and orbit when it rotates. */
-[[-10.45, 9.0, -Math.PI / 2], [-11.55, 9.85, 2.57], [-11.55, 8.15, 0.57]].forEach(([cx, cz, fy]) => { const c = cushion(cx, cz); c.position.y = PAVI_FLOOR_H; c.userData.faceY = fy; cushionSpots.push(c); regPart('pavilion', c, false); });
+/* v2.57.1: ONE meditation cushion in the CENTRE of the pavilion terrace
+   (Anita: the side cushions clipped into the pillars - the centre is
+   always clear). It rides along as a 'pavilion' layout part. */
+{ const c = cushion(-11.0, 9.0); c.position.y = PAVI_FLOOR_H; c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('pavilion', c, false); }
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag; regPart('shrine', stag, false);
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
   shrineLight.position.set(10.6, 1.7, pz); scene.add(shrineLight); regPart('shrine', shrineLight, false); regPart('shrine', shrineBurner, false);
@@ -3430,7 +3431,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.57.0';
+const PT3D_VER = '2.57.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
