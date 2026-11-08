@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.74.0">
+<meta name="pt3d-ver" content="2.74.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.74.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.74.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3006,7 +3006,7 @@ const PT3D_SB_URL = 'https://natylisofhdxklyjvbbb.supabase.co';
 const PT3D_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hdHlsaXNvZmhkeGtseWp2YmJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMDA2NjksImV4cCI6MjA5NDU3NjY2OX0.U0bXBPNvRy3owXYHdbVnwoKl6Tp05WU87NAoUU-UFis';
 const ROBE_COLORS = [0x4f9be0, 0xbd8449, 0x5a8a4f, 0x8a5a7d, 0x3f7f86, 0xa8542f, 0x7d6ac9, 0xc25e7d];
 const remotes = new Map();
-let ptChannel = null, ptLastSent = '', ptLastAt = 0, ptBooted = false;
+let ptChannel = null, ptLastSent = '', ptLastAt = 0, ptBooted = false, ptJoinGraceUntil = 0;
 let myGid = '';
 try {
   myGid = sessionStorage.getItem('pt3d-gid') || '';
@@ -3137,7 +3137,10 @@ function ptSync() {
     r.lastSeen = performance.now();
     if (p.at && p.at !== r.at) { r.at = p.at; r.atLocal = performance.now(); }
     if (Array.isArray(p.st) && JSON.stringify(p.st) !== JSON.stringify(r.st)) { r.st = p.st; meritDirty = true; }
-    if (Array.isArray(p.inc)) {
+    if (Array.isArray(p.inc) && performance.now() < ptJoinGraceUntil) {
+      /* v2.74.1: presence incense seeds ONLY a fresh joiner (Anita: burnt out
+         must stay out). A stale bucket from another device used to resurrect
+         an expired burn here; live lighting still arrives via the inc event. */
       if (p.inc[0] > 0 && !incenseLit) { setIncenseLit(true); incenseLeft = Math.min(p.inc[0], 6) * 30; smokeBoost = Math.max(smokeBoost, 10); }
       if (p.inc[1] > 0 && !hallLit) { setHallLit(true); hallLeft = Math.min(p.inc[1], 6) * 30; }
     }
@@ -3286,7 +3289,7 @@ function ptConnect() {
   ptChannel.on('presence', { event: 'sync' }, () => { ptSync(); ptSetPill(); });
   ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
   ptChannel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); fetchSharedLayout(); [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); }
+    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); fetchSharedLayout(); ptJoinGraceUntil = performance.now() + 20000; [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); }
     else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { ptConnOk = false; ptSetPill(); ptScheduleReconnect(); }
   });
 }
@@ -3522,8 +3525,27 @@ async function fetchSharedLayout() {
   } catch (e) {}
   layoutFetchBusy = false;
 }
+function askPin() {
+  return new Promise(res => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,6,3,.66);z-index:200;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = '<div style="background:#2b1d10;border:1px solid rgba(255,205,120,.55);border-radius:14px;padding:18px 20px;width:min(320px,86vw);color:#ffe9bd;font-family:inherit">'
+      + '<div style="font-weight:700;margin-bottom:10px">' + L().layPinPrompt + '</div>'
+      + '<input id="pinInp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,205,120,.4);background:#1d1208;color:#ffe9bd;font-size:16px;letter-spacing:2px">'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
+      + '<button id="pinCancel" class="laybtn">✕</button><button id="pinOk" class="laybtn">OK</button></div></div>';
+    document.body.appendChild(ov);
+    const inp = ov.querySelector('#pinInp');
+    setTimeout(() => inp.focus(), 30);
+    const done = v => { ov.remove(); res(v); };
+    ov.querySelector('#pinOk').addEventListener('click', () => done(inp.value || null));
+    ov.querySelector('#pinCancel').addEventListener('click', () => done(null));
+    ov.addEventListener('click', e => { if (e.target === ov) done(null); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value || null); if (e.key === 'Escape') done(null); });
+  });
+}
 document.getElementById('laySave').addEventListener('click', async () => {
-  const pin = prompt(L().layPinPrompt);
+  const pin = await askPin();
   if (!pin) return;
   if (!sbClient) { toast(L().laySaveErr); return; }
   try {
@@ -3779,7 +3801,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.74.0';
+const PT3D_VER = '2.74.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
