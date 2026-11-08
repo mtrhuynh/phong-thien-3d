@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.56.1">
+<meta name="pt3d-ver" content="2.57.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.56.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.57.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -753,25 +753,55 @@ function tree(x, z, s = 1) {
 }
 tree(-12.5, -23.5, 0.9); tree(16.8, -20.5, 1.0); tree(-15.8, -7.5, 1.15);
 tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.6, -7.6, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
-/* real papercut tree (v2.23.0): a true 3D model Anita generated on Tripo
-   from her reference photo, vertex-painted + simplified by Cuu - when it
-   loads it replaces the procedural disc trees; if it fails, they stay */
-new GLTFLoader().load('models/tree.glb?v=103', (gltf) => {
-  gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) { o.material.vertexColors = true; o.material.roughness = 0.9; } } });
-  treeProto = gltf.scene;
-  const TS = 3.7 / 1.958;
-  while (treeProcs.length) {
-    const p = treeProcs.shift();
-    const c = gltf.scene.clone();
-    c.scale.setScalar(TS * p.scale.x / ((layoutCur[p.userData.tid] || {}).sc || 1));
-    c.position.copy(p.position);
-    c.rotation.y = (p.position.x * 1.37 + p.position.z * 2.11) % (Math.PI * 2);
-    scene.add(c);
-    if (p.userData.tid) regPart(p.userData.tid, c, false, null, true);
-    scene.remove(p);
-  }
-  rebuildDupTrees();
-}, undefined, () => { /* model failed to load - procedural trees stay */ });
+/* ============ Real trees (v2.57.0) ============
+   Anita: replace the paper-leaf trees with REAL textured ones - 2-3 types
+   max so the page stays light. Each spot has a type (layoutStore tt):
+   0 leafy green, 1 red maple, 2 palm. Default mix: green everywhere, a
+   maple accent here and there, palms outside the west fence by the falls.
+   The type of a selected tree cycles with the Layout panel's Type button. */
+const TREE_TYPES = [
+  { url: 'models/tree-green.glb?v=100', h: 3.9 },
+  { url: 'models/tree-maple.glb?v=100', h: 3.7 },
+  { url: 'models/tree-palm.glb?v=100', h: 4.6 }
+];
+const treeProtos = [null, null, null];
+const treeProtoH = [1, 1, 1];
+function defTreeType(x, z) { if (x < -17) return 2; return Math.abs(Math.round(x * 7 + z * 13)) % 6 === 0 ? 1 : 0; }
+function treeTypeOf(id) { const e = layoutStore[id]; if (e && e.tt !== undefined) return e.tt; const a = LAYOUT_ANCHORS[id]; return a ? defTreeType(a.x, a.z) : 0; }
+function swapTreeModel(id) {
+  const type = treeTypeOf(id), proto = treeProtos[type];
+  if (!proto) return;
+  const idx = layoutParts.findIndex(p => p.id === id);
+  if (idx < 0) return;
+  const old = layoutParts[idx];
+  if (old.builtType === type) return;
+  const sAuth = old.sAuth !== undefined ? old.sAuth : old.obj.scale.x;
+  const c = proto.clone();
+  c.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  c.scale.setScalar(TREE_TYPES[type].h / treeProtoH[type] * sAuth / ((layoutCur[id] || {}).sc || 1));
+  c.position.copy(old.obj.position);
+  c.rotation.y = old.obj.rotation.y || (c.position.x * 1.37 + c.position.z * 2.11) % (Math.PI * 2);
+  scene.add(c);
+  layoutParts.splice(idx, 1);
+  scene.remove(old.obj);
+  const ti = treeProcs.indexOf(old.obj); if (ti >= 0) treeProcs.splice(ti, 1);
+  c.userData.tid = id;
+  regPart(id, c, false, null, true);
+  const np = layoutParts[layoutParts.length - 1];
+  np.sAuth = sAuth; np.builtType = type;
+  if (layoutStore[id] && layoutStore[id].del) c.visible = false;
+}
+TREE_TYPES.forEach((tt, type) => {
+  new GLTFLoader().load(tt.url, (gltf) => {
+    gltf.scene.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    const bb = new THREE.Box3().setFromObject(gltf.scene);
+    treeProtoH[type] = Math.max(0.1, bb.max.y - bb.min.y);
+    treeProtos[type] = gltf.scene;
+    treeProto = gltf.scene;
+    for (const id of [...new Set(layoutParts.filter(p => p.id.indexOf('tree') === 0).map(p => p.id))]) swapTreeModel(id);
+    rebuildDupTrees();
+  }, undefined, () => { /* this type failed - its spots keep the fallback look */ });
+});
 function fenceRun(x, z, len, rotY) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rotY;
   const posts = Math.floor(len / 2.2);
@@ -917,7 +947,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objTree: '🌳 Cây xanh', sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -953,7 +983,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objTree: '🌳 Tree', sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3084,6 +3114,7 @@ layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-siz
   + '<button class="laybtn" id="laySizeDn"></button>'
   + '<button class="laybtn" id="laySizeUp"></button>'
   + '<button class="laybtn" id="layDup"></button>'
+  + '<button class="laybtn" id="layType"></button>'
   + '<button class="laybtn" id="layDel"></button>'
   + '<button class="laybtn" id="layCode"></button>'
   + '<button class="laybtn" id="layReset"></button>'
@@ -3163,6 +3194,7 @@ function setLayoutEdit(on) {
     document.getElementById('laySizeDn').textContent = L().sizeDn;
     document.getElementById('laySizeUp').textContent = L().sizeUp;
     document.getElementById('layDup').textContent = L().layDup;
+    document.getElementById('layType').textContent = L().layType;
     document.getElementById('layDel').textContent = L().layDel;
     document.getElementById('layCode').textContent = L().layoutCode;
     document.getElementById('layReset').textContent = L().layoutReset;
@@ -3257,19 +3289,24 @@ function refreshTreeVisibility() {
   }
 }
 function rebuildDupTrees() {
-  if (!treeProto) return;
   for (const id in layoutStore) {
     const e = layoutStore[id];
     if (!e || !e.dup) continue;
     if (layoutParts.some(p => p.id === id)) continue;
+    const type = treeTypeOf(id), proto = treeProtos[type];
+    if (!proto) continue;
     if (!LAYOUT_ANCHORS[id]) LAYOUT_ANCHORS[id] = { x: e.x, z: e.z, ry: 0, rot: true, wide: true, scalable: true };
-    const c = treeProto.clone();
+    const c = proto.clone();
     c.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    const sAuth = e.asc > 1.4 ? e.asc / (3.7 / 1.958) : (e.asc || 1); // pre-v2.57 saves stored an absolute scale
     c.position.set(e.x, 0, e.z);
-    c.scale.setScalar(e.asc || 1.9);
+    c.scale.setScalar(TREE_TYPES[type].h / treeProtoH[type] * sAuth);
     scene.add(c);
     layoutCur[id] = layoutEntry(id);
+    c.userData.tid = id;
     regPart(id, c, false, null, false);
+    const np = layoutParts[layoutParts.length - 1];
+    np.sAuth = sAuth; np.builtType = type;
   }
 }
 function layoutResize(f) {
@@ -3285,7 +3322,8 @@ document.getElementById('laySizeUp').addEventListener('click', () => layoutResiz
 document.getElementById('laySizeDn').addEventListener('click', () => layoutResize(1 / 1.15));
 document.getElementById('layDup').addEventListener('click', () => {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
-  if (!treeProto) { toast(L().layoutHint); return; }
+  const srcType = treeTypeOf(layoutSel);
+  if (!treeProtos[srcType]) { toast(L().layoutHint); return; }
   const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
   if (!parts.length) return;
   const src = parts[parts.length - 1].obj;
@@ -3293,18 +3331,29 @@ document.getElementById('layDup').addEventListener('click', () => {
   const nid = 'tree' + treeSeq++;
   const nx = Math.max(-20, Math.min(20, cur.x + 1.4)), nz = Math.max(-27, Math.min(15, cur.z + 1.4));
   LAYOUT_ANCHORS[nid] = { x: nx, z: nz, ry: 0, rot: true, wide: true, scalable: true };
-  layoutStore[nid] = { x: nx, z: nz, ry: 0, sc: 1, asc: Math.round(src.scale.x * 1000) / 1000, dup: 1 };
+  layoutStore[nid] = { x: nx, z: nz, ry: 0, sc: 1, asc: Math.round((parts[parts.length - 1].sAuth !== undefined ? parts[parts.length - 1].sAuth : 1) * 1000) / 1000, dup: 1, tt: srcType };
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
-  const c = treeProto.clone();
+  const c = treeProtos[srcType].clone();
   c.traverse(o => { if (o.isMesh) o.castShadow = true; });
   c.position.set(nx, 0, nz);
   c.rotation.y = src.rotation.y;
   c.scale.setScalar(src.scale.x);
   scene.add(c);
   layoutCur[nid] = layoutEntry(nid);
+  c.userData.tid = nid;
   regPart(nid, c, false, null, false);
+  const npd = layoutParts[layoutParts.length - 1];
+  npd.sAuth = parts[parts.length - 1].sAuth !== undefined ? parts[parts.length - 1].sAuth : 1; npd.builtType = srcType;
   addLayoutProxy(nid);
   layoutSelect(nid);
+});
+document.getElementById('layType').addEventListener('click', () => {
+  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  const nt = (treeTypeOf(layoutSel) + 1) % TREE_TYPES.length;
+  layoutStore[layoutSel] = Object.assign({}, layoutStore[layoutSel], { tt: nt });
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+  swapTreeModel(layoutSel);
+  toast(L().treeTypeNames[nt]);
 });
 document.getElementById('layDel').addEventListener('click', () => {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
@@ -3381,7 +3430,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.56.1';
+const PT3D_VER = '2.57.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
