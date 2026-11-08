@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.25.2">
+<meta name="pt3d-ver" content="2.26.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.25.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.26.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -665,6 +665,7 @@ let bgRingMesh = null;
 }
 
 /* ============ Distant waterfall (v2.17.0) ============ */
+let fallsGrp = null;
 const fallsTex = canvasTexture(256, 256, (g) => {
   g.fillStyle = 'rgba(178,214,242,0.30)'; g.fillRect(0, 0, 256, 256);
   for (let i = 0; i < 46; i++) {
@@ -677,7 +678,7 @@ const fallsTex = canvasTexture(256, 256, (g) => {
 fallsTex.wrapS = fallsTex.wrapT = THREE.RepeatWrapping; fallsTex.repeat.set(1, 2);
 const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide });
 {
-  const wf = new THREE.Group(); wf.position.set(37, 0, -4); wf.rotation.y = -0.9; wf.scale.setScalar(1.25); scene.add(wf);
+  const wf = new THREE.Group(); wf.position.set(37, 0, -4); wf.rotation.y = -0.9; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
   /* papercut boulder falls (v2.21.0, from Anita's waterfall reference): a LOW
      cluster of faceted warm-grey + sand boulders with a two-step cascade -
      not a terraced tower */
@@ -704,6 +705,31 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
   }
   tree(30.5, -11.5, 1.25); tree(43.5, 1.5, 1.1); tree(30.8, 3.8, 0.9);
 }
+/* v2.26.0: Anita's Tripo waterfall (textured) replaces the procedural boulder
+   falls; the old group stays as fallback until the model loads. The model is a
+   rock-island diorama whose cascade faces local +Z, so it takes the same -0.9
+   yaw as the old group. Mist sprites are re-added over its pool. */
+new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
+  const m = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  const ctr = bb.getCenter(new THREE.Vector3());
+  m.position.set(-ctr.x, -bb.min.y, -ctr.z);
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const mistMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false });
+  for (let i = 0; i < 3; i++) {
+    const mist = new THREE.Sprite(mistMat);
+    mist.scale.set(0.30, 0.14, 1);
+    mist.position.set((i - 1) * 0.09, 0.07, 0.33);
+    m.add(mist);
+  }
+  const wrap = new THREE.Group(); wrap.add(m);
+  wrap.scale.setScalar(11.5 / size.x);
+  wrap.position.set(37, 0, -4);
+  wrap.rotation.y = -0.9;
+  scene.add(wrap);
+  if (fallsGrp) fallsGrp.visible = false;
+});
 
 /* ============ Language VI/EN (v2.19.0) ============
    UI chrome only - the fortune texts (xam) and chant texts stay Vietnamese,
@@ -2755,7 +2781,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.25.2';
+const PT3D_VER = '2.26.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
