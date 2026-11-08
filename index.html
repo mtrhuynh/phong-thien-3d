@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.45.0">
+<meta name="pt3d-ver" content="2.46.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.45.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.46.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -287,12 +287,13 @@ function regPart(id, obj, anchor, anchorDef, prePlaced) {
     const cur = layoutCur[id] || layoutEntry(id), a = LAYOUT_ANCHORS[id];
     bx -= (cur.x - a.x); bz -= (cur.z - a.z);
   }
-  layoutParts.push({ id, obj, bx, bz, anchor: !!anchor });
+  layoutParts.push({ id, obj, bx, bz, bry: obj.rotation.y, bs: obj.scale.x, anchor: !!anchor });
+  if (layoutStore[id] && layoutStore[id].del) obj.visible = false;
   if (layoutInitDone) applyLayoutId(id);
 }
 function layoutEntry(id) {
   const a = LAYOUT_ANCHORS[id], sv = layoutStore[id];
-  return sv ? { x: sv.x, z: sv.z, ry: (sv.ry !== undefined ? sv.ry : a.ry) } : { x: a.x, z: a.z, ry: a.ry };
+  return sv ? { x: sv.x, z: sv.z, ry: (sv.ry !== undefined ? sv.ry : a.ry), sc: (sv.sc !== undefined ? sv.sc : 1) } : { x: a.x, z: a.z, ry: a.ry, sc: 1 };
 }
 function resolveLayoutCols() {
   for (const id in LAYOUT_COLS) for (const spec of LAYOUT_COLS[id]) {
@@ -309,6 +310,8 @@ function applyLayoutId(id) {
   for (const p of layoutParts) if (p.id === id) {
     p.obj.position.x = p.bx + dx; p.obj.position.z = p.bz + dz;
     if (p.anchor) p.obj.rotation.y = cur.ry;
+    else if (a.rot) p.obj.rotation.y = p.bry + (cur.ry - a.ry);
+    if (a.scalable) p.obj.scale.setScalar(p.bs * (cur.sc !== undefined ? cur.sc : 1));
   }
   const swapped = Math.abs(Math.sin(cur.ry - a.ry)) > 0.7;
   for (const spec of (LAYOUT_COLS[id] || [])) {
@@ -320,13 +323,14 @@ function applyLayoutId(id) {
 }
 function saveLayoutId(id) {
   const cur = layoutCur[id]; if (!cur) return;
-  layoutStore[id] = { x: Math.round(cur.x * 100) / 100, z: Math.round(cur.z * 100) / 100, ry: Math.round(cur.ry * 1000) / 1000 };
+  layoutStore[id] = Object.assign({}, layoutStore[id], { x: Math.round(cur.x * 100) / 100, z: Math.round(cur.z * 100) / 100, ry: Math.round(cur.ry * 1000) / 1000, sc: Math.round((cur.sc !== undefined ? cur.sc : 1) * 1000) / 1000 });
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
 }
 function initLayout() {
   resolveLayoutCols();
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); }
   layoutInitDone = true;
+  refreshTreeVisibility();
 }
 
 /* ============ Renderer / Scene / Camera ============ */
@@ -590,8 +594,10 @@ carpet.receiveShadow = true; scene.add(carpet);
      procedural tiers when it loads; if it fails, the tiers stay. It joins
      roofParts so the hall/yard room toggle hides it indoors like the rest.
      Non-uniform scale: the model is proportionally tall + narrow, so it is
-     stretched to the eave footprint (x 19.5, z 14.4) and squashed to ~3.4
-     high, base on the unchanged eave line y=5.22. */
+     stretched to the eave footprint (x 19.5, z 14.4) and raised to ~4.9
+     high (v2.46.0: Anita said the first squash read too flat), base on the
+     unchanged eave line y=5.22. The old eave slab + fascia boards are
+     removed with the tiers - their dark bands poked out around the model. */
   new GLTFLoader().load('models/roof.glb?v=100', (gltf) => {
     const m = gltf.scene;
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -599,11 +605,11 @@ carpet.receiveShadow = true; scene.add(carpet);
     const ctr = bb.getCenter(new THREE.Vector3());
     m.position.set(-ctr.x, -bb.min.y, -ctr.z);
     const wrap = new THREE.Group(); wrap.add(m);
-    wrap.scale.set(19.5, 7.4, 26.8);
+    wrap.scale.set(19.5, 10.6, 26.8);
     wrap.position.set(0, 5.22, -2.2);
     T.add(wrap); roofParts.push(wrap);
     wrap.visible = room === 'yard';
-    T.remove(roof1); T.remove(roof2); T.remove(roof3); T.remove(fin);
+    T.remove(roof1); T.remove(roof2); T.remove(roof3); T.remove(fin); T.remove(eaveSlab); T.remove(fascia1); T.remove(fascia2); T.remove(fascia3);
   }, undefined, () => {});
   /* interior, visible from the yard through the colonnade */
   box(9, 3.0, 0.1, MAT.woodDark, 0, 2.7, -7.62, T);                      // altar backdrop
@@ -713,6 +719,7 @@ function scallopDisc(r, mat, phase = 0) {
 }
 const treeProcs = [];
 let treeSeq = 0;
+let treeProto = null;
 function tree(x, z, s = 1) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
   cyl(0.16, 0.24, 1.7, MAT.trunk, 0, 0.85, 0, g);
@@ -726,7 +733,7 @@ function tree(x, z, s = 1) {
       d.position.set(bx + li * 0.05, by + li * 0.13, bz); d.rotation.y = ci + li * 0.8; g.add(d);
     });
   });
-  scene.add(g); treeProcs.push(g); const tid = 'tree' + treeSeq++; g.userData.tid = tid; regPart(tid, g, false, { x: x, z: z, ry: 0, rot: false, wide: true }); return g;
+  scene.add(g); treeProcs.push(g); const tid = 'tree' + treeSeq++; g.userData.tid = tid; regPart(tid, g, false, { x: x, z: z, ry: 0, rot: true, wide: true, scalable: true }); return g;
 }
 tree(-12.5, -23.5, 0.9); tree(16.8, -20.5, 1.0); tree(-15.8, -7.5, 1.15);
 tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.6, -7.6, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
@@ -735,17 +742,19 @@ tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8
    loads it replaces the procedural disc trees; if it fails, they stay */
 new GLTFLoader().load('models/tree.glb?v=103', (gltf) => {
   gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) { o.material.vertexColors = true; o.material.roughness = 0.9; } } });
+  treeProto = gltf.scene;
   const TS = 3.7 / 1.958;
   while (treeProcs.length) {
     const p = treeProcs.shift();
     const c = gltf.scene.clone();
-    c.scale.setScalar(TS * p.scale.x);
+    c.scale.setScalar(TS * p.scale.x / ((layoutCur[p.userData.tid] || {}).sc || 1));
     c.position.copy(p.position);
     c.rotation.y = (p.position.x * 1.37 + p.position.z * 2.11) % (Math.PI * 2);
     scene.add(c);
     if (p.userData.tid) regPart(p.userData.tid, c, false, null, true);
     scene.remove(p);
   }
+  rebuildDupTrees();
 }, undefined, () => { /* model failed to load - procedural trees stay */ });
 function fenceRun(x, z, len, rotY) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rotY;
@@ -867,7 +876,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objTree: '🌳 Cây xanh', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objTree: '🌳 Cây xanh', sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -903,7 +912,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objTree: '🌳 Tree', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objTree: '🌳 Tree', sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3022,6 +3031,10 @@ layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-siz
   + '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">'
   + '<button class="laybtn" id="layRotL">⟲ 15°</button>'
   + '<button class="laybtn" id="layRotR">15° ⟳</button>'
+  + '<button class="laybtn" id="laySizeDn"></button>'
+  + '<button class="laybtn" id="laySizeUp"></button>'
+  + '<button class="laybtn" id="layDup"></button>'
+  + '<button class="laybtn" id="layDel"></button>'
   + '<button class="laybtn" id="layCode"></button>'
   + '<button class="laybtn" id="layReset"></button>'
   + '<button class="laybtn" id="layLock"></button></div>';
@@ -3048,13 +3061,16 @@ function buildLayoutProxies() {
     layoutRing.rotation.x = -Math.PI / 2; layoutRing.renderOrder = 5; layoutRing.visible = false;
     scene.add(layoutRing);
   }
-  for (const id in LAYOUT_ANCHORS) {
-    const sz = layoutProxySize(id);
-    const m = new THREE.Mesh(new THREE.BoxGeometry(sz.w, sz.h, sz.d), new THREE.MeshBasicMaterial({ visible: false }));
-    m.userData.layoutId = id; m.userData.sz = sz;
-    scene.add(m); layoutProxies.set(id, m);
-    syncLayoutProxy(id);
-  }
+  for (const id in LAYOUT_ANCHORS) addLayoutProxy(id);
+}
+function addLayoutProxy(id) {
+  if (layoutProxies.has(id)) return;
+  if (layoutStore[id] && layoutStore[id].del) return;
+  const sz = layoutProxySize(id);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(sz.w, sz.h, sz.d), new THREE.MeshBasicMaterial({ visible: false }));
+  m.userData.layoutId = id; m.userData.sz = sz;
+  scene.add(m); layoutProxies.set(id, m);
+  syncLayoutProxy(id);
 }
 function clearLayoutProxies() {
   for (const m of layoutProxies.values()) { scene.remove(m); m.geometry.dispose(); }
@@ -3065,9 +3081,11 @@ function syncLayoutProxy(id) {
   const m = layoutProxies.get(id); if (!m) return;
   const cur = layoutCur[id] || layoutEntry(id), sz = m.userData.sz;
   m.position.set(cur.x + sz.cx, sz.h / 2, cur.z + sz.cz);
+  const scf = LAYOUT_ANCHORS[id].scalable ? (cur.sc || 1) : 1;
+  m.scale.setScalar(scf);
   if (layoutSel === id && layoutRing) {
     layoutRing.position.set(cur.x + sz.cx, 0.07, cur.z + sz.cz);
-    const r = Math.max(sz.w, sz.d) * 0.62;
+    const r = Math.max(sz.w, sz.d) * 0.62 * scf;
     layoutRing.scale.set(r, r, 1);
     layoutRing.visible = true;
   }
@@ -3079,6 +3097,8 @@ function layoutSelect(id) {
   const rot = id && LAYOUT_ANCHORS[id].rot;
   document.getElementById('layRotL').style.display = rot ? '' : 'none';
   document.getElementById('layRotR').style.display = rot ? '' : 'none';
+  const isTree = !!(id && LAYOUT_ANCHORS[id].scalable);
+  for (const b of ['laySizeDn', 'laySizeUp', 'layDup', 'layDel']) document.getElementById(b).style.display = isTree ? '' : 'none';
   nameEl.textContent = id ? L()[LAYOUT_NAMES[id] || 'objTree'] : '🔧 Layout';
   hintEl.textContent = L().layoutHint;
   if (id) syncLayoutProxy(id);
@@ -3090,6 +3110,10 @@ function setLayoutEdit(on) {
   layoutPanel.style.display = on ? 'block' : 'none';
   document.getElementById('btnLayout').classList.toggle('on', on);
   if (on) {
+    document.getElementById('laySizeDn').textContent = L().sizeDn;
+    document.getElementById('laySizeUp').textContent = L().sizeUp;
+    document.getElementById('layDup').textContent = L().layDup;
+    document.getElementById('layDel').textContent = L().layDel;
     document.getElementById('layCode').textContent = L().layoutCode;
     document.getElementById('layReset').textContent = L().layoutReset;
     document.getElementById('layLock').textContent = L().layoutLock;
@@ -3125,6 +3149,7 @@ document.getElementById('layCode').addEventListener('click', () => {
     layoutStore = o;
     try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
     for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
+    refreshTreeVisibility();
     toast('✓ Layout');
   } catch (e) { /* invalid code pasted: ignore */ }
 });
@@ -3133,6 +3158,7 @@ document.getElementById('layReset').addEventListener('click', () => {
   layoutStore = {};
   try { localStorage.removeItem(LAYOUT_KEY); } catch (e) {}
   for (const id in LAYOUT_ANCHORS) { const a = LAYOUT_ANCHORS[id]; layoutCur[id] = { x: a.x, z: a.z, ry: a.ry }; applyLayoutId(id); syncLayoutProxy(id); }
+  refreshTreeVisibility();
 });
 let layoutGrabDX = 0, layoutGrabDZ = 0;
 function layoutPointerGround(e) {
@@ -3166,6 +3192,83 @@ renderer.domElement.addEventListener('pointermove', (e) => {
 });
 window.addEventListener('pointerup', () => {
   if (layoutDragId) { saveLayoutId(layoutDragId); layoutDragId = null; }
+});
+
+
+/* ============ Tree tools for the layout editor (v2.46.0) ============ */
+function refreshTreeVisibility() {
+  for (const p of layoutParts) {
+    if (p.id.indexOf('tree') !== 0 || !p.obj.parent) continue;
+    p.obj.visible = !(layoutStore[p.id] && layoutStore[p.id].del);
+  }
+}
+function rebuildDupTrees() {
+  if (!treeProto) return;
+  for (const id in layoutStore) {
+    const e = layoutStore[id];
+    if (!e || !e.dup) continue;
+    if (layoutParts.some(p => p.id === id)) continue;
+    if (!LAYOUT_ANCHORS[id]) LAYOUT_ANCHORS[id] = { x: e.x, z: e.z, ry: 0, rot: true, wide: true, scalable: true };
+    const c = treeProto.clone();
+    c.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    c.position.set(e.x, 0, e.z);
+    c.scale.setScalar(e.asc || 1.9);
+    scene.add(c);
+    layoutCur[id] = layoutEntry(id);
+    regPart(id, c, false, null, false);
+  }
+}
+function layoutResize(f) {
+  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  const cur = layoutCur[layoutSel];
+  cur.sc = Math.max(0.5, Math.min(2.6, (cur.sc || 1) * f));
+  cur.sc = Math.round(cur.sc * 1000) / 1000;
+  applyLayoutId(layoutSel);
+  syncLayoutProxy(layoutSel);
+  saveLayoutId(layoutSel);
+}
+document.getElementById('laySizeUp').addEventListener('click', () => layoutResize(1.15));
+document.getElementById('laySizeDn').addEventListener('click', () => layoutResize(1 / 1.15));
+document.getElementById('layDup').addEventListener('click', () => {
+  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  if (!treeProto) { toast(L().layoutHint); return; }
+  const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
+  if (!parts.length) return;
+  const src = parts[parts.length - 1].obj;
+  const cur = layoutCur[layoutSel];
+  const nid = 'tree' + treeSeq++;
+  const nx = Math.max(-20, Math.min(20, cur.x + 1.4)), nz = Math.max(-27, Math.min(15, cur.z + 1.4));
+  LAYOUT_ANCHORS[nid] = { x: nx, z: nz, ry: 0, rot: true, wide: true, scalable: true };
+  layoutStore[nid] = { x: nx, z: nz, ry: 0, sc: 1, asc: Math.round(src.scale.x * 1000) / 1000, dup: 1 };
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+  const c = treeProto.clone();
+  c.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  c.position.set(nx, 0, nz);
+  c.rotation.y = src.rotation.y;
+  c.scale.setScalar(src.scale.x);
+  scene.add(c);
+  layoutCur[nid] = layoutEntry(nid);
+  regPart(nid, c, false, null, false);
+  addLayoutProxy(nid);
+  layoutSelect(nid);
+});
+document.getElementById('layDel').addEventListener('click', () => {
+  if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  if (!confirm(L().layoutDelQ)) return;
+  const id = layoutSel;
+  for (const p of layoutParts.filter(p => p.id === id)) {
+    const ti = treeProcs.indexOf(p.obj);
+    if (ti >= 0) treeProcs.splice(ti, 1);
+    scene.remove(p.obj);
+    p.obj.visible = false;
+  }
+  if (layoutStore[id] && layoutStore[id].dup) delete layoutStore[id];
+  else layoutStore[id] = Object.assign({}, layoutStore[id], { del: 1 });
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+  delete layoutCur[id];
+  const px = layoutProxies.get(id);
+  if (px) { scene.remove(px); px.geometry.dispose(); layoutProxies.delete(id); }
+  layoutSelect(null);
 });
 
 /* ============ Draggable UI panels (v2.43.0) ============
@@ -3224,7 +3327,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.45.0';
+const PT3D_VER = '2.46.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
