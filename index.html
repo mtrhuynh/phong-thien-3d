@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.81.3">
+<meta name="pt3d-ver" content="2.82.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -183,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.81.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.82.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -220,9 +220,6 @@
   </div>
 </div>
 
-<div class="ui" id="actions">
-  <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb"></span></button>
-</div>
 
 <div id="chatLog"></div>
 <div id="chatRow">
@@ -241,7 +238,6 @@
   <div class="ctlRow">
     <button class="cmode" id="btnCam">📷 Camera</button>
     <button class="cmode" id="btnLayout">🔧 Layout</button>
-    <button class="cmode" id="btnMenu">☰ Menu</button>
   </div>
 </div>
 
@@ -1208,11 +1204,6 @@ dnLabel();
 /* ============ Collapsible action menu + language switch (v2.19.0) ============
    The horizontal action bar stays hidden until the Menu button in the
    right-hand stack is tapped (Anita: the row ate too much screen). */
-const btnMenu = document.getElementById('btnMenu');
-btnMenu.addEventListener('click', () => {
-  const open = document.getElementById('actions').classList.toggle('open');
-  btnMenu.classList.toggle('on', open);
-});
 const btnCam = document.getElementById('btnCam');
 btnCam.addEventListener('click', () => {
   const open = document.getElementById('camModes').classList.toggle('open');
@@ -2612,9 +2603,6 @@ document.getElementById('musPlay').addEventListener('click', () => {
 });
 document.getElementById('musNext').addEventListener('click', () => musLoad(musIdx + 1, true));
 musAudio.addEventListener('ended', () => musLoad(musIdx + 1, true));
-document.getElementById('btnXam').addEventListener('click', () => {
-  if (room !== 'hall') { goToRoom('hall'); pendingAfterZone = { zone: 'hall', cb: drawXam }; } else drawXam();
-});
 function doSweep() {
   if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => doSweep() }; return; }
   if (!leafPiles.length) { toast(L().tYardClean); return; }
@@ -4047,7 +4035,6 @@ function makePanelDraggable(el, key) {
     el.style.left = ''; el.style.top = ''; el.style.right = ''; el.style.bottom = ''; el.style.transform = '';
   });
 }
-makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
 
 /* ============ Session resume + build freshness (v2.4.1) ============
    A plain reload (F5) resumes exactly where you were: same room, same spot,
@@ -4056,7 +4043,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.81.3';
+const PT3D_VER = '2.82.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
