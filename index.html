@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.56.0">
+<meta name="pt3d-ver" content="2.56.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.56.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.56.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -270,7 +270,7 @@ const LAYOUT_ANCHORS = {
   burner: { x: 0,     z: -8.6, ry: 0, rot: true },
   pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true }
 };
-const PAVI_FLOOR_H = 0.55; // v2.56.0: open-pavilion terrace height (floor measured at 0.145 of model height; model scaled 5.6 m wide, base sunk 0.30 into the lawn)
+const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dominant up-facing surface sits at 0.057 of model height; x5.864 scale = 0.33 m, NO sinking (the v2.56.0 guess of 0.145 + a 0.30 sink buried the plinth and floated the cushions - Anita's screenshot caught both)
 const LAYOUT_COLS = {
   falls:  [{ x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 }],
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
@@ -878,13 +878,13 @@ new GLTFLoader().load('models/pavilion2.glb?v=100', (gltf) => { // v2.56.0: open
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
   const wrap = new THREE.Group(); wrap.add(m);
   wrap.scale.setScalar(5.6 / size.x);
-  wrap.position.set(-11.0, -0.30, 9.0); // base sunk 0.30 so the terrace is step-up-able
+  wrap.position.set(-11.0, 0, 9.0); // v2.56.1: sits on the ground, plinth fully visible
   wrap.rotation.y = Math.PI / 2;
   /* v2.55.0: Anita: the shell's inside was pitch black. A warm light inside
      the wrap (so it rides along when the pavilion is dragged) + DoubleSide
      walls make the doorway glow instead of reading as a black hole. */
   const paviLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
-  paviLight.position.set(0, 0.44, 0);
+  paviLight.position.set(0, 0.26, 0); // ~1.5 m up, inside the open ground floor
   wrap.add(paviLight);
   scene.add(wrap); regPart('pavilion', wrap, true);
 });
@@ -2005,8 +2005,8 @@ function groundY(x, z) {
   const pc = layoutCur.pavilion;
   if (pc) {
     const pd = Math.hypot(x - pc.x, z - pc.z);
-    if (pd < 1.75) return PAVI_FLOOR_H;
-    if (pd < 2.5) return PAVI_FLOOR_H * (2.5 - pd) / 0.75;
+    if (pd < 1.85) return PAVI_FLOOR_H;
+    if (pd < 2.45) return PAVI_FLOOR_H * (2.45 - pd) / 0.6;
   }
   return 0;
 }
@@ -3381,7 +3381,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.56.0';
+const PT3D_VER = '2.56.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
