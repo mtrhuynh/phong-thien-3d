@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.19.0">
+<meta name="pt3d-ver" content="2.19.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.19.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.19.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -223,6 +223,15 @@
 
 <script src="xam-data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* Safety net (v2.19.1): if the 3D module cannot start (broken script, blocked
+   CDN, old cached page), never leave the visitor on the loading screen -
+   after 12 s show a reload hint on the loading card itself. */
+setTimeout(function () {
+  var ld = document.getElementById('loading');
+  if (ld) ld.innerHTML = '<div class="spin">🪷</div><div>Đang tải lâu hơn thường lệ…<br><button onclick="location.reload()" style="margin-top:12px;padding:10px 22px;border-radius:999px;border:0;background:#c9a45c;color:#241708;font-weight:700;font-size:15px">↻ Tải lại trang</button></div>';
+}, 12000);
+</script>
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -769,6 +778,12 @@ btnDN.addEventListener('click', () => {
   dnMode = dnMode === 'auto' ? 'night' : dnMode === 'night' ? 'day' : 'auto';
   try { localStorage.setItem('pt3d-daynight', dnMode); } catch (e) {}
   dnLabel();
+});
+dnLabel();
+
+/* ============ Collapsible action menu + language switch (v2.19.0) ============
+   The horizontal action bar stays hidden until the Menu button in the
+   right-hand stack is tapped (Anita: the row ate too much screen). */
 const btnMenu = document.getElementById('btnMenu');
 btnMenu.addEventListener('click', () => {
   const open = document.getElementById('actions').classList.toggle('open');
@@ -803,8 +818,28 @@ btnLang.addEventListener('click', () => {
   langBtnLabel(); applyLang();
 });
 langBtnLabel();
-});
-dnLabel();
+function refreshTags() {
+  remotes.forEach(r => {
+    if (r.tag && r.tag.material) {
+      const sub = [L().sects[r.sc] || '', bacSub(r.bc || 1)].filter(Boolean).join(' · ');
+      r.tag.material.map = nameTag(r.name || L().guest, sub).material.map; r.tag.material.needsUpdate = true;
+    }
+    if (r.pet && r.pet.userData.tag) {} // pets carry no text
+  });
+  npcs.forEach(n => {
+    const df = n.userData.npcDef;
+    if (!df) return;
+    const sub = df.subKey ? bacSub(df.subKey) : (df.sub || '');
+    if (df.name && n.userData.tag) { n.userData.tag.material.map = nameTag(df.name, sub).material.map; n.userData.tag.material.needsUpdate = true; }
+  });
+  if (window.__ctag) { window.__ctag.material.map = nameTag(L().clockName, L().clockSub).material.map; window.__ctag.material.needsUpdate = true; }
+  if (window.__paviTag) { window.__paviTag.material.map = nameTag(L().paviName, L().paviSub).material.map; window.__paviTag.material.needsUpdate = true; }
+}
+function pt3dBootLang() {
+  if (typeof player === 'undefined' || typeof refreshBac !== 'function') { setTimeout(pt3dBootLang, 400); return; }
+  try { applyLang(); } catch (e) { setTimeout(pt3dBootLang, 800); }
+}
+pt3dBootLang();
 
 
 /* ============ Lantern poles along the path ============ */
@@ -2647,7 +2682,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.19.0';
+const PT3D_VER = '2.19.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -2773,6 +2808,7 @@ document.getElementById('pfPhoto').addEventListener('click', () => {
 });
 applyLook();
 refreshBac();
+applyLang();
 
 </script>
 </body>
