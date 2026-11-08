@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.70.0">
+<meta name="pt3d-ver" content="2.70.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.70.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.70.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1894,28 +1894,11 @@ new GLTFLoader().load('models/fox.glb?v=100', (gltf) => {
    triangles, so it costs almost nothing (the old deer model was heavy and went).
    It trails behind its owner, hops while they walk, idles with a gentle bob. */
 function makePet(type) {
+  /* v2.70.1: the primitive dragon pet is DELETED (Anita) - every pet is
+     the Tripo fox now, whatever type was saved or broadcast. */
   const g = new THREE.Group();
-  g.userData.type = type || 1;
-  if (g.userData.type === 2) { foxPets.add(g); fillFox(g); return g; }
-  const bodyM = new THREE.MeshStandardMaterial({ color: 0xe8913a, roughness: 0.6 });
-  const creamM = new THREE.MeshStandardMaterial({ color: 0xffe3b3, roughness: 0.7 });
-  const darkM = new THREE.MeshStandardMaterial({ color: 0x33302c, roughness: 0.5 });
-  const add = (geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = true; g.add(m); return m; };
-  add(new THREE.SphereGeometry(0.16, 14, 12), bodyM, 0, 0.17, 0, 1, 0.92, 1.1);
-  add(new THREE.SphereGeometry(0.105, 12, 10), creamM, 0, 0.155, 0.085, 1, 0.95, 0.7);
-  add(new THREE.SphereGeometry(0.135, 14, 12), bodyM, 0, 0.36, 0.02);
-  add(new THREE.SphereGeometry(0.07, 10, 8), creamM, 0, 0.325, 0.115, 1, 0.8, 0.9);
-  add(new THREE.SphereGeometry(0.021, 8, 6), darkM, -0.052, 0.385, 0.115);
-  add(new THREE.SphereGeometry(0.021, 8, 6), darkM, 0.052, 0.385, 0.115);
-  const h1 = add(new THREE.ConeGeometry(0.028, 0.11, 8), MAT.gold, -0.075, 0.485, -0.01); h1.rotation.z = 0.35;
-  const h2 = add(new THREE.ConeGeometry(0.028, 0.11, 8), MAT.gold, 0.075, 0.485, -0.01); h2.rotation.z = -0.35;
-  const w1 = add(new THREE.ConeGeometry(0.05, 0.16, 6), bodyM, -0.155, 0.30, -0.03); w1.rotation.z = 1.15;
-  const w2 = add(new THREE.ConeGeometry(0.05, 0.16, 6), bodyM, 0.155, 0.30, -0.03); w2.rotation.z = -1.15;
-  const tail = add(new THREE.ConeGeometry(0.045, 0.22, 8), bodyM, 0, 0.16, -0.20); tail.rotation.x = -1.15;
-  add(new THREE.SphereGeometry(0.035, 8, 6), MAT.gold, 0, 0.235, -0.295);
-  add(new THREE.SphereGeometry(0.045, 8, 6), bodyM, -0.085, 0.045, 0.05);
-  add(new THREE.SphereGeometry(0.045, 8, 6), bodyM, 0.085, 0.045, 0.05);
-  return g;
+  g.userData.type = 2;
+  foxPets.add(g); fillFox(g); return g;
 }
 function petFollow(pet, ox, oz, ory, dt, now) {
   const tx = ox + Math.cos(ory) * 0.42 - Math.sin(ory) * 0.5;
@@ -3024,8 +3007,9 @@ let ptHash = 0; for (let i = 0; i < myGid.length; i++) ptHash = (ptHash * 31 + m
 const MY_C = ptHash % ROBE_COLORS.length;
 /* personal look: robe colour, bead set, sect, pet — chosen in the profile panel */
 const SECTS = I18N.vi.sects;
-let look = { c: null, bd: 0, sect: 0, pet: 1 };
+let look = { c: null, bd: 0, sect: 0, pet: 2 };
 try { Object.assign(look, JSON.parse(localStorage.getItem('pt3d-look') || '{}')); } catch (e) {}
+if (look.pet === 1) look.pet = 2; // v2.70.1: saved dragon choices become the fox
 let myC = look.c != null ? look.c : MY_C;
 function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
 
@@ -3674,7 +3658,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.70.0';
+const PT3D_VER = '2.70.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -3775,7 +3759,7 @@ function openProfile() {
     beadBox.appendChild(b);
   });
   const petBox = document.getElementById('pfPet'); petBox.innerHTML = '';
-  [[L().petNone, 0], [L().petDragon, 1], [L().petFox, 2]].forEach(([label, v]) => {
+  [[L().petNone, 0], [L().petFox, 2]].forEach(([label, v]) => {
     const b = document.createElement('button');
     b.className = 'pf-chip' + ((look.pet | 0) === v ? ' on' : ''); b.textContent = label;
     b.addEventListener('click', () => { look.pet = v; saveLook(); syncPet(); ptTrack(true); openProfile(); });
