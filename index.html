@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.24.0">
+<meta name="pt3d-ver" content="2.25.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.24.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.25.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -731,7 +731,7 @@ const I18N = {
     boardSala: s => '🌼 Hứng hoa ×' + s.fl + (s.open ? ' · 🎋 Đã mở xin xăm' : ''),
     boardEmpty1: 'Bạn bè vào chùa cùng, công quả', boardEmpty2: 'sẽ cùng hiện lên bảng này', boardFoot: 'Số liệu được lưu trên máy của mỗi người',
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
-    clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Thiền Xá', paviSub: 'ngồi thiền ngắm thác',
+    clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
     petNone: 'Không có', petDragon: '🐉 Tiểu Long', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
@@ -767,7 +767,7 @@ const I18N = {
     boardSala: s => '🌼 Blooms caught ×' + s.fl + (s.open ? ' · 🎋 Fortune unlocked' : ''),
     boardEmpty1: 'Friends who visit the temple', boardEmpty2: 'will appear on this board', boardFoot: 'Stats are stored on each visitor’s own device',
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
-    clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Zen Shelter', paviSub: 'meditate facing the falls',
+    clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
     petNone: 'None', petDragon: '🐉 Little Dragon', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
@@ -1126,73 +1126,32 @@ function cushion(x, z) {
 const cushionSpots = [];
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -5.6)); });
 [-7.2, -4.2, 4.2, 7.2].forEach(x => { cushionSpots.push(cushion(x, -2.2)); });
-/* Thien Xa: an open meditation pavilion in the east yard, modelled on the simple
-   wooden shelter in Anita's Second Life photo - deck, posts, beam roof with
-   upturned ends, shoji back screen, a small Buddha, tatami and cushions */
+/* Dien Tho (v2.25.0): Anita's Tripo temple as a small look-in shrine in the
+   east yard, replacing the Thien Xa pavilion. The model stays UNCUT - its own
+   white Buddha remains inside as the shrine's Buddha. The door faces west
+   toward the yard; the bamboo grove now stands behind it; sittable cushions
+   rest on the grass in front of the door. */
+let shrineGrp = null;
 {
   const px = 12.6, pz = 8.6;
-  const deck = box(6.4, 0.18, 4.8, MAT.woodDark, px, 0.09, pz, scene); deck.receiveShadow = true;
-  box(0.55, 0.09, 2.4, MAT.woodDark, px + 3.47, 0.045, pz, scene);
-  const shojiM = new THREE.MeshStandardMaterial({ color: 0xf3e9d2, roughness: 0.9 });
-  box(0.08, 2.2, 4.4, shojiM, px - 3.0, 1.28, pz, scene);
-  for (let i = 0; i < 5; i++) box(0.05, 2.2, 0.07, MAT.woodDark, px - 2.95, 1.28, pz - 1.76 + i * 0.88, scene);
   const bamM = new THREE.MeshStandardMaterial({ color: 0x5d8a4a, roughness: 0.9 });
   for (let i = 0; i < 13; i++) {
     const bz = 5.9 + i * 0.47 + (i % 3) * 0.06, bh = 3.1 + (i % 4) * 0.35;
-    const stalk = cyl(0.045, 0.055, bh, bamM, 8.55 + (i % 2) * 0.22, bh / 2, bz, scene);
+    const stalk = cyl(0.045, 0.055, bh, bamM, 15.55 + (i % 2) * 0.22, bh / 2, bz, scene);
     stalk.rotation.z = (i % 3 - 1) * 0.02;
-    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(8.6 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
+    if (i % 2 === 0) { const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), MAT.leaf); lf.scale.set(1, 0.62, 1); lf.position.set(15.6 + (i % 2) * 0.2, bh - 0.2, bz); scene.add(lf); }
   }
-  box(0.05, 0.07, 4.4, MAT.woodDark, px - 2.95, 1.75, pz, scene);
-  [[-2.9, -1.9], [2.9, -1.9], [-2.9, 1.9], [2.9, 1.9]].forEach(([ox, oz]) => {
-    const post = box(0.18, 2.6, 0.18, MAT.woodDark, px + ox, 1.48, pz + oz, scene); post.castShadow = true;
-  });
-  const beamM = MAT.woodDark;
-  [-1.9, 1.9].forEach(oz => {
-    const bm = box(7.6, 0.16, 0.2, beamM, px, 2.86, pz + oz, scene); bm.castShadow = true;
-  });
-  /* papercut pyramid roof (v2.21.0, from Anita's pavilion reference):
-     four-sided shingle pyramid, cream paper edge, pointed finial, bamboo
-     blinds under the side eaves, a hanging paper lantern, low side rails */
-  const pCreamM = new THREE.MeshStandardMaterial({ color: 0xefe3c8, roughness: 0.95 });
-  const pRoofM = new THREE.MeshStandardMaterial({ map: shingleTex, roughness: 0.9 });
-  const edge = new THREE.Mesh(new THREE.ConeGeometry(5.5, 0.5, 4), pCreamM);
-  edge.rotation.y = Math.PI / 4; edge.scale.set(1.15, 1, 0.85); edge.position.set(px, 3.08, pz); scene.add(edge);
-  const proof = new THREE.Mesh(new THREE.ConeGeometry(5.3, 1.55, 4), pRoofM);
-  proof.rotation.y = Math.PI / 4; proof.scale.set(1.15, 1, 0.85); proof.position.set(px, 3.72, pz); proof.castShadow = true; scene.add(proof);
-  const pfin = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 8), pCreamM); pfin.scale.y = 1.5; pfin.position.set(px, 4.62, pz); scene.add(pfin);
-  const blindM = new THREE.MeshStandardMaterial({ color: 0xd9b878, roughness: 1 });
-  [-1, 1].forEach(sd => { box(3.6, 0.8, 0.05, blindM, px, 2.42, pz + sd * 1.92, scene); });
-  const plampM = new THREE.MeshStandardMaterial({ color: 0xffd98a, emissive: 0xffa04a, emissiveIntensity: 1.1, roughness: 0.6 });
-  const plamp = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 10), plampM); plamp.scale.y = 1.15; plamp.position.set(px, 2.5, pz); scene.add(plamp);
-  const pglow = new THREE.Sprite(lampGlowMat); pglow.scale.set(1.7, 1.7, 1); pglow.position.set(px, 2.5, pz); scene.add(pglow);
-  [-1, 1].forEach(sd => {
-    box(6.0, 0.07, 0.09, MAT.woodDark, px, 0.66, pz + sd * 2.32, scene);
-    [-2.6, 0, 2.6].forEach(ox => box(0.09, 0.5, 0.09, MAT.woodDark, px + ox, 0.42, pz + sd * 2.32, scene));
-  });
-  const tatM = new THREE.MeshStandardMaterial({ color: 0xd9c491, roughness: 0.95 });
-  [13.1, 14.9].forEach(tx => { const tm = box(1.15, 0.035, 3.9, tatM, tx, 0.2, pz, scene); tm.receiveShadow = true; });
-  [13.1, 14.9].forEach(tx => [7.3, 8.6, 9.9].forEach(tz => { const c = cushion(tx, tz); c.position.y = 0.22; cushionSpots.push(c); }));
-  box(1.3, 0.3, 0.55, MAT.woodDark, 11.55, 0.33, pz, scene);
-  cyl(0.03, 0.03, 0.16, MAT.gold, 11.25, 0.56, pz - 0.12, scene);
-  cyl(0.03, 0.03, 0.16, MAT.gold, 11.85, 0.56, pz - 0.12, scene);
-  addFlame(scene, 11.25, 0.66, pz - 0.12, 0.45);
-  addFlame(scene, 11.85, 0.66, pz - 0.12, 0.45);
-  cyl(0.09, 0.05, 0.07, MAT.bronze, 11.55, 0.52, pz + 0.1, scene);
-  [-0.14, 0, 0.14].forEach(tilt => { const st = cyl(0.006, 0.006, 0.24, MAT.woodDark, 11.55, 0.62, pz + 0.1, scene); st.rotation.z = tilt; });
-  const ptag = nameTag(L().paviName, L().paviSub); ptag.position.set(px, 3.85, pz); scene.add(ptag);
-  new GLTFLoader().load('models/cand-b/buddha-statue.glb', (gltf) => {
+  [7.0, 8.6, 10.2].forEach(cz => { const c = cushion(8.9, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); });
+  const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag;
+  const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
+  shrineLight.position.set(11.7, 1.7, pz); scene.add(shrineLight);
+  new GLTFLoader().load('models/temple.glb?v=100', (gltf) => {
     const m = gltf.scene;
-    const bb = new THREE.Box3().setFromObject(m);
-    m.scale.setScalar(1.9 / bb.getSize(new THREE.Vector3()).y);
-    const bb2 = new THREE.Box3().setFromObject(m);
-    const c2 = bb2.getCenter(new THREE.Vector3());
-    m.rotation.y = Math.PI / 2;
-    const bb3 = new THREE.Box3().setFromObject(m);
-    const c3 = bb3.getCenter(new THREE.Vector3());
-    m.position.set((px - 2.2) - c3.x, 0.18 - bb3.min.y, pz - c3.z);
-    m.traverse(o => { if (o.isMesh) o.castShadow = true; });
-    scene.add(m);
+    m.rotation.y = -Math.PI / 2;
+    m.scale.setScalar(7.3);
+    m.position.set(px, 0, pz);
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    scene.add(m); shrineGrp = m;
   });
 }
 
@@ -1737,7 +1696,6 @@ const SPEED = 3.4;
 let room = 'yard';
 /* v2.11: ONE space. groundY = the height under a point (yard 0, steps, platform, hall floor) */
 function groundY(x, z) {
-  if (x > 9.2 && x < 16.0 && z > 6.0 && z < 11.2) return 0.18;
   if (Math.abs(x) < 10.6 && z < -10.3 && z > -24.9) {
     if (z < -12.95 && Math.abs(x) < 8.6) return 1.12;
     if (z < -12.25) return 1.0;
@@ -1770,12 +1728,8 @@ const COLLIDERS = [
   { x0: 7.45, x1: 10.95, z0: -1.25, z1: 2.25 },
   { x0: -10.95, x1: -7.45, z0: -12.25, z1: -8.75 },
   { x0: 7.45, x1: 10.95, z0: -12.25, z1: -8.75 },
-  { x0: 9.35, x1: 9.85, z0: 6.2, z1: 11.0 },       // thien xa back screen
-  { x0: 8.3, x1: 8.95, z0: 5.6, z1: 11.6 },        // bamboo grove
-  { x0: 9.55, x1: 9.9, z0: 6.55, z1: 6.9 },        // thien xa posts
-  { x0: 15.3, x1: 15.65, z0: 6.55, z1: 6.9 },
-  { x0: 9.55, x1: 9.9, z0: 10.3, z1: 10.65 },
-  { x0: 15.3, x1: 15.65, z0: 10.3, z1: 10.65 },
+  { x0: 10.45, x1: 14.75, z0: 4.92, z1: 12.28 },   // dien tho shrine (Tripo, v2.25.0)
+  { x0: 15.35, x1: 16.0, z0: 5.6, z1: 11.6 },      // bamboo grove (behind the shrine)
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -1814,7 +1768,7 @@ function sitDown(cushion) {
     player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
     cushion.userData.occupiedByPlayer = true;
   }
-  player.rotation.y = Math.PI;
+  player.rotation.y = (cushion && cushion.userData.faceY !== undefined) ? cushion.userData.faceY : Math.PI;
   player.userData.bodyG.scale.set(1.15, 0.78, 1.15);
   btnSit.classList.add('on');
   btnSit.querySelector('.lb').textContent = L().aStand; sitting = true;
@@ -2801,7 +2755,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.24.0';
+const PT3D_VER = '2.25.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
