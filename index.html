@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.64.0">
+<meta name="pt3d-ver" content="2.65.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.64.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.65.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -277,7 +277,7 @@ const LAYOUT_COLS = {
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }], // v2.63.1: bamboo collider gone with the grove
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
-  pavilion: [], // v2.56.0: open pavilion - no blocking collider; the terrace is walkable via groundY
+  pavilion: [{ x0: -13.9, x1: -7.9, z0: 6.15, z1: 7.05 }, { x0: -13.9, x1: -7.9, z0: 10.95, z1: 11.85 }, { x0: -13.85, x1: -12.95, z0: 7.05, z1: 10.95 }, { x0: -8.75, x1: -7.15, z0: 6.15, z1: 8.1 }, { x0: -8.75, x1: -7.15, z0: 9.9, z1: 11.85 }, { x0: -9.57, x1: -8.47, z0: 6.47, z1: 7.57 }, { x0: -13.53, x1: -12.43, z0: 6.47, z1: 7.57 }, { x0: -9.57, x1: -8.47, z0: 10.43, z1: 11.53 }, { x0: -13.53, x1: -12.43, z0: 10.43, z1: 11.53 }], // v2.65.0: railing ring (measured platform r ~2.0-2.25, steps east) - walk in via the steps gap only
   bridgescene: [{ x0: 4.55, x1: 5.42, z0: 7.1, z1: 12.9 }, { x0: 6.58, x1: 7.45, z0: 7.1, z1: 12.9 }] // bridge body flanking the corridor (capped at +-0.58 m; measured railing inner faces at +-0.80 m)
 };
 let layoutStore = {};
@@ -1286,7 +1286,7 @@ burnerGlow.scale.set(1.02, 0.72, 1); burnerGlow.position.y = 2.02; burner.add(bu
 const burnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); burnerLight.position.y = 2.05; burner.add(burnerLight);
 const yardFx = { ember: burnerGlow, fl: burnerLight, seed: 3.7 };
 emberFx.push(yardFx);
-const yardFlameG = addFlame(burner, 0, 2.06, 0, 0.8);
+const yardFlameG = addFlame(burner, 0, 2.06, 0, 0.08);
 burnerBodies.push({ g: burner, flame: yardFlameG, glow: burnerGlow, light: burnerLight });
 let shrineFxRefs = null; // v2.31.0: shrine burner refs, filled in below
 let incenseLit = false, incenseLeft = 0;
@@ -1341,7 +1341,7 @@ shrineGlow.scale.set(1.02, 0.72, 1); shrineGlow.position.y = 2.02; shrineBurner.
 const shrineBurnerLight = new THREE.PointLight(0xff8c4a, 2.5, 5, 1.8); shrineBurnerLight.position.y = 2.05; shrineBurner.add(shrineBurnerLight);
 const shrineFx = { ember: shrineGlow, fl: shrineBurnerLight, seed: 5.1 };
 emberFx.push(shrineFx);
-const shrineFlameG = addFlame(shrineBurner, 0, 2.06, 0, 0.8);
+const shrineFlameG = addFlame(shrineBurner, 0, 2.06, 0, 0.08);
 shrineFxRefs = { glow: shrineGlow, flameG: shrineFlameG, fx: shrineFx, tips: shrineTips, light: shrineBurnerLight };
 burnerBodies.push({ g: shrineBurner, flame: shrineFlameG, glow: shrineGlow, light: shrineBurnerLight });
 shrineGlow.visible = false; shrineFlameG.visible = false; shrineFx.off = true; shrineTips.forEach(t => { t.visible = false; }); shrineBurnerLight.intensity = 0;
@@ -1678,7 +1678,7 @@ function hallBurner() {
   const fl = new THREE.PointLight(0xff8c4a, 2.5, 4.5, 1.8); fl.position.y = 1.35; b.add(fl);
   const hfx = { ember, fl, seed: Math.random() * 10 };
   emberFx.push(hfx); hallFxEntries.push(hfx);
-  hallFlames.push(addFlame(b, 0, 1.88, 0, 0.78));
+  hallFlames.push(addFlame(b, 0, 1.88, 0, 0.08));
   burnerBodies.push({ g: b, flame: hallFlames[hallFlames.length - 1], glow: ember, light: fl });
 }
 hallBurner();
@@ -2164,6 +2164,15 @@ const COLLIDERS = [
   { x0: 5.8, x1: 8.6, z0: -13.2, z1: -12.7 },
   { x0: -8.6, x1: 8.6, z0: -24.65, z1: -24.1 },    // back wall
   { x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 },   // yard burner
+  { x0: -13.9, x1: -7.9, z0: 6.15, z1: 7.05 },
+  { x0: -13.9, x1: -7.9, z0: 10.95, z1: 11.85 },
+  { x0: -13.85, x1: -12.95, z0: 7.05, z1: 10.95 },
+  { x0: -8.75, x1: -7.15, z0: 6.15, z1: 8.1 },
+  { x0: -8.75, x1: -7.15, z0: 9.9, z1: 11.85 },
+  { x0: -9.57, x1: -8.47, z0: 6.47, z1: 7.57 },
+  { x0: -13.53, x1: -12.43, z0: 6.47, z1: 7.57 },
+  { x0: -9.57, x1: -8.47, z0: 10.43, z1: 11.53 },
+  { x0: -13.53, x1: -12.43, z0: 10.43, z1: 11.53 }, // pavilion railing ring (v2.65.0)
   { x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 },     // dien tho shrine (v2.29.0: east-mid yard)
   { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
   { x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 },
@@ -2206,7 +2215,15 @@ function sitDown(cushion) {
     player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
     cushion.userData.occupiedByPlayer = true;
   }
-  player.rotation.y = (cushion && cushion.userData.faceY !== undefined) ? cushion.userData.faceY : Math.PI;
+  let faceY = (cushion && cushion.userData.faceY !== undefined) ? cushion.userData.faceY : Math.PI;
+  if (cushion) {
+    /* v2.65.0: a cushion carried by a rotated layout cluster (the pavilion)
+       turns with it - the sit facing follows the cluster's rotation delta,
+       otherwise the sitter faces a pillar after a layout rotate. */
+    const part = layoutParts.find(p => p.obj === cushion);
+    if (part && LAYOUT_ANCHORS[part.id] && layoutCur[part.id]) faceY += layoutCur[part.id].ry - LAYOUT_ANCHORS[part.id].ry;
+  }
+  player.rotation.y = faceY;
   player.userData.bodyG.scale.set(1.15, 0.78, 1.15);
   btnSit.classList.add('on');
   btnSit.querySelector('.lb').textContent = L().aStand; sitting = true;
@@ -3597,7 +3614,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.64.0';
+const PT3D_VER = '2.65.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
