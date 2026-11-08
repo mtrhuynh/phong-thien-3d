@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.43.0">
+<meta name="pt3d-ver" content="2.44.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.43.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.44.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -280,8 +280,14 @@ try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catc
 const layoutParts = [];
 const layoutCur = {};
 let layoutInitDone = false;
-function regPart(id, obj, anchor) {
-  layoutParts.push({ id, obj, bx: obj.position.x, bz: obj.position.z, anchor: !!anchor });
+function regPart(id, obj, anchor, anchorDef, prePlaced) {
+  if (anchorDef && !LAYOUT_ANCHORS[id]) LAYOUT_ANCHORS[id] = anchorDef;
+  let bx = obj.position.x, bz = obj.position.z;
+  if (prePlaced && layoutInitDone && LAYOUT_ANCHORS[id]) {
+    const cur = layoutCur[id] || layoutEntry(id), a = LAYOUT_ANCHORS[id];
+    bx -= (cur.x - a.x); bz -= (cur.z - a.z);
+  }
+  layoutParts.push({ id, obj, bx, bz, anchor: !!anchor });
   if (layoutInitDone) applyLayoutId(id);
 }
 function layoutEntry(id) {
@@ -687,6 +693,7 @@ function scallopDisc(r, mat, phase = 0) {
   const m = new THREE.Mesh(geo, mat); m.castShadow = true; return m;
 }
 const treeProcs = [];
+let treeSeq = 0;
 function tree(x, z, s = 1) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
   cyl(0.16, 0.24, 1.7, MAT.trunk, 0, 0.85, 0, g);
@@ -700,7 +707,7 @@ function tree(x, z, s = 1) {
       d.position.set(bx + li * 0.05, by + li * 0.13, bz); d.rotation.y = ci + li * 0.8; g.add(d);
     });
   });
-  scene.add(g); treeProcs.push(g); return g;
+  scene.add(g); treeProcs.push(g); const tid = 'tree' + treeSeq++; g.userData.tid = tid; regPart(tid, g, false, { x: x, z: z, ry: 0, rot: false, wide: true }); return g;
 }
 tree(-12.5, -23.5, 0.9); tree(16.8, -20.5, 1.0); tree(-15.8, -7.5, 1.15);
 tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8, -26.5, 1.1); tree(7.8, -26.5, 1.1); tree(-16.6, -7.6, 1.05); tree(-13.5, 12.3, 1.1); tree(-6.8, 13.2, 0.95); tree(4.2, 13.4, 1.15); tree(10.5, 12.6, 0.9); tree(16.3, 12.8, 1.0); tree(16.6, 2.0, 1.1); tree(16.4, -3.5, 0.95);
@@ -717,6 +724,7 @@ new GLTFLoader().load('models/tree.glb?v=103', (gltf) => {
     c.position.copy(p.position);
     c.rotation.y = (p.position.x * 1.37 + p.position.z * 2.11) % (Math.PI * 2);
     scene.add(c);
+    if (p.userData.tid) regPart(p.userData.tid, c, false, null, true);
     scene.remove(p);
   }
 }, undefined, () => { /* model failed to load - procedural trees stay */ });
@@ -840,7 +848,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objTree: '🌳 Cây xanh', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -876,7 +884,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objTree: '🌳 Tree', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3052,7 +3060,7 @@ function layoutSelect(id) {
   const rot = id && LAYOUT_ANCHORS[id].rot;
   document.getElementById('layRotL').style.display = rot ? '' : 'none';
   document.getElementById('layRotR').style.display = rot ? '' : 'none';
-  nameEl.textContent = id ? L()[LAYOUT_NAMES[id]] : '🔧 Layout';
+  nameEl.textContent = id ? L()[LAYOUT_NAMES[id] || 'objTree'] : '🔧 Layout';
   hintEl.textContent = L().layoutHint;
   if (id) syncLayoutProxy(id);
   else if (layoutRing) layoutRing.visible = false;
@@ -3130,8 +3138,10 @@ renderer.domElement.addEventListener('pointermove', (e) => {
   if (!layoutEdit || !layoutDragId) return;
   const p = layoutPointerGround(e); if (!p) return;
   const cur = layoutCur[layoutDragId];
-  cur.x = Math.max(-16.6, Math.min(16.6, p.x + layoutGrabDX));
-  cur.z = Math.max(-11.6, Math.min(13.4, p.z + layoutGrabDZ));
+  const wide = !!LAYOUT_ANCHORS[layoutDragId].wide;
+  const xLim = wide ? 20.5 : 16.6, zLo = wide ? -28 : -11.6, zHi = wide ? 15.5 : 13.4;
+  cur.x = Math.max(-xLim, Math.min(xLim, p.x + layoutGrabDX));
+  cur.z = Math.max(zLo, Math.min(zHi, p.z + layoutGrabDZ));
   applyLayoutId(layoutDragId);
   syncLayoutProxy(layoutDragId);
 });
@@ -3195,7 +3205,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.43.0';
+const PT3D_VER = '2.44.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
