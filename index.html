@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.57.1">
+<meta name="pt3d-ver" content="2.58.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.57.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.58.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -268,7 +268,8 @@ const LAYOUT_ANCHORS = {
   clock:  { x: -10.8, z: 4.0,  ry: 0, rot: true },
   shrine: { x: 11.6,  z: 0.5,  ry: -Math.PI / 2, rot: false },
   burner: { x: 0,     z: -8.6, ry: 0, rot: true },
-  pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true }
+  pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true },
+  bridgescene: { x: 6.0, z: 10.0, ry: 0, rot: true }
 };
 const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dominant up-facing surface sits at 0.057 of model height; x5.864 scale = 0.33 m, NO sinking (the v2.56.0 guess of 0.145 + a 0.30 sink buried the plinth and floated the cushions - Anita's screenshot caught both)
 const LAYOUT_COLS = {
@@ -276,7 +277,8 @@ const LAYOUT_COLS = {
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }, { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 }],
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
-  pavilion: [] // v2.56.0: open pavilion - no blocking collider; the terrace is walkable via groundY
+  pavilion: [], // v2.56.0: open pavilion - no blocking collider; the terrace is walkable via groundY
+  bridgescene: [{ x0: 3.3, x1: 4.95, z0: 6.2, z1: 13.8 }, { x0: 7.05, x1: 8.7, z0: 6.2, z1: 13.8 }] // pond banks flanking the bridge corridor
 };
 let layoutStore = {};
 try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
@@ -919,6 +921,51 @@ new GLTFLoader().load('models/pavilion2.glb?v=100', (gltf) => { // v2.56.0: open
   scene.add(wrap); regPart('pavilion', wrap, true);
 });
 
+/* ============ Pond + stone bridge scene (v2.58.0) ============
+   The last piece of Anita's Tripo-library haul: a ground lotus pond with
+   the carved stone bridge over it - placed in front of the pavilion so
+   you cross the bridge to reach it. One Layout cluster ('bridgescene'):
+   pond banks are colliders flanking the corridor, the deck itself is
+   walkable via the groundY profile above (measured from the model). */
+const pondGrp = new THREE.Group(); pondGrp.position.set(6.0, 0, 10.0);
+{
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(3.55, 28), new THREE.MeshStandardMaterial({ color: 0x4a3b28, roughness: 1 }));
+  soil.rotation.x = -Math.PI / 2; soil.position.y = -0.09; soil.scale.set(1, 0.8, 1); pondGrp.add(soil);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(3.28, 0.17, 10, 36), MAT.stone);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.03; rim.scale.set(1, 0.8, 0.55); rim.castShadow = true; rim.receiveShadow = true; pondGrp.add(rim);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(3.22, 28), new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.25 }));
+  water.rotation.x = -Math.PI / 2; water.position.y = -0.04; water.scale.set(1, 0.8, 1); pondGrp.add(water);
+  const padMat = new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.9 });
+  [[-2.2, -1.4, 0.4], [2.3, -1.0, 0.32], [-1.9, 1.6, 0.3], [2.1, 1.8, 0.42], [-2.6, 0.2, 0.26], [2.7, 0.4, 0.28]].forEach(([px, pz, pr]) => {
+    const pad = new THREE.Mesh(new THREE.CircleGeometry(pr, 14), padMat);
+    pad.rotation.x = -Math.PI / 2; pad.position.set(px, -0.02, pz); pondGrp.add(pad);
+  });
+  const petalMat = new THREE.MeshStandardMaterial({ color: 0xf2a7c3, roughness: 0.6 });
+  [[-2.2, -1.4], [2.1, 1.8]].forEach(([px, pz]) => {
+    const f = new THREE.Group(); f.position.set(px, -0.02, pz);
+    for (let i = 0; i < 6; i++) {
+      const holder = new THREE.Group(); holder.rotation.y = (i / 6) * Math.PI * 2; f.add(holder);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.085, 8, 8), petalMat);
+      p.position.set(0.05, 0.07, 0); p.scale.set(0.55, 1.25, 0.24); p.rotation.z = -0.3; holder.add(p);
+    }
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), MAT.gold); core.position.y = 0.05; f.add(core);
+    pondGrp.add(f);
+  });
+}
+scene.add(pondGrp); regPart('bridgescene', pondGrp, true);
+new GLTFLoader().load('models/bridge.glb?v=100', (gltf) => {
+  const m = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  const ctr = bb.getCenter(new THREE.Vector3());
+  m.position.set(-ctr.x, -bb.min.y, -ctr.z);
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const wrap = new THREE.Group(); wrap.add(m);
+  wrap.scale.setScalar(5.6 / size.z);
+  wrap.position.set(6.0, -0.437, 10.0); // sunk so the deck ends meet the lawn at 0
+  scene.add(wrap); regPart('bridgescene', wrap, false);
+});
+
 /* ============ Language VI/EN (v2.19.0) ============
    UI chrome only - the fortune texts (xam) and chant texts stay Vietnamese,
    as agreed: they are the content layer. Strings live in I18N; elements with a
@@ -947,7 +994,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Hồ sen + cầu đá', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -983,7 +1030,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Lotus pond & bridge', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -2032,6 +2079,20 @@ function groundY(x, z) {
     if (z < -12.25) return 1.0;
     if (z < -11.2) return 0.67;
     return 0.34;
+  }
+  const bc = layoutCur.bridgescene;
+  if (bc) {
+    const bdx = x - bc.x, bdz = z - bc.z;
+    const bco = Math.cos(bc.ry), bsi = Math.sin(bc.ry);
+    const lx = bdx * bco - bdz * bsi, lz = bdx * bsi + bdz * bco;
+    if (Math.abs(lx) < 1.05 && Math.abs(lz) < 3.4) {
+      const prof = [[-0.5, 0.078], [-0.429, 0.112], [-0.357, 0.135], [-0.286, 0.176], [-0.214, 0.212], [-0.143, 0.229], [-0.071, 0.233], [0, 0.233], [0.071, 0.233], [0.143, 0.23], [0.214, 0.212], [0.286, 0.176], [0.357, 0.139], [0.429, 0.111], [0.5, 0.078]];
+      const t = Math.max(-0.5, Math.min(0.5, lz / 5.6));
+      let dy = 0.078;
+      for (let i = 1; i < prof.length; i++) { if (t <= prof[i][0]) { dy = prof[i - 1][1] + (prof[i][1] - prof[i - 1][1]) * (t - prof[i - 1][0]) / (prof[i][0] - prof[i - 1][0]); break; } }
+      const h = (dy - 0.078) * 5.6;
+      if (h > 0) return h;
+    }
   }
   const pc = layoutCur.pavilion;
   if (pc) {
@@ -3103,7 +3164,7 @@ const layoutRay = new THREE.Raycaster();
 const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
-const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion' };
+const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge' };
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -3431,7 +3492,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.57.1';
+const PT3D_VER = '2.58.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
