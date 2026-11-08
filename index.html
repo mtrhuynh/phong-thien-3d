@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.19.2">
+<meta name="pt3d-ver" content="2.20.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.19.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.20.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -597,14 +597,26 @@ fallsTex.wrapS = fallsTex.wrapT = THREE.RepeatWrapping; fallsTex.repeat.set(1, 2
 const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide });
 {
   const wf = new THREE.Group(); wf.position.set(37, 0, -4); wf.rotation.y = -0.9; scene.add(wf);
-  const rockM = new THREE.MeshStandardMaterial({ color: 0x767c84, roughness: 1, flatShading: true });
-  const rock2M = new THREE.MeshStandardMaterial({ color: 0x8a9097, roughness: 1, flatShading: true });
-  const rb = (w, h, d, m, x, y, z) => { const q = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); q.position.set(x, y, z); q.castShadow = true; wf.add(q); return q; };
-  rb(9.5, 3, 6.5, rockM, 0, 1.5, 0); rb(7.2, 3.4, 5.2, rock2M, 0, 4.4, -0.4); rb(5.2, 3.4, 4.2, rockM, 0, 7.6, -0.7); rb(3.6, 1.8, 3.2, rock2M, 0, 9.9, -0.8);
+  /* papercut restyle (v2.20.0): warm layered paper-stone terraces instead of
+     plain grey blocks - each terrace is a matte slab in a warm gradient tone
+     topped by a thin overhanging cream 'paper sheet', so the strata read like
+     the layered edges in Anita's papercut house models */
+  const paperTones = [0xcfc3ab, 0xc2b498, 0xb5a586, 0xa8977a];
+  const sheetM = new THREE.MeshStandardMaterial({ color: 0xe9dfc6, roughness: 1 });
+  const rb = (w, h, d, tone, x, y, z) => {
+    const q = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: tone, roughness: 1, flatShading: true }));
+    q.position.set(x, y, z); q.castShadow = true; wf.add(q);
+    const s = new THREE.Mesh(new THREE.BoxGeometry(w + 0.5, 0.22, d + 0.5), sheetM);
+    s.position.set(x, y + h / 2 + 0.11, z); s.castShadow = true; wf.add(s);
+    return q;
+  };
+  rb(9.5, 3, 6.5, paperTones[0], 0, 1.5, 0); rb(7.2, 3.4, 5.2, paperTones[1], 0, 4.4, -0.4); rb(5.2, 3.4, 4.2, paperTones[2], 0, 7.6, -0.7); rb(3.6, 1.8, 3.2, paperTones[3], 0, 9.9, -0.8);
   const f1 = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 9.4), fallsMat); f1.position.set(0, 5.2, 2.45); f1.rotation.x = 0.05; wf.add(f1);
   const f2 = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 3.4), fallsMat); f2.position.set(0, 1.1, 3.6); f2.rotation.x = -0.55; wf.add(f2);
   const pool = new THREE.Mesh(new THREE.CircleGeometry(3.8, 22), new THREE.MeshStandardMaterial({ color: 0x3d7a99, roughness: 0.3 }));
   pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.04, 5.2); wf.add(pool);
+  const foamM = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
+  [[1.7, 3.26, 2.75], [2.1, 0.07, 4.5]].forEach(([r, y, z]) => { const fm = new THREE.Mesh(new THREE.CircleGeometry(r, 20), foamM); fm.rotation.x = -Math.PI / 2; fm.position.set(0, y, z); wf.add(fm); });
   for (let i = 0; i < 3; i++) {
     const mist = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false }));
     mist.scale.set(3.6, 1.7, 1); mist.position.set((i - 1) * 1.1, 0.8, 3.4 + (i % 2) * 0.7); wf.add(mist);
@@ -706,7 +718,8 @@ try { dnMode = localStorage.getItem('pt3d-daynight') || 'auto'; } catch (e) {}
 let dnCur = -1;
 const DN = { bgD: new THREE.Color(0xd9edf8), bgN: new THREE.Color(0x0c1828), fogD: new THREE.Color(0xf0d3a2), fogN: new THREE.Color(0x14253f),
              sunD: new THREE.Color(0xffdfae), sunN: new THREE.Color(0xa8c4ff), ringD: new THREE.Color(0xffffff), ringN: new THREE.Color(0x2e4258),
-             fallD: new THREE.Color(0xffffff), fallN: new THREE.Color(0x9fc0e8) };
+             fallD: new THREE.Color(0xffffff), fallN: new THREE.Color(0x9fc0e8),
+             domeD: new THREE.Color(0xffffff), domeN: new THREE.Color(0x2b3a56) };
 function dnTarget() {
   if (dnMode === 'night') return 1;
   if (dnMode === 'day') return 0;
@@ -749,6 +762,8 @@ function dnApply(f) {
   sun.intensity = 2.15 + (0.22 - 2.15) * f; sun.color.lerpColors(DN.sunD, DN.sunN, f);
   hemi.intensity = 1.05 + (0.30 - 1.05) * f;
   if (bgRingMesh) bgRingMesh.material.color.lerpColors(DN.ringD, DN.ringN, f);
+  skyDome.material.color.lerpColors(DN.domeD, DN.domeN, f);
+  renderer.toneMappingExposure = 1.12 + (0.60 - 1.12) * f;
   lampGlowMat.opacity = f * 0.8;
   starMat.opacity = f * 0.95; moonMat.opacity = f * 0.85; moonCoreMat.opacity = f;
   fallsMat.color.lerpColors(DN.fallD, DN.fallN, f);
@@ -982,10 +997,16 @@ function stoneLantern(x, z) {
   const lampMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffa04a, emissiveIntensity: 1.5 });
   box(0.4, 0.34, 0.4, lampMat, 0, 1.12, 0, g);
   box(0.5, 0.06, 0.5, MAT.stone, 0, 1.32, 0, g);
-  const rf = new THREE.Mesh(new THREE.ConeGeometry(0.56, 0.34, 4), MAT.roofRidge);
-  rf.rotation.y = Math.PI / 4; rf.position.y = 1.52; rf.castShadow = true; g.add(rf);
+  /* papercut layered cap (v2.20.0): cream paper sheet + two terracotta strata */
+  const sTerraM = new THREE.MeshStandardMaterial({ color: 0xb26a4c, roughness: 0.9 });
+  const sCreamM = new THREE.MeshStandardMaterial({ color: 0xefe3c8, roughness: 0.95 });
+  box(0.58, 0.05, 0.58, sCreamM, 0, 1.375, 0, g);
+  const rf = new THREE.Mesh(new THREE.ConeGeometry(0.56, 0.3, 4), sTerraM);
+  rf.rotation.y = Math.PI / 4; rf.position.y = 1.55; rf.castShadow = true; g.add(rf);
+  const rf2 = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.2, 4), sTerraM);
+  rf2.rotation.y = Math.PI / 4; rf2.position.y = 1.76; rf2.castShadow = true; g.add(rf2);
   const jewel = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), MAT.gold);
-  jewel.position.y = 1.76; g.add(jewel);
+  jewel.position.y = 1.93; g.add(jewel);
   scene.add(g);
 }
 stoneLantern(-2.4, -1.2); stoneLantern(2.4, -1.2); stoneLantern(-2.4, 5.2); stoneLantern(2.4, 5.2);
@@ -1052,8 +1073,17 @@ const cushionSpots = [];
     const bm = box(7.6, 0.16, 0.2, beamM, px, 2.86, pz + oz, scene); bm.castShadow = true;
     [-1, 1].forEach(sd => { const tip = box(0.7, 0.13, 0.18, beamM, px + sd * 3.95, 3.02, pz + oz, scene); tip.rotation.z = sd * 0.42; });
   });
-  const roofSlab = box(7.0, 0.1, 5.2, MAT.roofRidge, px, 3.06, pz, scene); roofSlab.castShadow = true;
-  box(4.6, 0.09, 3.4, MAT.roofRidge, px, 3.38, pz, scene);
+  /* papercut layered roof (v2.20.0): thin warm terracotta + cream strata
+     stacked with slight offsets, like the paper roofs in Anita's models */
+  const pTerraM = new THREE.MeshStandardMaterial({ color: 0xb26a4c, roughness: 0.9 });
+  const pTerra2M = new THREE.MeshStandardMaterial({ color: 0x9d5a40, roughness: 0.9 });
+  const pCreamM = new THREE.MeshStandardMaterial({ color: 0xefe3c8, roughness: 0.95 });
+  box(7.3, 0.07, 5.5, pCreamM, px, 2.97, pz, scene);
+  const roofSlab = box(7.0, 0.12, 5.2, pTerraM, px, 3.07, pz, scene); roofSlab.castShadow = true;
+  box(6.6, 0.07, 4.9, pTerra2M, px, 3.17, pz, scene);
+  box(4.9, 0.07, 3.6, pCreamM, px, 3.3, pz, scene);
+  box(4.6, 0.11, 3.4, pTerraM, px, 3.39, pz, scene);
+  box(4.2, 0.07, 3.1, pTerra2M, px, 3.48, pz, scene);
   const tatM = new THREE.MeshStandardMaterial({ color: 0xd9c491, roughness: 0.95 });
   [13.1, 14.9].forEach(tx => { const tm = box(1.15, 0.035, 3.9, tatM, tx, 0.2, pz, scene); tm.receiveShadow = true; });
   [13.1, 14.9].forEach(tx => [7.3, 8.6, 9.9].forEach(tz => { const c = cushion(tx, tz); c.position.y = 0.22; cushionSpots.push(c); }));
@@ -2685,7 +2715,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.19.2';
+const PT3D_VER = '2.20.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
