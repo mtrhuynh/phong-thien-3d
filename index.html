@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.58.0">
+<meta name="pt3d-ver" content="2.58.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.58.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.58.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -278,7 +278,7 @@ const LAYOUT_COLS = {
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }, { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 }],
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
   pavilion: [], // v2.56.0: open pavilion - no blocking collider; the terrace is walkable via groundY
-  bridgescene: [{ x0: 3.3, x1: 4.95, z0: 6.2, z1: 13.8 }, { x0: 7.05, x1: 8.7, z0: 6.2, z1: 13.8 }] // pond banks flanking the bridge corridor
+  bridgescene: [{ x0: 3.3, x1: 5.42, z0: 6.2, z1: 13.8 }, { x0: 6.58, x1: 8.7, z0: 6.2, z1: 13.8 }] // pond banks; corridor capped at +-0.58 m (measured railing inner faces at +-0.80 m)
 };
 let layoutStore = {};
 try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
@@ -2085,7 +2085,7 @@ function groundY(x, z) {
     const bdx = x - bc.x, bdz = z - bc.z;
     const bco = Math.cos(bc.ry), bsi = Math.sin(bc.ry);
     const lx = bdx * bco - bdz * bsi, lz = bdx * bsi + bdz * bco;
-    if (Math.abs(lx) < 1.05 && Math.abs(lz) < 3.4) {
+    if (Math.abs(lx) < 0.80 && Math.abs(lz) < 3.4) {
       const prof = [[-0.5, 0.078], [-0.429, 0.112], [-0.357, 0.135], [-0.286, 0.176], [-0.214, 0.212], [-0.143, 0.229], [-0.071, 0.233], [0, 0.233], [0.071, 0.233], [0.143, 0.23], [0.214, 0.212], [0.286, 0.176], [0.357, 0.139], [0.429, 0.111], [0.5, 0.078]];
       const t = Math.max(-0.5, Math.min(0.5, lz / 5.6));
       let dy = 0.078;
@@ -3492,7 +3492,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.58.0';
+const PT3D_VER = '2.58.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
