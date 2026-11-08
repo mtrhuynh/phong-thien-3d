@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.19.1">
+<meta name="pt3d-ver" content="2.19.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.19.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.19.2</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -789,12 +789,14 @@ btnMenu.addEventListener('click', () => {
   const open = document.getElementById('actions').classList.toggle('open');
   btnMenu.classList.toggle('on', open);
 });
+let sitting = false;
 function setActionLabels() {
   const d = L();
   const set = (id, txt) => { const b = document.getElementById(id); if (b && b.querySelector('.lb')) b.querySelector('.lb').textContent = txt; };
   set('btnSit', sitting ? d.aStand : d.aSit); set('btnBow', d.aBow); set('btnMala', d.aMala); set('btnXam', d.aXam); set('btnSala', d.aSala);
   set('btnHall', room === 'hall' ? d.aHallOut : d.aHallIn);
-  set('btnIncense', incenseCounting() ? d.tBurnLeft(fmtBurn()) : d.aInc);
+  const bl = room === 'hall' ? (typeof hallLit !== 'undefined' && hallLit ? hallLeft : -1) : (typeof incenseLit !== 'undefined' && incenseLit ? incenseLeft : -1);
+  set('btnIncense', bl >= 0 ? d.tBurnLeft(Math.floor(Math.max(0, bl) / 60) + ':' + String(Math.floor(Math.max(0, bl) % 60)).padStart(2, '0')) : d.aInc);
   set('btnSweep', d.aSweep + ' (' + leafPiles.length + ')');
 }
 function applyLang() {
@@ -836,10 +838,10 @@ function refreshTags() {
   if (window.__paviTag) { window.__paviTag.material.map = nameTag(L().paviName, L().paviSub).material.map; window.__paviTag.material.needsUpdate = true; }
 }
 function pt3dBootLang() {
-  if (typeof player === 'undefined' || typeof refreshBac !== 'function') { setTimeout(pt3dBootLang, 400); return; }
+  // Called only from after animate() starts (see below): by then `player`
+  // exists, so applyLang() can stamp the own name tag safely.
   try { applyLang(); } catch (e) { setTimeout(pt3dBootLang, 800); }
 }
-pt3dBootLang();
 
 
 /* ============ Lantern poles along the path ============ */
@@ -1058,8 +1060,8 @@ const cushionSpots = [];
   box(1.3, 0.3, 0.55, MAT.woodDark, 11.55, 0.33, pz, scene);
   cyl(0.03, 0.03, 0.16, MAT.gold, 11.25, 0.56, pz - 0.12, scene);
   cyl(0.03, 0.03, 0.16, MAT.gold, 11.85, 0.56, pz - 0.12, scene);
-  scene.add(makeFlame(11.25, 0.66, pz - 0.12, 0.45));
-  scene.add(makeFlame(11.85, 0.66, pz - 0.12, 0.45));
+  addFlame(scene, 11.25, 0.66, pz - 0.12, 0.45);
+  addFlame(scene, 11.85, 0.66, pz - 0.12, 0.45);
   cyl(0.09, 0.05, 0.07, MAT.bronze, 11.55, 0.52, pz + 0.1, scene);
   [-0.14, 0, 0.14].forEach(tilt => { const st = cyl(0.006, 0.006, 0.24, MAT.woodDark, 11.55, 0.62, pz + 0.1, scene); st.rotation.z = tilt; });
   const ptag = nameTag(L().paviName, L().paviSub); ptag.position.set(px, 3.85, pz); scene.add(ptag);
@@ -2361,6 +2363,7 @@ addEventListener('keyup', (e) => keysHeld.delete(e.key));
 addEventListener('blur', () => keysHeld.clear());
 
 animate();
+setTimeout(pt3dBootLang, 600);
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -2682,7 +2685,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.19.1';
+const PT3D_VER = '2.19.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
