@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.79.3">
+<meta name="pt3d-ver" content="2.80.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -78,6 +78,8 @@
   #chatSend { padding:8px 13px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(146,96,28,.85); color:#fff; font-size:14px; cursor:pointer; }
   #bubbleLayer { position:fixed; inset:0; z-index:28; pointer-events:none; overflow:hidden; }
   .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
+  #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
+  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; font-size:12.5px; padding:5px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); color:#ffe9bd; white-space:nowrap; }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
   #gainFx { position:fixed; left:50%; bottom:122px; transform:translateX(-50%); z-index:35; pointer-events:none; }
@@ -175,7 +177,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.79.3</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.80.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -215,7 +217,6 @@
 <div class="ui" id="actions">
   <button class="abtn" id="btnBow"><span class="ic">🙏</span><span class="lb"></span></button>
   <button class="abtn" id="btnMala"><span class="ic">📿</span><span class="lb"></span><span class="cnt" id="malaCnt">0/108</span></button>
-  <button class="abtn" id="btnIncense"><span class="ic">🕯️</span><span class="lb"></span></button>
   <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb"></span></button>
   <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb"></span></button>
   <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb"></span></button>
@@ -1221,8 +1222,6 @@ function setActionLabels() {
   const set = (id, txt) => { const b = document.getElementById(id); if (b && b.querySelector('.lb')) b.querySelector('.lb').textContent = txt; };
   set('btnSit', sitting ? d.aStand : d.aSit); set('btnBow', d.aBow); set('btnMala', d.aMala); set('btnXam', d.aXam); set('btnSala', d.aSala);
   set('btnHall', room === 'hall' ? d.aHallOut : d.aHallIn);
-  const bl = room === 'hall' ? (typeof hallLit !== 'undefined' && hallLit ? hallLeft : -1) : (typeof incenseLit !== 'undefined' && incenseLit ? incenseLeft : -1);
-  set('btnIncense', bl >= 0 ? d.tBurnLeft(Math.floor(Math.max(0, bl) / 60) + ':' + String(Math.floor(Math.max(0, bl) % 60)).padStart(2, '0')) : d.aInc);
   set('btnSweep', d.aSweep + ' (' + leafPiles.length + ')');
 }
 function applyLang() {
@@ -1751,8 +1750,9 @@ const hallCushions = [];
 [-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -17.4); c.position.y = 1.12; hallCushions.push(c); });
 [-5.0, -3.0, -1.0, 1.0, 3.0, 5.0].forEach(dx => { const c = cushion(dx, -19.8); c.position.y = 1.12; hallCushions.push(c); });
 const hallSmokes = [];
+let hallBurnerG = null;
 function hallBurner() {
-  const b = new THREE.Group(); b.position.set(0, 2.15, -22.72); b.scale.setScalar(0.34); scene.add(b);
+  const b = new THREE.Group(); b.position.set(0, 2.15, -22.72); b.scale.setScalar(0.34); scene.add(b); hallBurnerG = b;
   const urnPtsH = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
   const urnH = new THREE.Mesh(new THREE.LatheGeometry(urnPtsH, 22), MAT.bronze);
   urnH.castShadow = true; urnH.receiveShadow = true; b.add(urnH);
@@ -2324,6 +2324,40 @@ function setWalkTarget(v, cushion = null, incense = false) {
   P.sweepPile = null;
   P.mode = 'walk';
 }
+/* v2.80.0 (Anita): the incense control leaves the Menu bar and lives ON
+   the burners - a chip over each censer: '🕯️ Đốt nhang' when it is out,
+   the live countdown while it burns. Same walk-then-light flow as the
+   old button, per burner (the shrine censer shares the yard state). */
+const incenseChipWrap = document.createElement('div'); incenseChipWrap.id = 'incenseBtns'; document.body.appendChild(incenseChipWrap);
+const __incV = new THREE.Vector3();
+function incenseChipTap(ch) {
+  if (ch.hall) { if (hallLit) { toast(L().tIncenseHallBusy(Math.ceil(hallLeft))); return; } }
+  else if (incenseLit) { toast(L().tIncenseBusy(Math.ceil(incenseLeft))); return; }
+  const f = ch.front();
+  if (player.position.distanceTo(f) < 0.7) lightIncense();
+  else { if (P.mode === 'seated') standUp(); setWalkTarget(f, null, true); }
+}
+const incenseChips = [
+  { el: null, grp: () => burner, dy: 2.35, hall: false, front: () => new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9) },
+  { el: null, grp: () => shrineBurner, dy: 2.35, hall: false, front: () => new THREE.Vector3(shrineBurner.position.x - 1.8, 0, shrineBurner.position.z) },
+  { el: null, grp: () => hallBurnerG, dy: 1.15, hall: true, front: () => new THREE.Vector3(0, 0, -21.15) },
+];
+function updateIncenseChips() {
+  for (const ch of incenseChips) {
+    if (!ch.el) { ch.el = document.createElement('button'); ch.el.className = 'incChip'; ch.el.addEventListener('click', () => incenseChipTap(ch)); incenseChipWrap.appendChild(ch.el); }
+    const g = ch.grp();
+    if (!g || window.__layoutEdit || (ch.hall ? room !== 'hall' : room !== 'yard') || player.position.distanceTo(g.position) >= 24) { ch.el.style.display = 'none'; continue; }
+    const lit = ch.hall ? hallLit : incenseLit, left = ch.hall ? hallLeft : incenseLeft;
+    const txt = lit ? '🔥 ' + L().tBurnLeft(Math.floor(Math.max(0, left) / 60) + ':' + String(Math.floor(Math.max(0, left) % 60)).padStart(2, '0')) : '🕯️ ' + L().aInc;
+    if (ch.el.textContent !== txt) ch.el.textContent = txt;
+    __incV.copy(g.position); __incV.y += ch.dy; __incV.project(camera);
+    if (__incV.z > 1 || __incV.z < -1) { ch.el.style.display = 'none'; continue; }
+    ch.el.style.display = '';
+    ch.el.style.left = (__incV.x * 0.5 + 0.5) * innerWidth + 'px';
+    ch.el.style.top = (-__incV.y * 0.5 + 0.5) * innerHeight + 'px';
+  }
+}
+
 function sitDown(cushion) {
   P.mode = 'seated';
   P.seatedOn = cushion || null;
@@ -2459,7 +2493,6 @@ function toast(msg, ms = 2600) {
 }
 const btnBow = document.getElementById('btnBow');
 const btnMala = document.getElementById('btnMala');
-const btnIncense = document.getElementById('btnIncense');
 const malaCntEl = document.getElementById('malaCnt');
 const senEl = document.getElementById('pSen');
 let mala = 0, sen = stats.sen || 0, malaPulse = 0;
@@ -2486,21 +2519,6 @@ btnMala.addEventListener('click', () => {
     mala = 0; malaCntEl.textContent = '0/108'; addSen(10);
   } else if (mala % 27 === 0) toast(L().tMalaN(mala));
 });
-btnIncense.addEventListener('click', () => {
-  if (room === 'hall') {
-    if (hallLit) { toast(L().tIncenseHallBusy(Math.ceil(hallLeft))); return; }
-    const frontH = new THREE.Vector3(0, 0, -21.15);
-    if (player.position.distanceTo(frontH) < 0.7) lightIncense();
-    else { if (P.mode === 'seated') standUp(); setWalkTarget(frontH, null, true); }
-    return;
-  }
-  if (incenseLit) { toast(L().tIncenseBusy(Math.ceil(incenseLeft))); return; }
-  const front = new THREE.Vector3(burner.position.x, 0, burner.position.z + 1.9);
-  if (player.position.distanceTo(front) < 0.7) lightIncense();
-  else { if (P.mode === 'seated') standUp(); setWalkTarget(front, null, true); }
-});
-const incenseLb = document.querySelector('#btnIncense .lb');
-let incenseShown = '';
 function lightIncense() {
   bumpDaily('ic');
   ptSend({ k: 'inc', r: room }); ptTrack(true);
@@ -2841,11 +2859,6 @@ function animate() {
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
   if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast(L().tIncenseOut); } }
   if (hallLeft > 0) { hallLeft -= dt; if (hallLeft <= 0) { setHallLit(false); toast(L().tIncenseHallOut); } }
-  if (incenseLb) {
-    const burnLeft = room === 'hall' ? (hallLit ? hallLeft : -1) : (incenseLit ? incenseLeft : -1);
-    const s = burnLeft >= 0 ? 'Còn ' + Math.floor(Math.max(0, burnLeft) / 60) + ':' + String(Math.floor(Math.max(0, burnLeft) % 60)).padStart(2, '0') : 'Đốt nhang';
-    if (s !== incenseShown) { incenseShown = s; incenseLb.textContent = s; }
-  }
   /* smoke */
   const boost = smokeBoost > 0 ? 1 : 0;
   if (smokeBoost > 0) smokeBoost -= dt;
@@ -2902,7 +2915,7 @@ function animate() {
     const bs = f.g.userData.bs;
     f.g.scale.set(bs * (1 + Math.sin(t * 17 + f.seed * 9) * 0.07), bs * (1 + Math.sin(t * 15 + f.seed * 7) * 0.13), bs);
   });
-  updateCushionBtns(); updateChatBubbles();
+  updateCushionBtns(); updateChatBubbles(); updateIncenseChips();
 
   /* fortune jar shake */
   if (xamAnimT >= 0) {
@@ -3986,7 +3999,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.79.3';
+const PT3D_VER = '2.80.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
