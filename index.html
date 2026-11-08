@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.61.0">
+<meta name="pt3d-ver" content="2.62.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.61.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.62.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -880,7 +880,7 @@ const fallsFlowMat = new THREE.ShaderMaterial({
   uniforms: { uTime: fallsFlowU },
   transparent: true, depthWrite: false,
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float w = sin(vY * 150.0 - uTime * 7.0 + sin(vX * 80.0) * 2.2); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.25, 0.65, vSlope); float a = 0.10 + streak * 0.38; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float w = sin(vY * 150.0 + uTime * 7.0 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.25, 0.65, vSlope); float a = 0.08 + streak * 0.30; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
 });
 new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   const m = gltf.scene;
@@ -986,7 +986,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Về bố cục mặc định?', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1022,7 +1022,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset to the default layout?', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3208,6 +3208,7 @@ layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-siz
   + '<button class="laybtn" id="layType"></button>'
   + '<button class="laybtn" id="layDel"></button>'
   + '<button class="laybtn" id="layCode"></button>'
+  + '<button class="laybtn" id="layUndo"></button>'
   + '<button class="laybtn" id="layReset"></button>'
   + '<button class="laybtn" id="layLock"></button></div>';
 document.body.appendChild(layoutPanel);
@@ -3288,6 +3289,7 @@ function setLayoutEdit(on) {
     document.getElementById('layType').textContent = L().layType;
     document.getElementById('layDel').textContent = L().layDel;
     document.getElementById('layCode').textContent = L().layoutCode;
+    document.getElementById('layUndo').textContent = L().layUndo;
     document.getElementById('layReset').textContent = L().layoutReset;
     document.getElementById('layLock').textContent = L().layoutLock;
     buildLayoutProxies();
@@ -3303,6 +3305,7 @@ document.getElementById('btnLayout').addEventListener('click', () => setLayoutEd
 document.getElementById('layLock').addEventListener('click', () => setLayoutEdit(false));
 function layoutRotate(dir) {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].rot) return;
+  layoutSnapshot();
   layoutCur[layoutSel].ry += dir * Math.PI / 12;
   applyLayoutId(layoutSel);
   syncLayoutProxy(layoutSel);
@@ -3320,6 +3323,7 @@ document.getElementById('layCode').addEventListener('click', () => {
   try {
     const o = JSON.parse(v);
     if (!o || typeof o !== 'object') return;
+    layoutSnapshot();
     layoutStore = o;
     try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
     for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
@@ -3329,11 +3333,45 @@ document.getElementById('layCode').addEventListener('click', () => {
 });
 document.getElementById('layReset').addEventListener('click', () => {
   if (!confirm(L().layoutResetQ)) return;
+  layoutSnapshot();
   layoutStore = {};
   try { localStorage.removeItem(LAYOUT_KEY); } catch (e) {}
   for (const id in LAYOUT_ANCHORS) { const a = LAYOUT_ANCHORS[id]; layoutCur[id] = { x: a.x, z: a.z, ry: a.ry }; applyLayoutId(id); syncLayoutProxy(id); }
   refreshTreeVisibility();
 });
+const layoutUndoStack = [];
+let layoutPendingSnap = null, layoutLastTap = null;
+function layoutSnapshot() {
+  layoutUndoStack.push(JSON.stringify(layoutStore));
+  if (layoutUndoStack.length > 30) layoutUndoStack.shift();
+}
+function layoutUndo() {
+  const snap = layoutUndoStack.pop();
+  if (!snap) { toast(L().layoutUndoNone); return; }
+  layoutStore = JSON.parse(snap);
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+  for (let i = layoutParts.length - 1; i >= 0; i--) {
+    const p = layoutParts[i];
+    if (p.obj && p.obj.userData && p.obj.userData.dupCreated && !layoutStore[p.id]) {
+      if (p.obj.parent) p.obj.parent.remove(p.obj);
+      layoutParts.splice(i, 1);
+      delete LAYOUT_ANCHORS[p.id];
+      delete layoutCur[p.id];
+    }
+  }
+  for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); }
+  for (const p of layoutParts) {
+    if (!p.obj.parent && !(layoutStore[p.id] && layoutStore[p.id].del)) { scene.add(p.obj); p.obj.visible = true; }
+  }
+  for (const p of [...layoutParts]) {
+    if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.obj.parent && !(layoutStore[p.id] && layoutStore[p.id].del) && treeTypeOf(p.id) !== p.builtType) swapTreeModel(p.id);
+  }
+  rebuildDupTrees();
+  refreshTreeVisibility();
+  if (layoutEdit) { buildLayoutProxies(); layoutSelect(layoutSel && LAYOUT_ANCHORS[layoutSel] ? layoutSel : null); for (const id in LAYOUT_ANCHORS) syncLayoutProxy(id); }
+  toast(L().layoutUndoDone);
+}
+document.getElementById('layUndo').addEventListener('click', layoutUndo);
 let layoutGrabDX = 0, layoutGrabDZ = 0;
 function layoutPointerGround(e) {
   const nd = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
@@ -3346,12 +3384,24 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
   layoutRay.setFromCamera(nd, camera);
   const hits = layoutRay.intersectObjects([...layoutProxies.values()], false);
   if (hits.length) {
-    const id = hits[0].object.userData.layoutId;
+    /* v2.62.0: pick the SMALLEST proxy under the tap - a small object next
+       to a big one used to be unselectable because the big box always won
+       the raycast. Tapping the same spot again (without dragging) cycles
+       to the next candidate under the tap. */
+    const cands = hits.map(h => { const sz = h.object.userData.sz; return { id: h.object.userData.layoutId, vol: sz.w * sz.d, d: h.distance }; }).sort((a, b) => a.vol - b.vol || a.d - b.d);
+    let ci = 0;
+    if (layoutLastTap && !layoutLastTap.moved && Math.abs(e.clientX - layoutLastTap.x) < 6 && Math.abs(e.clientY - layoutLastTap.y) < 6) {
+      const cur = cands.findIndex(c => c.id === layoutSel);
+      if (cur >= 0) ci = (cur + 1) % cands.length;
+    }
+    layoutLastTap = { x: e.clientX, y: e.clientY, moved: false };
+    const id = cands[ci].id;
+    layoutPendingSnap = JSON.stringify(layoutStore);
     layoutSelect(id);
     const p = layoutPointerGround(e), cur = layoutCur[id];
     if (p && cur) { layoutGrabDX = cur.x - p.x; layoutGrabDZ = cur.z - p.z; }
     layoutDragId = id;
-  } else layoutSelect(null);
+  } else { layoutSelect(null); layoutLastTap = null; }
 });
 renderer.domElement.addEventListener('pointermove', (e) => {
   if (!layoutEdit || !layoutDragId) return;
@@ -3365,7 +3415,15 @@ renderer.domElement.addEventListener('pointermove', (e) => {
   syncLayoutProxy(layoutDragId);
 });
 window.addEventListener('pointerup', () => {
-  if (layoutDragId) { saveLayoutId(layoutDragId); layoutDragId = null; unstickPlayer(); }
+  if (layoutDragId) {
+    saveLayoutId(layoutDragId); layoutDragId = null; unstickPlayer();
+    if (layoutPendingSnap) {
+      const changed = JSON.stringify(layoutStore) !== layoutPendingSnap;
+      if (changed) { layoutUndoStack.push(layoutPendingSnap); if (layoutUndoStack.length > 30) layoutUndoStack.shift(); }
+      if (layoutLastTap) layoutLastTap.moved = changed;
+      layoutPendingSnap = null;
+    }
+  }
 });
 /* v2.55.0: if a dragged/rotated building lands on the avatar, push the
    avatar out of the colliders instead of leaving it trapped inside. */
@@ -3394,7 +3452,7 @@ function rebuildDupTrees() {
     c.scale.setScalar(TREE_TYPES[type].h / treeProtoH[type] * sAuth);
     scene.add(c);
     layoutCur[id] = layoutEntry(id);
-    c.userData.tid = id;
+    c.userData.tid = id; c.userData.dupCreated = true;
     regPart(id, c, false, null, false);
     const np = layoutParts[layoutParts.length - 1];
     np.sAuth = sAuth; np.builtType = type;
@@ -3402,6 +3460,7 @@ function rebuildDupTrees() {
 }
 function layoutResize(f) {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  layoutSnapshot();
   const cur = layoutCur[layoutSel];
   cur.sc = Math.max(0.5, Math.min(2.6, (cur.sc || 1) * f));
   cur.sc = Math.round(cur.sc * 1000) / 1000;
@@ -3417,6 +3476,7 @@ document.getElementById('layDup').addEventListener('click', () => {
   if (!treeProtos[srcType]) { toast(L().layoutHint); return; }
   const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
   if (!parts.length) return;
+  layoutSnapshot();
   const src = parts[parts.length - 1].obj;
   const cur = layoutCur[layoutSel];
   const nid = 'tree' + treeSeq++;
@@ -3431,7 +3491,7 @@ document.getElementById('layDup').addEventListener('click', () => {
   c.scale.setScalar(src.scale.x);
   scene.add(c);
   layoutCur[nid] = layoutEntry(nid);
-  c.userData.tid = nid;
+  c.userData.tid = nid; c.userData.dupCreated = true;
   regPart(nid, c, false, null, false);
   const npd = layoutParts[layoutParts.length - 1];
   npd.sAuth = parts[parts.length - 1].sAuth !== undefined ? parts[parts.length - 1].sAuth : 1; npd.builtType = srcType;
@@ -3440,6 +3500,7 @@ document.getElementById('layDup').addEventListener('click', () => {
 });
 document.getElementById('layType').addEventListener('click', () => {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
+  layoutSnapshot();
   const nt = (treeTypeOf(layoutSel) + 1) % TREE_TYPES.length;
   layoutStore[layoutSel] = Object.assign({}, layoutStore[layoutSel], { tt: nt });
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
@@ -3449,6 +3510,7 @@ document.getElementById('layType').addEventListener('click', () => {
 document.getElementById('layDel').addEventListener('click', () => {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
   if (!confirm(L().layoutDelQ)) return;
+  layoutSnapshot();
   const id = layoutSel;
   for (const p of layoutParts.filter(p => p.id === id)) {
     const ti = treeProcs.indexOf(p.obj);
@@ -3521,7 +3583,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.61.0';
+const PT3D_VER = '2.62.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
