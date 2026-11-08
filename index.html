@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.81.1">
+<meta name="pt3d-ver" content="2.81.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -79,11 +79,11 @@
   #bubbleLayer { position:fixed; inset:0; z-index:28; pointer-events:none; overflow:hidden; }
   .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
   #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; font-size:12.5px; padding:5px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); color:#ffe9bd; white-space:nowrap; }
+  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; font-size:12.5px; padding:5px 11px; border:none; background:none; color:#ffe9bd; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
   #worldBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); font-size:12.5px; color:#ffe9bd; line-height:1; padding:6px 11px; white-space:nowrap; }
+  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; border:none; background:none; font-size:12.5px; color:#ffe9bd; line-height:1; padding:6px 11px; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
   #seatBtns { position:fixed; z-index:30; display:none; gap:8px; transform:translate(-50%,-100%); pointer-events:none; }
-  .seatChip { pointer-events:auto; cursor:pointer; min-width:38px; height:38px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.85); font-size:16px; color:#ffe9bd; line-height:1; padding:0 8px; }
+  .seatChip { pointer-events:auto; cursor:pointer; min-width:38px; height:38px; border:none; background:none; font-size:15px; color:#ffe9bd; line-height:1; padding:0 8px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
   #gainFx { position:fixed; left:50%; bottom:122px; transform:translateX(-50%); z-index:35; pointer-events:none; }
@@ -181,7 +181,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.81.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.81.2</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2453,7 +2453,7 @@ let cushionBtns = null, cushionBtnLang = '';
 function buildCushionBtns() {
   cushionBtns = activeCushions().map(c => {
     const el = document.createElement('button');
-    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:1px solid rgba(255,210,120,.65);background:rgba(43,30,16,.78);color:#ffe9b0;border-radius:999px;padding:6px 9px;font-size:16px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;';
+    el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:none;background:none;color:#ffe9b0;padding:6px 9px;font-size:16px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55);';
     el.addEventListener('click', () => {
       if (P.mode === 'seated') { if (P.seatedOn === c) standUp(); return; }
       if (c.userData.occupied || c.userData.occupiedByPlayer || c.userData.remoteOcc) { toast(L().tOccupied); return; }
@@ -4052,7 +4052,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.81.1';
+const PT3D_VER = '2.81.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
