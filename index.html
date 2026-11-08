@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.73.0">
+<meta name="pt3d-ver" content="2.73.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.73.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.73.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -893,12 +893,13 @@ const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true,
    the yard, out from beside the hall); yaw +90 deg, cascade faces east. */
 regPart('falls', fallsGrp, true);
 const fallsFlowU = { value: 0 };
+const fallsGainU = { value: 1 }; // v2.73.1: dnApply dims the flow at night
 let fallsMistMat = null;
 const fallsFlowMat = new THREE.ShaderMaterial({
-  uniforms: { uTime: fallsFlowU },
+  uniforms: { uTime: fallsFlowU, uGain: fallsGainU },
   transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.5 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.06 + streak * 0.55; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+  fragmentShader: 'uniform float uTime; uniform float uGain; varying float vY; varying float vX; varying float vSlope; float hashf(float n) { return fract(sin(n) * 43758.5453); } void main() { float wx = vX * 60.0 + sin(vY * 90.0) * 0.8; float colId = floor(wx); float rnd = hashf(colId * 1.37); float speed = 4.0 + rnd * 4.0; float ph = vY * (120.0 + rnd * 60.0) + uTime * speed + rnd * 40.0; float w = sin(ph) * 0.5 + sin(ph * 2.33 + rnd * 9.0) * 0.3 + sin(ph * 0.37 - uTime * 1.3) * 0.2; float colFade = 0.35 + 0.65 * hashf(colId * 3.11); float broken = 0.55 + 0.45 * sin(vY * 34.0 - uTime * (2.0 + rnd * 2.0) + rnd * 20.0); float streak = smoothstep(0.25, 0.95, w) * colFade * broken; streak *= smoothstep(0.12, 0.45, vSlope); float sparkle = step(0.94, hashf(floor(vX * 300.0) + floor(vY * 300.0) * 57.0 + floor(uTime * 3.0) * 131.0)) * 0.06; float a = (0.05 + streak * 0.42 + sparkle) * uGain; vec3 col = mix(vec3(0.55, 0.78, 0.90), vec3(0.97), streak); gl_FragColor = vec4(col, a); }'
 });
 new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin
   const m = gltf.scene;
@@ -1116,7 +1117,7 @@ function dnApply(f) {
   if (bgRingMesh) bgRingMesh.material.color.lerpColors(DN.ringD, DN.ringN, f);
   skyDome.material.color.lerpColors(DN.domeD, DN.domeN, f);
   renderer.toneMappingExposure = 1.12 + (0.60 - 1.12) * f;
-  lampGlowMat.opacity = f * 0.8;
+  lampGlowMat.opacity = f * 0.8; fallsGainU.value = 1 - f * 0.55;;
   starMat.opacity = f * 0.95; moonMat.opacity = f * 0.85; moonCoreMat.opacity = f;
   fallsMat.color.lerpColors(DN.fallD, DN.fallN, f);
 }
@@ -3736,7 +3737,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.73.0';
+const PT3D_VER = '2.73.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
