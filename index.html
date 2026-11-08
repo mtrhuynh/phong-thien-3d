@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.36.1">
+<meta name="pt3d-ver" content="2.36.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -124,7 +124,7 @@
 <body>
 <div id="scene"></div>
 
-<div id="loading"><div class="spin">🪷</div><div data-i18n="loading">Đang dựng sân chùa…</div></div>
+<div id="loading"><div class="spin">🪷</div><div data-i18n="loading">Đang dựng sân chùa…</div><div id="bootTrace" style="margin-top:10px;font-size:11px;color:#cbb27f;max-width:82vw;word-break:break-word"></div></div>
 
 <div class="ui" id="ribbon" data-i18n="ribbon">🪷 Phòng thiền tự chơi — ngồi yên, thở nhẹ, mỉm cười. Có điều kiện, đến chùa thật vẫn tốt hơn 🙏</div>
 <a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.36.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.36.2</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -232,6 +232,25 @@ setTimeout(function () {
   if (ld) ld.innerHTML = '<div class="spin">🪷</div><div>Đang tải lâu hơn thường lệ…<br><button onclick="location.reload()" style="margin-top:12px;padding:10px 22px;border-radius:999px;border:0;background:#c9a45c;color:#241708;font-weight:700;font-size:15px">↻ Tải lại trang</button></div>';
 }, 25000);
 </script>
+<script>
+/* Boot diagnostics (v2.36.2, temporary): the loading card prints how far boot
+   got and the last error, so any browser can report the failure stage. */
+window.__boot = []; window.__bootErr = '';
+window.bootMark = function (s) { window.__boot.push(s); };
+window.addEventListener('error', function (e) {
+  window.__bootErr = 'ERR: ' + (e.message || 'unknown') + (e.filename ? ' @ ' + String(e.filename).split('/').pop() + ':' + e.lineno : '');
+}, true);
+window.addEventListener('unhandledrejection', function (e) {
+  window.__bootErr = 'REJECT: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
+});
+setInterval(function () {
+  var ld = document.getElementById('loading'); if (!ld) return;
+  var t = document.getElementById('bootTrace'); if (!t) return;
+  var txt = window.__boot.length ? window.__boot.join(' > ') : 'module chua chay';
+  if (window.__bootErr) txt += ' || ' + window.__bootErr;
+  if (t.textContent !== txt) t.textContent = txt;
+}, 600);
+</script>
 <script type="importmap">
 { "imports": {
   "three": "vendor/three.module.js",
@@ -244,10 +263,13 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const bootMark = window.bootMark || function () {};
+bootMark('imports-ok');
 
 /* ============ Renderer / Scene / Camera ============ */
 const container = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+bootMark('renderer-ok');
 let prLevel = Math.min(devicePixelRatio || 1, 1.5), prAcc = 0, prN = 0;
 renderer.setPixelRatio(prLevel);
 renderer.setSize(innerWidth, innerHeight);
@@ -2501,6 +2523,7 @@ function animate() {
   if (myPet) petFollow(myPet, player.position.x, player.position.z, player.rotation.y, dt, performance.now());
   renderer.render(scene, camera);
   if (firstFrame) {
+    bootMark('frame-1');
     firstFrame = false;
     const ld = document.getElementById('loading');
     ld.style.opacity = '0';
@@ -2527,6 +2550,7 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => keysHeld.delete(e.key));
 addEventListener('blur', () => keysHeld.clear());
 
+bootMark('scene-ok');
 animate();
 setTimeout(pt3dBootLang, 600);
 
@@ -2850,7 +2874,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.36.1';
+const PT3D_VER = '2.36.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
