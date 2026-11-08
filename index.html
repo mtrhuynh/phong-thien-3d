@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.82.0">
+<meta name="pt3d-ver" content="2.83.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -183,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.82.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.83.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -297,6 +297,7 @@ const __chatV = new THREE.Vector3();
 const LAYOUT_ANCHORS = {
   falls:  { x: -13.6, z: -1.5, ry: Math.PI / 2, rot: true },
   clock:  { x: -10.8, z: 4.0,  ry: 0, rot: true },
+  well:   { x: 13.2,  z: 5.6,  ry: -Math.PI / 2, rot: true },
   shrine: { x: 11.6,  z: 0.5,  ry: -Math.PI / 2, rot: false },
   burner: { x: 0,     z: -8.6, ry: 0, rot: true },
   pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true },
@@ -316,6 +317,7 @@ const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dom
 const LAYOUT_COLS = {
   falls:  [{ x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 }],
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
+  well:   [{ x0: 11.9, x1: 14.5, z0: 4.3, z1: 6.9 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }], // v2.63.1: bamboo collider gone with the grove
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
   pavilion: [], // v2.69.0: railing enforced by the radial fence in collide() - exact at any rotation
@@ -953,7 +955,7 @@ const fallsFlowMat = new THREE.ShaderMaterial({
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.5 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.06 + streak * 0.55; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
 });
-new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin
+new GLTFLoader().load('models/waterfall3.glb?v=100', (gltf) => { // v2.83.0: Tripo library 'rock waterfall fountain' (Anita's pick) - tiered rock cascade + round pond; replaces the waterfall garden in the same layout slot
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -964,7 +966,7 @@ new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Ani
   for (let i = 0; i < 3; i++) {
     const mist = new THREE.Sprite(mistMat);
     mist.scale.set(0.30, 0.14, 1);
-    mist.position.set((i - 1) * 0.11 + 0.03, 0.13, 0.18); // v2.68.0: at the new cascade's base pool
+    mist.position.set((i - 1) * 0.12, 0.10, 0.24); // v2.83.0: at the rock cascade's pond edge
     m.add(mist);
   }
   const wrap = new THREE.Group(); wrap.add(m);
@@ -977,13 +979,43 @@ new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Ani
      (extracted offline as falls-water.glb) with a shader running light
      streaks down the slope; the flat pool stays calm (slope-weighted).
      Same position offset as m, so it stays glued wherever Layout moves it. */
-  new GLTFLoader().load('models/falls2-water2.glb?v=100', (wg) => { // v2.71.2: STRICT re-extraction - the v1 mask's weak colour test (B>R+10) also caught light rock, so the flow painted the whole rockery (Anita); the new mask is water only, verified on a mask render
+  new GLTFLoader().load('models/falls3-water.glb?v=100', (wg) => { // v2.83.0: this model's own water (pond + both ribbons), extracted offline and verified on mask renders - the dark glassy ribbons needed geometry rules + region growth, colour alone kept missing them
     const wm = wg.scene;
     wm.position.copy(m.position);
     wm.traverse(o => { if (o.isMesh) { o.material = fallsFlowMat; o.castShadow = false; o.receiveShadow = false; } });
     wrap.add(wm);
   });
   if (fallsGrp) fallsGrp.visible = false;
+});
+
+/* v2.83.0: the library well (Anita's pick). Its baked water read as fake,
+   so the pool + spill sheet were cut out of the body offline and come
+   back as an overlay with a calm, deep-teal ripple shader. A layout
+   part like the falls - she can move it in the editor. */
+const wellFlowMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: fallsFlowU },
+  transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float rip = sin(vX * 120.0 + uTime * 1.3 + sin(vY * 90.0 + uTime * 0.9) * 1.6); float streak = smoothstep(0.55, 0.98, rip) * (0.35 + 0.65 * vSlope); float a = 0.85 + streak * 0.15; vec3 col = mix(vec3(0.36, 0.58, 0.66), vec3(0.88, 0.97, 1.0), streak); gl_FragColor = vec4(col, a); }'
+});
+new GLTFLoader().load('models/well.glb?v=100', (gltf) => {
+  const m = gltf.scene;
+  const bb = new THREE.Box3().setFromObject(m);
+  const size = bb.getSize(new THREE.Vector3());
+  const ctr = bb.getCenter(new THREE.Vector3());
+  m.position.set(-ctr.x, -bb.min.y, -ctr.z);
+  m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const wrap = new THREE.Group(); wrap.add(m);
+  wrap.scale.setScalar(2.5 / size.y);
+  wrap.position.set(13.2, 0, 5.6);
+  wrap.rotation.y = -Math.PI / 2;
+  scene.add(wrap); regPart('well', wrap, true);
+  new GLTFLoader().load('models/well-water.glb?v=100', (wg) => {
+    const wm = wg.scene;
+    wm.position.copy(m.position);
+    wm.traverse(o => { if (o.isMesh) { o.material = wellFlowMat; o.castShadow = false; o.receiveShadow = false; } });
+    wrap.add(wm);
+  });
 });
 
 /* ============ Pavilion (Tripo library 'ornate temple', v2.53.0) ============
@@ -1057,7 +1089,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1093,7 +1125,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -3516,7 +3548,7 @@ const layoutRay = new THREE.Raycaster();
 const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
-const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper' };
+const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper', well: 'objWell' };
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -4043,7 +4075,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.82.0';
+const PT3D_VER = '2.83.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
