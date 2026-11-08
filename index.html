@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.83.7">
+<meta name="pt3d-ver" content="2.84.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -183,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.83.7</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.84.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3233,7 +3233,7 @@ function ptSync() {
     if (k !== myGid && (pp.name || L().guest) === myNm) return;
     winKeys.add(k);
   });
-  [...remotes.keys()].forEach(k => { if (!winKeys.has(k)) { scene.remove(remotes.get(k).g); remotes.delete(k); } });
+  [...remotes.keys()].forEach(k => { if (!winKeys.has(k)) ptRemoveRemote(k); }); // v2.84.0: full removal - this path used to leave the pet fox orphaned in the yard (Anita)
   Object.keys(st).forEach(key => {
     if (key === myGid || !winKeys.has(key)) return;
     const metas = st[key]; if (!metas || !metas.length) return;
@@ -3244,7 +3244,7 @@ function ptSync() {
       const sx = pm ? pm.x : (typeof p.x === 'number' ? p.x : 0), sz = pm ? pm.z : (typeof p.z === 'number' ? p.z : 9.5);
       const sry = pm ? (pm.ry || 0) : (p.ry || 0), ssit = pm ? !!pm.sit : !!p.sit;
       const g = buildAvatar({ name: cleanName(p.name, L().guest), sub: [L().sects[p.sc] || '', bacSub(p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: (p.bd === 1 || p.bd === 2) ? p.bd : 0 });
-      g.position.set(sx, ssit ? 0.24 : 0, sz);
+      g.position.set(sx, 0, sz);
       r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: cleanName(p.name, L().guest), ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: (p.bd === 1 || p.bd === 2) ? p.bd : 0, sc: (p.sc >= 0 && p.sc <= 3) ? p.sc | 0 : 0, };
       remotes.set(key, r);
       if (ptBooted) toast(L().tJoined(r.name), 2000);
@@ -3301,6 +3301,13 @@ function ptSync() {
   ptSetPill();
   ptBooted = true;
 }
+function ptRemoveRemote(key) {
+  const r = remotes.get(key); if (!r) return;
+  if (r.sitCushion && r.sitCushion.userData.remoteOcc === key) r.sitCushion.userData.remoteOcc = null;
+  scene.remove(r.g);
+  if (r.pet) { scene.remove(r.pet); foxPets.delete(r.pet); r.pet = null; }
+  remotes.delete(key); pendingMv.delete(key);
+}
 function ptSweep() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
@@ -3308,7 +3315,7 @@ function ptSweep() {
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
     if (st[key]) { r.lastSeen = now; return; }
-    if (now - r.lastSeen > 12000) { if (r.sitCushion && r.sitCushion.userData.remoteOcc === key) r.sitCushion.userData.remoteOcc = null; scene.remove(r.g); if (r.pet) { scene.remove(r.pet); foxPets.delete(r.pet); } remotes.delete(key); }
+    if (now - r.lastSeen > 12000) ptRemoveRemote(key);
   });
 }
 let ptPrev = performance.now();
@@ -3326,7 +3333,7 @@ function ptAnim(now) {
     while (da > Math.PI) da -= Math.PI * 2;
     while (da < -Math.PI) da += Math.PI * 2;
     g.rotation.y += da * Math.min(1, dt * 8);
-    const targetY = groundY(g.position.x, g.position.z) + (r.sit ? 0.24 : 0);
+    const targetY = groundY(g.position.x, g.position.z); // v2.84.0: no more +0.24 lift - seated friends floated above their cushions (Anita)
     g.position.y += (targetY - g.position.y) * Math.min(1, dt * 8);
     const body = g.userData.bodyG;
     if (body) {
@@ -4038,7 +4045,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.83.7';
+const PT3D_VER = '2.84.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
