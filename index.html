@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.39.0">
+<meta name="pt3d-ver" content="2.40.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.39.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.40.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -700,7 +700,7 @@ const fallsTex = canvasTexture(256, 256, (g) => {
 fallsTex.wrapS = fallsTex.wrapT = THREE.RepeatWrapping; fallsTex.repeat.set(1, 2);
 const fallsMat = new THREE.MeshBasicMaterial({ map: fallsTex, transparent: true, opacity: 0.88, depthWrite: false, side: THREE.DoubleSide });
 {
-  const wf = new THREE.Group(); wf.position.set(-11.6, 0, 0.5); wf.rotation.y = Math.PI / 2; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
+  const wf = new THREE.Group(); wf.position.set(-11.6, 0, -1.5); wf.rotation.y = Math.PI / 2; wf.scale.setScalar(1.25); scene.add(wf); fallsGrp = wf;
   /* papercut boulder falls (v2.21.0, from Anita's waterfall reference): a LOW
      cluster of faceted warm-grey + sand boulders with a two-step cascade -
      not a terraced tower */
@@ -748,7 +748,7 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   }
   const wrap = new THREE.Group(); wrap.add(m);
   wrap.scale.setScalar(7.6 / size.x);
-  wrap.position.set(-11.6, 0, 0.5);
+  wrap.position.set(-11.6, 0, -1.5);
   wrap.rotation.y = Math.PI / 2;
   scene.add(wrap);
   if (fallsGrp) fallsGrp.visible = false;
@@ -1517,7 +1517,7 @@ document.getElementById('xamAgain').addEventListener('click', () => { xamCard.cl
 const waterDrops = [];
 let floatRod = null;
 {
-  const clockG = new THREE.Group(); clockG.position.set(-10.8, 0, -4.6); clockG.rotation.y = 0.55; scene.add(clockG);
+  const clockG = new THREE.Group(); clockG.position.set(-5.6, 0, -1.5); clockG.rotation.y = 0; scene.add(clockG);
   box(1.5, 0.25, 1.1, MAT.stone, 0, 0.12, 0, clockG);
   [[-0.6, -0.4], [0.6, -0.4], [-0.6, 0.4], [0.6, 0.4]].forEach(([px, pz]) => box(0.09, 1.55, 0.09, MAT.woodDark, px, 0.95, pz, clockG));
   box(1.45, 0.09, 1.0, MAT.woodDark, 0, 1.78, 0, clockG);
@@ -1555,7 +1555,7 @@ const leafGeo = (() => {
   return new THREE.ShapeGeometry(s, 6);
 })();
 /* leaf piles live at FIXED spots with ids, so every visitor's yard holds the same 11 piles and sweeping can be shared */
-const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-11.2, -6.9], [10.9, -6.9], [-8.6, 4.9], [9.7, 7.8], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [15.9, 12.6], [-5.5, -2.2]];
+const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-11.2, -6.9], [10.9, -6.9], [-8.6, 4.9], [9.7, 7.8], [-4.5, 9.5], [4.5, 9.5], [-13.5, 10.5], [15.9, 12.6], [-6.8, 2.6]];
 const leafGoneAt = new Map();
 let remoteSweeps = [];
 function updateLeafBtn() {
@@ -1887,7 +1887,7 @@ const COLLIDERS = [
   { x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 },     // dien tho shrine (v2.29.0: east-mid yard)
   { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
   { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 },      // bamboo grove (behind the shrine)
-  { x0: -15.5, x1: -8.9, z0: -3.5, z1: 4.5 },     // waterfall rock (v2.29.0: west-mid yard)
+  { x0: -15.5, x1: -8.9, z0: -5.5, z1: 2.5 },     // waterfall rock (v2.29.0: west-mid yard)
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -2925,7 +2925,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.39.0';
+const PT3D_VER = '2.40.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
