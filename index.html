@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.81.2">
+<meta name="pt3d-ver" content="2.81.3">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -79,11 +79,13 @@
   #bubbleLayer { position:fixed; inset:0; z-index:28; pointer-events:none; overflow:hidden; }
   .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
   #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; font-size:12.5px; padding:5px 11px; border:none; background:none; color:#ffe9bd; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
+  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; padding:2px 6px; border:none; background:none; color:#ffe9bd; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
+  .chipIc { font-size:17px; line-height:1.1; }
+  .chipTx { font-size:12px; line-height:1.15; white-space:nowrap; }
   #worldBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; border:none; background:none; font-size:12.5px; color:#ffe9bd; line-height:1; padding:6px 11px; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
+  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; border:none; background:none; color:#ffe9bd; padding:2px 6px; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
   #seatBtns { position:fixed; z-index:30; display:none; gap:8px; transform:translate(-50%,-100%); pointer-events:none; }
-  .seatChip { pointer-events:auto; cursor:pointer; min-width:38px; height:38px; border:none; background:none; font-size:15px; color:#ffe9bd; line-height:1; padding:0 8px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
+  .seatChip { pointer-events:auto; cursor:pointer; border:none; background:none; color:#ffe9bd; padding:2px 7px; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
   #gainFx { position:fixed; left:50%; bottom:122px; transform:translateX(-50%); z-index:35; pointer-events:none; }
@@ -181,7 +183,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.81.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.81.3</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2328,6 +2330,8 @@ function setWalkTarget(v, cushion = null, incense = false) {
    the burners - a chip over each censer: '🕯️ Đốt nhang' when it is out,
    the live countdown while it burns. Same walk-then-light flow as the
    old button, per burner (the shrine censer shares the yard state). */
+function chipLines(el) { const ic = document.createElement('span'); ic.className = 'chipIc'; const tx = document.createElement('span'); tx.className = 'chipTx'; el.append(ic, tx); el._ic = ic; el._tx = tx; }
+function setChip(el, txt) { const sp = txt.indexOf(' '); const a = sp > 0 ? txt.slice(0, sp) : txt, b = sp > 0 ? txt.slice(sp + 1) : ''; if (el._ic && el._ic.textContent !== a) el._ic.textContent = a; if (el._tx && el._tx.textContent !== b) el._tx.textContent = b; }
 const incenseChipWrap = document.createElement('div'); incenseChipWrap.id = 'incenseBtns'; document.body.appendChild(incenseChipWrap);
 const __incV = new THREE.Vector3();
 function incenseChipTap(ch) {
@@ -2344,12 +2348,12 @@ const incenseChips = [
 ];
 function updateIncenseChips() {
   for (const ch of incenseChips) {
-    if (!ch.el) { ch.el = document.createElement('button'); ch.el.className = 'incChip'; ch.el.addEventListener('click', () => incenseChipTap(ch)); incenseChipWrap.appendChild(ch.el); }
+    if (!ch.el) { ch.el = document.createElement('button'); ch.el.className = 'incChip'; chipLines(ch.el); ch.el.addEventListener('click', () => incenseChipTap(ch)); incenseChipWrap.appendChild(ch.el); }
     const g = ch.grp();
     if (!g || window.__layoutEdit || (ch.hall ? room !== 'hall' : room !== 'yard') || player.position.distanceTo(g.position) >= 24) { ch.el.style.display = 'none'; continue; }
     const lit = ch.hall ? hallLit : incenseLit, left = ch.hall ? hallLeft : incenseLeft;
     const txt = lit ? '🔥 ' + L().tBurnLeft(Math.floor(Math.max(0, left) / 60) + ':' + String(Math.floor(Math.max(0, left) % 60)).padStart(2, '0')) : '🕯️ ' + L().aInc;
-    if (ch.el.textContent !== txt) ch.el.textContent = txt;
+    setChip(ch.el, txt);
     __incV.copy(g.position); __incV.y += ch.dy; __incV.project(camera);
     if (__incV.z > 1 || __incV.z < -1) { ch.el.style.display = 'none'; continue; }
     ch.el.style.display = '';
@@ -2381,18 +2385,18 @@ function updateWorldChips() {
     seen.add(p.userData.pid);
     let el = pileChips.get(p.userData.pid);
     if (!el) {
-      el = document.createElement('button'); el.className = 'wChip';
+      el = document.createElement('button'); el.className = 'wChip'; chipLines(el);
       el.addEventListener('click', () => { const pile = leafPiles.find(q => q.userData.pid === p.userData.pid); if (!pile) return; if (P.mode === 'seated') standUp(); const d = player.position.distanceTo(pile.position); if (d < 1.0) startSweep(pile); else { const t = pile.position.clone(); t.y = 0; setWalkTarget(t); P.sweepPile = pile; } });
       worldBtnWrap.appendChild(el); pileChips.set(p.userData.pid, el);
     }
-    const pt = '🍂 ' + L().aSweep; if (el.textContent !== pt) el.textContent = pt;
+    setChip(el, '🍂 ' + L().aSweep);
     if (player.position.distanceTo(p.position) >= 24) { el.style.display = 'none'; continue; }
     projectChip(el, p.position, 0.62);
   }
   for (const [pid, el] of pileChips) if (!seen.has(pid)) { el.remove(); pileChips.delete(pid); }
   if (yardOk && sala && sala.userData.sala && sala.userData.sala.state !== 'fly') {
-    if (!salaChipEl) { salaChipEl = document.createElement('button'); salaChipEl.className = 'wChip'; salaChipEl.addEventListener('click', () => catchSala()); worldBtnWrap.appendChild(salaChipEl); }
-    const st = '🌼 ' + L().aSala; if (salaChipEl.textContent !== st) salaChipEl.textContent = st;
+    if (!salaChipEl) { salaChipEl = document.createElement('button'); salaChipEl.className = 'wChip'; chipLines(salaChipEl); salaChipEl.addEventListener('click', () => catchSala()); worldBtnWrap.appendChild(salaChipEl); }
+    setChip(salaChipEl, '🌼 ' + L().aSala);
     if (player.position.distanceTo(sala.position) >= 24) salaChipEl.style.display = 'none'; else projectChip(salaChipEl, sala.position, 0.66);
   } else if (salaChipEl) salaChipEl.style.display = 'none';
 }
@@ -2402,10 +2406,10 @@ const seatChipDefs = [
   { icon: '🙏', tap: () => doBow(), label: () => '🙏 ' + L().aBow },
   { icon: '📿', tap: () => doMala(), label: () => '📿 ' + L().aMala + ' ' + mala + '/108' },
 ];
-for (const d of seatChipDefs) { const b = document.createElement('button'); b.className = 'seatChip'; b.textContent = d.icon; b.addEventListener('click', d.tap); seatBtnWrap.appendChild(b); d.el = b; }
+for (const d of seatChipDefs) { const b = document.createElement('button'); b.className = 'seatChip'; chipLines(b); b._ic.textContent = d.icon; b.addEventListener('click', d.tap); seatBtnWrap.appendChild(b); d.el = b; }
 function updateSeatBtns() {
   if (P.mode !== 'seated' || window.__layoutEdit) { seatBtnWrap.style.display = 'none'; return; }
-  for (const d of seatChipDefs) if (d.label) d.el.textContent = d.label();
+  for (const d of seatChipDefs) if (d.label) setChip(d.el, d.label());
   __wV.copy(player.position); __wV.y += 1.52; __wV.project(camera);
   if (__wV.z > 1 || __wV.z < -1) { seatBtnWrap.style.display = 'none'; return; }
   seatBtnWrap.style.display = 'flex';
@@ -4052,7 +4056,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.81.2';
+const PT3D_VER = '2.81.3';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
