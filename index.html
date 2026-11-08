@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.74.2">
+<meta name="pt3d-ver" content="2.75.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.74.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.75.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -270,7 +270,15 @@ const LAYOUT_ANCHORS = {
   pavilion: { x: -11.0, z: 9.0, ry: Math.PI / 2, rot: true },
   bridgescene: { x: 6.0, z: 10.0, ry: 0, rot: true },
   lamppost1: { x: -2.7, z: 10.6, ry: 0, rot: true },
-  lamppost2: { x: 2.7, z: 10.6, ry: 0, rot: true }
+  lamppost2: { x: 2.7, z: 10.6, ry: 0, rot: true },
+  lamppost3: { x: -3.0, z: 5.4, ry: 0, rot: true },
+  lamppost4: { x: 3.0, z: 5.4, ry: 0, rot: true },
+  lp1: { x: -3.2, z: -10.6, ry: 0, rot: true },
+  lp2: { x: 3.2, z: -10.6, ry: 0, rot: true },
+  lp3: { x: -3.0, z: 11.2, ry: 0, rot: true },
+  lp4: { x: 3.0, z: 11.2, ry: 0, rot: true },
+  lp5: { x: -3.0, z: 2.2, ry: 0, rot: true },
+  lp6: { x: 3.0, z: 2.2, ry: 0, rot: true }
 };
 const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dominant up-facing surface sits at 0.057 of model height; x5.864 scale = 0.33 m, NO sinking (the v2.56.0 guess of 0.145 + a 0.30 sink buried the plinth and floated the cushions - Anita's screenshot caught both)
 const LAYOUT_COLS = {
@@ -281,7 +289,15 @@ const LAYOUT_COLS = {
   pavilion: [], // v2.69.0: railing enforced by the radial fence in collide() - exact at any rotation
   bridgescene: [{ x0: 4.55, x1: 5.42, z0: 7.1, z1: 12.9 }, { x0: 6.58, x1: 7.45, z0: 7.1, z1: 12.9 }], // bridge body flanking the corridor (capped at +-0.58 m; measured railing inner faces at +-0.80 m)
   lamppost1: [{ x0: -3.04, x1: -2.36, z0: 10.26, z1: 10.94 }],
-  lamppost2: [{ x0: 2.36, x1: 3.04, z0: 10.26, z1: 10.94 }]
+  lamppost2: [{ x0: 2.36, x1: 3.04, z0: 10.26, z1: 10.94 }],
+  lamppost3: [{ x0: -3.34, x1: -2.66, z0: 5.06, z1: 5.74 }],
+  lamppost4: [{ x0: 2.66, x1: 3.34, z0: 5.06, z1: 5.74 }],
+  lp1: [{ x0: -3.44, x1: -2.96, z0: -10.84, z1: -10.36 }],
+  lp2: [{ x0: 2.96, x1: 3.44, z0: -10.84, z1: -10.36 }],
+  lp3: [{ x0: -3.24, x1: -2.76, z0: 10.96, z1: 11.44 }],
+  lp4: [{ x0: 2.76, x1: 3.24, z0: 10.96, z1: 11.44 }],
+  lp5: [{ x0: -3.24, x1: -2.76, z0: 1.96, z1: 2.44 }],
+  lp6: [{ x0: 2.76, x1: 3.24, z0: 1.96, z1: 2.44 }]
 };
 let layoutStore = {};
 try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
@@ -1008,7 +1024,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vào vật để chọn, kéo để dời', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objTree: '🌳 Cây xanh', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1044,7 +1060,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select it, drag to move', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objTree: '🌳 Tree', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -1395,38 +1411,16 @@ function lotusPond(x, z) {
   scene.add(g); return g;
 }
 /* v2.28.0: yard lotus bowls removed on Anita's call - the pond lives on the tha-den race page. */
-function stoneLantern(x, z) {
-  /* papercut toro (v2.21.0, from Anita's lantern reference): warm cream stone -
-     square base, tapered square pillar, glowing firebox with corner posts,
-     curved pagoda cap and an onion finial, all in cream paper-stone */
-  const g = new THREE.Group(); g.position.set(x, 0, z);
-  box(0.72, 0.16, 0.72, toroMat, 0, 0.08, 0, g);
-  const pillar = cyl(0.17, 0.27, 0.6, toroMat, 0, 0.46, 0, g, 4); pillar.rotation.y = Math.PI / 4;
-  box(0.64, 0.1, 0.64, toroMat, 0, 0.81, 0, g);
-  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffe2b0, emissive: 0xffa04a, emissiveIntensity: 1.5 });
-  box(0.34, 0.3, 0.34, lampMat, 0, 1.06, 0, g);
-  [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]].forEach(([ox, oz]) => box(0.09, 0.36, 0.09, toroMat, ox, 1.06, oz, g));
-  box(0.52, 0.07, 0.52, toroMat, 0, 1.27, 0, g);
-  const capPts = [[0.55, 0], [0.52, 0.05], [0.36, 0.17], [0.2, 0.27], [0.17, 0.31]].map(p => new THREE.Vector2(p[0], p[1]));
-  const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 4), toroMat);
-  cap.rotation.y = Math.PI / 4; cap.position.y = 1.3; cap.castShadow = true; g.add(cap);
-  cyl(0.11, 0.11, 0.05, toroMat, 0, 1.64, 0, g, 10);
-  const onion = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), toroMat);
-  onion.scale.y = 1.3; onion.position.y = 1.76; g.add(onion);
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.12, 8), toroMat); tip.position.y = 1.9; g.add(tip);
-  scene.add(g);
-}
-stoneLantern(-2.4, 8.6); stoneLantern(2.4, 8.6); stoneLantern(-2.4, 2.2); stoneLantern(2.4, 2.2); stoneLantern(-2.4, -4.2); stoneLantern(2.4, -4.2);
-
-/* ============ Yard lamps - Tripo models (v2.74.0) ============
-   Paper-lantern posts (fixed) + two rustic roofed posts as layout parts.
-   All solid: colliders above and in LAYOUT_COLS. Glows ride lampGlowMat,
-   so they breathe with the day/night cycle like the old pole lanterns. */
-const lampPaperGroups = [];
-[[-3.2, -10.6], [3.2, -10.6], [-3.0, 11.2], [3.0, 11.2]].forEach(([x, z]) => {
+/* ============ Yard lamps - Tripo models (v2.75.0) ============
+   Anita removed the stone lanterns and places the lamps herself:
+   6 paper-lantern posts + 4 rustic roofed posts, all layout parts
+   (move/rotate in the editor; colliders follow via LAYOUT_COLS).
+   Glows ride lampGlowMat, breathing with the day/night cycle. */
+const lampPaperGroups = {};
+[['lp1', -3.2, -10.6], ['lp2', 3.2, -10.6], ['lp3', -3.0, 11.2], ['lp4', 3.0, 11.2], ['lp5', -3.0, 2.2], ['lp6', 3.0, 2.2]].forEach(([id, x, z]) => {
   const g = new THREE.Group(); g.position.set(x, 0, z);
   const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(1.15, 1.15, 1); glow.position.y = 2.32; g.add(glow);
-  scene.add(g); lampPaperGroups.push(g);
+  scene.add(g); lampPaperGroups[id] = g; regPart(id, g, true);
 });
 new GLTFLoader().load('models/lamp-paper.glb?v=100', (gltf) => {
   const proto = gltf.scene;
@@ -1434,10 +1428,10 @@ new GLTFLoader().load('models/lamp-paper.glb?v=100', (gltf) => {
   const bb = new THREE.Box3().setFromObject(proto);
   proto.position.set(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
   const wrap0 = new THREE.Group(); wrap0.add(proto); wrap0.scale.setScalar(2.9);
-  lampPaperGroups.forEach(g => g.add(wrap0.clone(true)));
+  Object.values(lampPaperGroups).forEach(g => g.add(wrap0.clone(true)));
 });
 const lampRusticGroups = {};
-[['lamppost1', -2.7, 10.6], ['lamppost2', 2.7, 10.6]].forEach(([id, x, z]) => {
+[['lamppost1', -2.7, 10.6], ['lamppost2', 2.7, 10.6], ['lamppost3', -3.0, 5.4], ['lamppost4', 3.0, 5.4]].forEach(([id, x, z]) => {
   const g = new THREE.Group(); g.position.set(x, 0, z);
   const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(0.85, 0.85, 1); glow.position.set(0.45, 1.62, 0); g.add(glow);
   scene.add(g); lampRusticGroups[id] = g; regPart(id, g, true);
@@ -1450,20 +1444,7 @@ new GLTFLoader().load('models/lamp-rustic.glb?v=100', (gltf) => {
   const wrap0 = new THREE.Group(); wrap0.add(proto); wrap0.scale.setScalar(2.35);
   Object.values(lampRusticGroups).forEach(g => g.add(wrap0.clone(true)));
 });
-const petalTex = canvasTexture(64, 64, (g) => {
-  g.fillStyle = 'rgba(246,170,196,0.95)';
-  g.beginPath(); g.ellipse(32, 32, 15, 9, 0.6, 0, Math.PI * 2); g.fill();
-  g.fillStyle = 'rgba(255,205,225,0.7)';
-  g.beginPath(); g.ellipse(28, 28, 8, 5, 0.6, 0, Math.PI * 2); g.fill();
-});
-const petals = [];
-for (let i = 0; i < 42; i++) {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: petalTex, transparent: true, opacity: 0.9, depthWrite: false }));
-  sp.userData = { x: (Math.random() - 0.5) * 26, y: 2 + Math.random() * 7, z: -12 + Math.random() * 22,
-    ph: Math.random() * Math.PI * 2, fall: 0.25 + Math.random() * 0.3, sway: 0.6 + Math.random() * 0.9 };
-  sp.scale.set(0.22, 0.22, 1);
-  scene.add(sp); petals.push(sp);
-}
+
 /* v2.35.0: the drifting motes are DANDELION SEEDS now, drawn on canvas - a
    filament parachute over a tiny seed, like the glowing one Anita zoomed
    into in Second Life. */
@@ -2209,12 +2190,6 @@ const COLLIDERS = [
   { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
   { x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 },
   { x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 },     // waterfall rock (v2.29.0: west-mid yard)
-  // v2.74.0: lamps are solid (Anita: the avatar walks through them) - stone lanterns first, then the paper-lantern posts
-  { x0: -2.7, x1: -2.1, z0: 8.3, z1: 8.9 }, { x0: 2.1, x1: 2.7, z0: 8.3, z1: 8.9 },
-  { x0: -2.7, x1: -2.1, z0: 1.9, z1: 2.5 }, { x0: 2.1, x1: 2.7, z0: 1.9, z1: 2.5 },
-  { x0: -2.7, x1: -2.1, z0: -4.5, z1: -3.9 }, { x0: 2.1, x1: 2.7, z0: -4.5, z1: -3.9 },
-  { x0: -3.44, x1: -2.96, z0: -10.84, z1: -10.36 }, { x0: 2.96, x1: 3.44, z0: -10.84, z1: -10.36 },
-  { x0: -3.24, x1: -2.76, z0: 10.96, z1: 11.44 }, { x0: 2.76, x1: 3.24, z0: 10.96, z1: 11.44 }
 ];
 function collide() {
   const p = player.position, R = 0.26;
@@ -2306,7 +2281,7 @@ function buildCushionBtns() {
     el.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:1px solid rgba(255,210,120,.65);background:rgba(43,30,16,.78);color:#ffe9b0;border-radius:999px;padding:6px 9px;font-size:16px;font-family:inherit;cursor:pointer;display:none;white-space:nowrap;';
     el.addEventListener('click', () => {
       if (P.mode === 'seated') { if (P.seatedOn === c) standUp(); return; }
-      if (c.userData.occupied || c.userData.occupiedByPlayer) { toast(L().tOccupied); return; }
+      if (c.userData.occupied || c.userData.occupiedByPlayer || c.userData.remoteOcc) { toast(L().tOccupied); return; }
       const p = c.position.clone();
       if (player.position.distanceTo(p) < 0.6) sitDown(c); else setWalkTarget(p, c);
     });
@@ -2325,7 +2300,8 @@ function updateCushionBtns() {
     if (window.__layoutEdit) show = false;
     else if (seated) {
       if (P.seatedOn === c) { b.el.textContent = '🧍'; show = true; }
-    } else if (!c.userData.occupied && !c.userData.occupiedByPlayer) {
+    } else if (!c.userData.occupied && !c.userData.occupiedByPlayer && !c.userData.remoteOcc) {
+      b.el.textContent = '🧘'; // v2.75.0: never leave a stale stand icon behind
       const inHall = c.position.z < -12.9 && Math.abs(c.position.x) < 10.6;
       if ((room === 'hall') === inHall && player.position.distanceTo(c.position) < 24) show = true; // v2.74.2: was 11 - too tight for a 35x40 yard, far cushions lost their buttons (Anita's screenshot)
     }
@@ -3193,7 +3169,7 @@ function ptSweep() {
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
     if (st[key]) { r.lastSeen = now; return; }
-    if (now - r.lastSeen > 12000) { scene.remove(r.g); if (r.pet) { scene.remove(r.pet); foxPets.delete(r.pet); } remotes.delete(key); }
+    if (now - r.lastSeen > 12000) { if (r.sitCushion && r.sitCushion.userData.remoteOcc === key) r.sitCushion.userData.remoteOcc = null; scene.remove(r.g); if (r.pet) { scene.remove(r.pet); foxPets.delete(r.pet); } remotes.delete(key); }
   });
 }
 let ptPrev = performance.now();
@@ -3266,7 +3242,12 @@ function ptWorld(pl) {
     const r = remotes.get(pl.from); if (r) r.bowT = 0;
   } else if (pl.k === 'mv') {
     const r = remotes.get(pl.from);
-    if (r) { r.tx = pl.x; r.tz = pl.z; r.try_ = pl.ry || 0; r.sit = !!pl.sit; r.lastSeen = performance.now(); }
+    if (r) { r.tx = pl.x; r.tz = pl.z; r.try_ = pl.ry || 0; r.sit = !!pl.sit; r.lastSeen = performance.now();
+      /* v2.75.0: a cushion someone else sits on is occupied on my screen too -
+         no button over it at all (the stand button belongs to the sitter alone) */
+      if (r.sit && !r.sitCushion) { let best = null, bd = 0.7; for (const cc of [...cushionSpots, ...hallCushions]) { const d = Math.hypot(cc.position.x - pl.x, cc.position.z - pl.z); if (d < bd) { bd = d; best = cc; } } if (best) { best.userData.remoteOcc = pl.from; r.sitCushion = best; } }
+      if (!r.sit && r.sitCushion) { if (r.sitCushion.userData.remoteOcc === pl.from) r.sitCushion.userData.remoteOcc = null; r.sitCushion = null; }
+    }
     else pendingMv.set(pl.from, pl);
   } else if (pl.k === 'hi') {
     ptMove(true); ptTrack(true);
@@ -3324,7 +3305,7 @@ const layoutRay = new THREE.Raycaster();
 const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
-const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost' };
+const LAYOUT_NAMES = { falls: 'objFalls', clock: 'objClock', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper' };
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -3801,7 +3782,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.74.2';
+const PT3D_VER = '2.75.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
