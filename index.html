@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.69.2">
+<meta name="pt3d-ver" content="2.70.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.69.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.70.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1998,7 +1998,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk.glb?v=301', (gltf) => {
+new GLTFLoader().load('models/monk2.glb?v=100', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -2008,7 +2008,9 @@ new GLTFLoader().load('models/monk.glb?v=301', (gltf) => {
   const wrap = new THREE.Group(); wrap.add(inner);
   monkProto = wrap;
   while (modelPending.length) swapToModel(modelPending.shift());
-}, undefined, () => { /* model failed to load — primitive avatars stay */ });
+}, undefined, monkFallback);
+function monkFallback() { if (monkProto) return; modelPending.forEach(g => { if (g.userData.bodyG) g.userData.bodyG.visible = true; }); }
+setTimeout(monkFallback, 25000); // v2.70.0: only if the model truly cannot load do the old placeholder bodies show
 
 /* ============ Avatar builder ============ */
 const BEAD_SETS = [[0x8a5a28, 0x6f451f], [0xc89b62, 0xa87c48], [0xd9a441, 0xb97f26]];
@@ -2073,7 +2075,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   g.userData.beads = beads;
   g.userData.upperG = upperG;
   scene.add(g);
-  if (monkProto) swapToModel(g); else modelPending.push(g);
+  if (monkProto) swapToModel(g); else { modelPending.push(g); bodyG.visible = false; } // v2.70.0: no old-cone flash while the real monk loads (Anita: delete the old one)
   return g;
 }
 
@@ -3672,7 +3674,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.69.2';
+const PT3D_VER = '2.70.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
