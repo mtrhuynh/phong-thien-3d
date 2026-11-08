@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.75.0">
+<meta name="pt3d-ver" content="2.75.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.75.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.75.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1445,6 +1445,20 @@ new GLTFLoader().load('models/lamp-rustic.glb?v=100', (gltf) => {
   Object.values(lampRusticGroups).forEach(g => g.add(wrap0.clone(true)));
 });
 
+const petalTex = canvasTexture(64, 64, (g) => {
+  g.fillStyle = 'rgba(246,170,196,0.95)';
+  g.beginPath(); g.ellipse(32, 32, 15, 9, 0.6, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(255,205,225,0.7)';
+  g.beginPath(); g.ellipse(28, 28, 8, 5, 0.6, 0, Math.PI * 2); g.fill();
+});
+const petals = [];
+for (let i = 0; i < 42; i++) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: petalTex, transparent: true, opacity: 0.9, depthWrite: false }));
+  sp.userData = { x: (Math.random() - 0.5) * 26, y: 2 + Math.random() * 7, z: -12 + Math.random() * 22,
+    ph: Math.random() * Math.PI * 2, fall: 0.25 + Math.random() * 0.3, sway: 0.6 + Math.random() * 0.9 };
+  sp.scale.set(0.22, 0.22, 1);
+  scene.add(sp); petals.push(sp);
+}
 /* v2.35.0: the drifting motes are DANDELION SEEDS now, drawn on canvas - a
    filament parachute over a tiny seed, like the glowing one Anita zoomed
    into in Second Life. */
@@ -3782,7 +3796,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.75.0';
+const PT3D_VER = '2.75.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
