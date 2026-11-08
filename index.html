@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.72.0">
+<meta name="pt3d-ver" content="2.72.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.72.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.72.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2474,6 +2474,7 @@ function closeNameModal() {
   const v = (nameInput.value || '').trim().slice(0, 14);
   const n = v || myName || 'Hành giả';
   try { localStorage.setItem(NAME_KEY, n); } catch (e) {}
+  refreshKeeperGate();
   applyName(n);
   nameModal.classList.remove('show');
 }
@@ -3358,7 +3359,23 @@ function layoutSelect(id) {
   if (id) syncLayoutProxy(id);
   else if (layoutRing) layoutRing.visible = false;
 }
+/* v2.72.1: the layout editor belongs to the temple keeper only (Anita) -
+   normal players never see it. A device counts as the keeper's when its
+   saved name is hers; once recognised, that device remembers. */
+const KEEPER_NAME = 'Thích thì Phá';
+function isKeeperDevice() {
+  try {
+    if (localStorage.getItem('pt3d-keeper') === '1') return true;
+    if ((localStorage.getItem(NAME_KEY) || '').trim() === KEEPER_NAME) { localStorage.setItem('pt3d-keeper', '1'); return true; }
+  } catch (e) {}
+  return false;
+}
+function refreshKeeperGate() {
+  const b = document.getElementById('btnLayout');
+  if (b) b.style.display = isKeeperDevice() ? '' : 'none';
+}
 function setLayoutEdit(on) {
+  if (on && !isKeeperDevice()) return;
   layoutEdit = on; window.__layoutEdit = on;
   controls.enabled = !on;
   layoutPanel.style.display = on ? 'block' : 'none';
@@ -3384,6 +3401,7 @@ function setLayoutEdit(on) {
   }
 }
 document.getElementById('btnLayout').addEventListener('click', () => setLayoutEdit(!layoutEdit));
+refreshKeeperGate();
 document.getElementById('layLock').addEventListener('click', () => setLayoutEdit(false));
 function layoutRotate(dir) {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].rot) return;
@@ -3714,7 +3732,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.72.0';
+const PT3D_VER = '2.72.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
