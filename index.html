@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.67.0">
+<meta name="pt3d-ver" content="2.68.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.67.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.68.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -273,7 +273,7 @@ const LAYOUT_ANCHORS = {
 };
 const PAVI_FLOOR_H = 0.33; // v2.56.1: terrace floor measured properly - the dominant up-facing surface sits at 0.057 of model height; x5.864 scale = 0.33 m, NO sinking (the v2.56.0 guess of 0.145 + a 0.30 sink buried the plinth and floated the cushions - Anita's screenshot caught both)
 const LAYOUT_COLS = {
-  falls:  [{ x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 }],
+  falls:  [{ x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 }],
   clock:  [{ x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 }],
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }], // v2.63.1: bamboo collider gone with the grove
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
@@ -895,9 +895,9 @@ const fallsFlowMat = new THREE.ShaderMaterial({
   uniforms: { uTime: fallsFlowU },
   transparent: true, depthWrite: false,
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float col = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 5.2 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.25, 0.65, vSlope) * col; float a = 0.07 + streak * 0.26; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float col = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.0 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.25, 0.65, vSlope) * col; float a = 0.10 + streak * 0.34; // v2.68.0: flow clearly visible again (v2.64 was too faint) vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
 });
-new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
+new GLTFLoader().load('models/waterfall2.glb?v=100', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -908,7 +908,7 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
   for (let i = 0; i < 3; i++) {
     const mist = new THREE.Sprite(mistMat);
     mist.scale.set(0.30, 0.14, 1);
-    mist.position.set((i - 1) * 0.09, 0.07, 0.33);
+    mist.position.set((i - 1) * 0.11 + 0.03, 0.13, 0.18); // v2.68.0: at the new cascade's base pool
     m.add(mist);
   }
   const wrap = new THREE.Group(); wrap.add(m);
@@ -921,7 +921,7 @@ new GLTFLoader().load('models/waterfall.glb?v=100', (gltf) => {
      (extracted offline as falls-water.glb) with a shader running light
      streaks down the slope; the flat pool stays calm (slope-weighted).
      Same position offset as m, so it stays glued wherever Layout moves it. */
-  new GLTFLoader().load('models/falls-water.glb?v=100', (wg) => {
+  new GLTFLoader().load('models/falls2-water.glb?v=100', (wg) => { // v2.68.0: water surface of the NEW model
     const wm = wg.scene;
     wm.position.copy(m.position);
     wm.traverse(o => { if (o.isMesh) { o.material = fallsFlowMat; o.castShadow = false; o.receiveShadow = false; } });
@@ -2188,7 +2188,7 @@ const COLLIDERS = [
   { x0: -13.53, x1: -12.43, z0: 10.43, z1: 11.53 }, // pavilion railing ring (v2.65.0)
   { x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 },     // dien tho shrine (v2.29.0: east-mid yard)
   { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
-  { x0: -17.5, x1: -10.9, z0: -5.5, z1: 2.5 },
+  { x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 },
   { x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 },     // waterfall rock (v2.29.0: west-mid yard)
 ];
 function collide() {
@@ -3627,7 +3627,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.67.0';
+const PT3D_VER = '2.68.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
