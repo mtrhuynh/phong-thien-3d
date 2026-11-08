@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.33.0">
+<meta name="pt3d-ver" content="2.34.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -173,7 +173,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.33.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.34.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -333,7 +333,7 @@ const MAT = {
   leaf: new THREE.MeshStandardMaterial({ color: 0x54a047, roughness: 0.7 }),
   leaf2: new THREE.MeshStandardMaterial({ color: 0x6cb85a, roughness: 0.7 }),
   trunk: new THREE.MeshStandardMaterial({ color: 0x7d5738, roughness: 0.8 }),
-  bronze: new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.4, metalness: 0.5 }),
+  bronze: new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide }), // DoubleSide: urn inner wall must render, else the burner is see-through over its rim
   cushion: new THREE.MeshStandardMaterial({ color: 0xc08c46, roughness: 0.6 }),
   cushionTop: new THREE.MeshStandardMaterial({ color: 0xe0aa54, roughness: 0.55 }),
   matSide: new THREE.MeshStandardMaterial({ color: 0x6e2a20, roughness: 0.85 }),
@@ -417,10 +417,10 @@ const carpetTex = canvasTexture(256, 256, (g) => {
   g.fillStyle = 'rgba(217,164,65,0.35)';
   g.beginPath(); g.arc(128, 128, 34, 0, Math.PI * 2); g.fill();
 });
-carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping; carpetTex.repeat.set(1, 8);
-const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 24),
+carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping; carpetTex.repeat.set(1, 7);
+const carpet = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 21.1),
   new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.9 }));
-carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 1.7);
+carpet.rotation.x = -Math.PI / 2; carpet.position.set(0, 0.012, 3.15); // v2.34.0: carpet now spans z -7.4..13.7, ending before the yard burner at -8.6
 carpet.receiveShadow = true; scene.add(carpet);
 /* ============ Chánh điện: open hall like the reference (white walls, red pillars, see the altar from the yard) ============ */
 {
@@ -2874,7 +2874,7 @@ applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.33.0';
+const PT3D_VER = '2.34.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
