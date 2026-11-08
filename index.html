@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.77.0">
+<meta name="pt3d-ver" content="2.78.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -44,7 +44,8 @@
   #camModes.open { display:flex; }
   #utilBar { position:fixed; top:84px; right:12px; display:flex; align-items:center; gap:6px; z-index:30; flex-wrap:wrap; justify-content:flex-end; max-width:97vw; }
   #utilBar .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
-  #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; gap:6px; z-index:30; }
+  #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; align-items:center; gap:6px; z-index:30; flex-wrap:wrap; justify-content:flex-end; max-width:97vw; }
+  #bottomCtl .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
   .cmode { padding:8px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.4); background:rgba(20,16,12,.66); color:#ffe9bd; font-size:13px; cursor:pointer; }
   .cmode.on { background:rgba(146,96,28,.9); color:#fff; }
 
@@ -82,7 +83,7 @@
     border-top:1px solid rgba(240,199,106,0.3); border-bottom:1px solid rgba(240,199,106,0.3); padding:12px 4px; }
   .xam-giai { font-size:14.5px; line-height:1.65; margin:12px 0 16px; color:#f5e6c4; }
   .xam-btns { display:flex; gap:10px; justify-content:center; }
-  #credit { position:fixed; left:10px; bottom:8px; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; }
+  #credit { position:fixed; left:10px; bottom:8px; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; display:none; }
   #toast { top:238px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(30,22,12,.88);
     border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
     opacity:0; transition:all .35s ease; pointer-events:none; max-width:88vw; text-align:center; }
@@ -140,10 +141,7 @@
 
 <div class="ui" id="utilBar">
   <a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
-  <span class="musLbl">🎵 Music</span>
-  <button class="cmode" id="musPlay" data-i18n-title="musPlayT" title="Mở / tắt nhạc thiền">▶</button>
-  <button class="cmode" id="musNext" data-i18n-title="musNextT" title="Bài tiếp">⏭</button>
-  <button class="cmode" id="btnDN">🌙 Giờ thật</button>
+  <button class="cmode" id="btnHall"><span class="ic">🏛️</span><span class="lb"></span></button>
   <button class="cmode" id="btnLang">🌐 EN</button>
 </div>
 
@@ -168,7 +166,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.77.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.78.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -212,10 +210,13 @@
   <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb"></span></button>
   <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb"></span></button>
   <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb"></span></button>
-  <button class="abtn" id="btnHall"><span class="ic">🏛️</span><span class="lb"></span></button>
 </div>
 
 <div class="ui" id="bottomCtl">
+  <span class="musLbl">🎵 Music</span>
+  <button class="cmode" id="musPlay" data-i18n-title="musPlayT" title="Mở / tắt nhạc thiền">▶</button>
+  <button class="cmode" id="musNext" data-i18n-title="musNextT" title="Bài tiếp">⏭</button>
+  <button class="cmode" id="btnDN">🌙 Giờ thật</button>
   <button class="cmode" id="btnCam">📷 Camera</button>
   <button class="cmode" id="btnLayout">🔧 Layout</button>
   <button class="cmode" id="btnMenu">☰ Menu</button>
@@ -3466,6 +3467,8 @@ function isKeeperDevice() {
 function refreshKeeperGate() {
   const b = document.getElementById('btnLayout');
   if (b) b.style.display = isKeeperDevice() ? '' : 'none';
+  const cr = document.getElementById('credit'); // v2.78.0: the version line is for the keeper's eyes only
+  if (cr) cr.style.display = isKeeperDevice() ? '' : 'none';
 }
 function setLayoutEdit(on) {
   if (on && !isKeeperDevice()) return;
@@ -3891,7 +3894,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.77.0';
+const PT3D_VER = '2.78.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
