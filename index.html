@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.80.0">
+<meta name="pt3d-ver" content="2.81.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -80,6 +80,10 @@
   .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
   #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
   .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; font-size:12.5px; padding:5px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); color:#ffe9bd; white-space:nowrap; }
+  #worldBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
+  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); font-size:16px; line-height:1; padding:0; }
+  #seatBtns { position:fixed; z-index:30; display:none; gap:8px; transform:translate(-50%,-100%); pointer-events:none; }
+  .seatChip { pointer-events:auto; cursor:pointer; min-width:38px; height:38px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.85); font-size:16px; color:#ffe9bd; line-height:1; padding:0 8px; }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
   #xamCard.open { display:flex; }
   #gainFx { position:fixed; left:50%; bottom:122px; transform:translateX(-50%); z-index:35; pointer-events:none; }
@@ -177,7 +181,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.80.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.81.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -215,11 +219,7 @@
 </div>
 
 <div class="ui" id="actions">
-  <button class="abtn" id="btnBow"><span class="ic">🙏</span><span class="lb"></span></button>
-  <button class="abtn" id="btnMala"><span class="ic">📿</span><span class="lb"></span><span class="cnt" id="malaCnt">0/108</span></button>
   <button class="abtn" id="btnXam"><span class="ic">🎋</span><span class="lb"></span></button>
-  <button class="abtn" id="btnSweep"><span class="ic">🍂</span><span class="lb"></span></button>
-  <button class="abtn" id="btnSala"><span class="ic">🌼</span><span class="lb"></span></button>
 </div>
 
 <div id="chatLog"></div>
@@ -2358,6 +2358,59 @@ function updateIncenseChips() {
   }
 }
 
+/* v2.81.0 (Anita): world-object chips for sweeping and sala, and a
+   private seated trio. A 🍂 chip floats over every standing leaf pile,
+   a 🌼 chip over a fallen sala blossom; while *I* am seated, 🧍 🙏 📿
+   float over my own head - only this device ever renders them. The
+   Menu bar keeps just Xin xăm now. */
+const worldBtnWrap = document.createElement('div'); worldBtnWrap.id = 'worldBtns'; document.body.appendChild(worldBtnWrap);
+const __wV = new THREE.Vector3();
+function projectChip(el, pos, dy) {
+  __wV.copy(pos); __wV.y += dy; __wV.project(camera);
+  if (__wV.z > 1 || __wV.z < -1) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.style.left = (__wV.x * 0.5 + 0.5) * innerWidth + 'px';
+  el.style.top = (-__wV.y * 0.5 + 0.5) * innerHeight + 'px';
+}
+const pileChips = new Map();
+let salaChipEl = null;
+function updateWorldChips() {
+  const yardOk = room === 'yard' && !window.__layoutEdit;
+  const seen = new Set();
+  if (yardOk) for (const p of leafPiles) {
+    seen.add(p.userData.pid);
+    let el = pileChips.get(p.userData.pid);
+    if (!el) {
+      el = document.createElement('button'); el.className = 'wChip'; el.textContent = '🍂';
+      el.addEventListener('click', () => { const pile = leafPiles.find(q => q.userData.pid === p.userData.pid); if (!pile) return; if (P.mode === 'seated') standUp(); const d = player.position.distanceTo(pile.position); if (d < 1.0) startSweep(pile); else { const t = pile.position.clone(); t.y = 0; setWalkTarget(t); P.sweepPile = pile; } });
+      worldBtnWrap.appendChild(el); pileChips.set(p.userData.pid, el);
+    }
+    if (player.position.distanceTo(p.position) >= 24) { el.style.display = 'none'; continue; }
+    projectChip(el, p.position, 0.62);
+  }
+  for (const [pid, el] of pileChips) if (!seen.has(pid)) { el.remove(); pileChips.delete(pid); }
+  if (yardOk && sala && sala.userData.sala && sala.userData.sala.state !== 'fly') {
+    if (!salaChipEl) { salaChipEl = document.createElement('button'); salaChipEl.className = 'wChip'; salaChipEl.textContent = '🌼'; salaChipEl.addEventListener('click', () => catchSala()); worldBtnWrap.appendChild(salaChipEl); }
+    if (player.position.distanceTo(sala.position) >= 24) salaChipEl.style.display = 'none'; else projectChip(salaChipEl, sala.position, 0.66);
+  } else if (salaChipEl) salaChipEl.style.display = 'none';
+}
+const seatBtnWrap = document.createElement('div'); seatBtnWrap.id = 'seatBtns'; document.body.appendChild(seatBtnWrap);
+const seatChipDefs = [
+  { icon: '🧍', tap: () => standUp() },
+  { icon: '🙏', tap: () => doBow() },
+  { icon: '📿', tap: () => doMala(), label: () => '📿 ' + mala + '/108' },
+];
+for (const d of seatChipDefs) { const b = document.createElement('button'); b.className = 'seatChip'; b.textContent = d.icon; b.addEventListener('click', d.tap); seatBtnWrap.appendChild(b); d.el = b; }
+function updateSeatBtns() {
+  if (P.mode !== 'seated' || window.__layoutEdit) { seatBtnWrap.style.display = 'none'; return; }
+  for (const d of seatChipDefs) if (d.label) d.el.textContent = d.label();
+  __wV.copy(player.position); __wV.y += 1.52; __wV.project(camera);
+  if (__wV.z > 1 || __wV.z < -1) { seatBtnWrap.style.display = 'none'; return; }
+  seatBtnWrap.style.display = 'flex';
+  seatBtnWrap.style.left = (__wV.x * 0.5 + 0.5) * innerWidth + 'px';
+  seatBtnWrap.style.top = (-__wV.y * 0.5 + 0.5) * innerHeight + 'px';
+}
+
 function sitDown(cushion) {
   P.mode = 'seated';
   P.seatedOn = cushion || null;
@@ -2491,8 +2544,6 @@ function toast(msg, ms = 2600) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
 }
-const btnBow = document.getElementById('btnBow');
-const btnMala = document.getElementById('btnMala');
 const malaCntEl = document.getElementById('malaCnt');
 const senEl = document.getElementById('pSen');
 let mala = 0, sen = stats.sen || 0, malaPulse = 0;
@@ -2509,16 +2560,16 @@ function addSen(n) {
 }
 
 /* v2.69.0: the menu-bar Sit button is gone - meditating starts from the buttons on the cushions. */
-btnBow.addEventListener('click', () => { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpDaily('bw'); ptSend({ k: 'bow' }); } });
-btnMala.addEventListener('click', () => {
+function doBow() { if (P.bowT < 0) { P.bowT = 0; addSen(1); bumpDaily('bw'); ptSend({ k: 'bow' }); } }
+function doMala() {
   malaPulse = 0.35;
   mala++; addSen(1); bumpDaily('ma');
-  malaCntEl.textContent = mala + '/108';
+  if (malaCntEl) malaCntEl.textContent = mala + '/108';
   if (mala >= 108) {
     toast(L().tMalaFull, 3600);
-    mala = 0; malaCntEl.textContent = '0/108'; addSen(10);
+    mala = 0; if (malaCntEl) malaCntEl.textContent = '0/108'; addSen(10);
   } else if (mala % 27 === 0) toast(L().tMalaN(mala));
-});
+}
 function lightIncense() {
   bumpDaily('ic');
   ptSend({ k: 'inc', r: room }); ptTrack(true);
@@ -2558,8 +2609,8 @@ musAudio.addEventListener('ended', () => musLoad(musIdx + 1, true));
 document.getElementById('btnXam').addEventListener('click', () => {
   if (room !== 'hall') { goToRoom('hall'); pendingAfterZone = { zone: 'hall', cb: drawXam }; } else drawXam();
 });
-document.getElementById('btnSweep').addEventListener('click', () => {
-  if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => document.getElementById('btnSweep').click() }; return; }
+function doSweep() {
+  if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => doSweep() }; return; }
   if (!leafPiles.length) { toast(L().tYardClean); return; }
   let best = null, bd = 1e9;
   leafPiles.forEach(p => { const d = player.position.distanceTo(p.position); if (d < bd) { bd = d; best = p; } });
@@ -2568,11 +2619,11 @@ document.getElementById('btnSweep').addEventListener('click', () => {
     const p = best.position.clone(); p.y = 0;
     if (bd < 1.0) startSweep(best); else { setWalkTarget(p); P.sweepPile = best; }
   }
-});
-document.getElementById('btnSala').addEventListener('click', () => {
-  if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => document.getElementById('btnSala').click() }; return; }
+}
+function doSala() {
+  if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => doSala() }; return; }
   if (sala) catchSala(); else toast(L().tNoSala);
-});
+}
 const btnHall = document.getElementById('btnHall');
 /* nickname: chosen once, kept on this device (never IP-based) */
 const NAME_KEY = 'pt3d-name';
@@ -2915,7 +2966,7 @@ function animate() {
     const bs = f.g.userData.bs;
     f.g.scale.set(bs * (1 + Math.sin(t * 17 + f.seed * 9) * 0.07), bs * (1 + Math.sin(t * 15 + f.seed * 7) * 0.13), bs);
   });
-  updateCushionBtns(); updateChatBubbles(); updateIncenseChips();
+  updateCushionBtns(); updateChatBubbles(); updateIncenseChips(); updateWorldChips(); updateSeatBtns();
 
   /* fortune jar shake */
   if (xamAnimT >= 0) {
@@ -3999,7 +4050,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.80.0';
+const PT3D_VER = '2.81.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
