@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.58.2">
+<meta name="pt3d-ver" content="2.59.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -165,7 +165,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.58.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.59.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -278,7 +278,7 @@ const LAYOUT_COLS = {
   shrine: [{ x0: 9.45, x1: 13.75, z0: -3.2, z1: 4.2 }, { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 }, { x0: 14.7, x1: 15.35, z0: -2.5, z1: 3.6 }],
   burner: [{ x0: -0.95, x1: 0.95, z0: -9.55, z1: -7.65 }],
   pavilion: [], // v2.56.0: open pavilion - no blocking collider; the terrace is walkable via groundY
-  bridgescene: [{ x0: 2.5, x1: 5.42, z0: 7.1, z1: 12.9 }, { x0: 6.58, x1: 9.5, z0: 7.1, z1: 12.9 }] // pond footprint (rim ellipse +-3.45 x +-2.76); corridor capped at +-0.58 m (measured railing inner faces at +-0.80 m)
+  bridgescene: [{ x0: 2.15, x1: 5.42, z0: 8.05, z1: 11.95 }, { x0: 6.58, x1: 9.85, z0: 8.05, z1: 11.95 }, { x0: 4.55, x1: 5.42, z0: 7.1, z1: 8.05 }, { x0: 4.55, x1: 5.42, z0: 11.95, z1: 12.9 }, { x0: 6.58, x1: 7.45, z0: 7.1, z1: 8.05 }, { x0: 6.58, x1: 7.45, z0: 11.95, z1: 12.9 }] // stream band + bridge abutments flanking the corridor (capped at +-0.58 m; measured railing inner faces at +-0.80 m)
 };
 let layoutStore = {};
 try { layoutStore = JSON.parse(localStorage.getItem(LAYOUT_KEY) || '{}'); } catch (e) { layoutStore = {}; }
@@ -929,19 +929,19 @@ new GLTFLoader().load('models/pavilion2.glb?v=100', (gltf) => { // v2.56.0: open
    walkable via the groundY profile above (measured from the model). */
 const pondGrp = new THREE.Group(); pondGrp.position.set(6.0, 0, 10.0);
 {
-  const soil = new THREE.Mesh(new THREE.CircleGeometry(3.55, 28), new THREE.MeshStandardMaterial({ color: 0x4a3b28, roughness: 1 }));
-  soil.rotation.x = -Math.PI / 2; soil.position.y = 0.004; soil.scale.set(1, 0.8, 1); pondGrp.add(soil);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(3.28, 0.17, 10, 36), MAT.stone);
-  rim.rotation.x = Math.PI / 2; rim.position.y = 0.045; rim.scale.set(1, 0.8, 0.55); rim.castShadow = true; rim.receiveShadow = true; pondGrp.add(rim);
-  const water = new THREE.Mesh(new THREE.CircleGeometry(3.22, 28), new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.25 }));
-  water.rotation.x = -Math.PI / 2; water.position.y = 0.03; water.scale.set(1, 0.8, 1); pondGrp.add(water);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(1, 36), new THREE.MeshStandardMaterial({ color: 0x4a3b28, roughness: 1 }));
+  soil.rotation.x = -Math.PI / 2; soil.position.y = 0.004; soil.scale.set(3.9, 2.0, 1); pondGrp.add(soil);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.045, 10, 64), MAT.stone);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.045; rim.scale.set(3.9, 2.0, 3.8); rim.castShadow = true; rim.receiveShadow = true; pondGrp.add(rim);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(1, 36), new THREE.MeshStandardMaterial({ color: 0x5fb3c9, roughness: 0.15, metalness: 0.25 }));
+  water.rotation.x = -Math.PI / 2; water.position.y = 0.03; water.scale.set(3.72, 1.82, 1); pondGrp.add(water);
   const padMat = new THREE.MeshStandardMaterial({ color: 0x4d7c43, roughness: 0.9 });
-  [[-2.2, -1.4, 0.4], [2.3, -1.0, 0.32], [-1.9, 1.6, 0.3], [2.1, 1.8, 0.42], [-2.6, 0.2, 0.26], [2.7, 0.4, 0.28]].forEach(([px, pz, pr]) => {
+  [[-2.7, -0.8, 0.38], [2.8, -0.7, 0.34], [-2.5, 1.0, 0.3], [2.5, 1.1, 0.4], [-0.5, 0.9, 0.26], [0.6, -1.0, 0.28]].forEach(([px, pz, pr]) => {
     const pad = new THREE.Mesh(new THREE.CircleGeometry(pr, 14), padMat);
     pad.rotation.x = -Math.PI / 2; pad.position.set(px, 0.045, pz); pondGrp.add(pad);
   });
   const petalMat = new THREE.MeshStandardMaterial({ color: 0xf2a7c3, roughness: 0.6 });
-  [[-2.2, -1.4], [2.1, 1.8]].forEach(([px, pz]) => {
+  [[-2.7, -0.8], [2.5, 1.1]].forEach(([px, pz]) => {
     const f = new THREE.Group(); f.position.set(px, 0.04, pz);
     for (let i = 0; i < 6; i++) {
       const holder = new THREE.Group(); holder.rotation.y = (i / 6) * Math.PI * 2; f.add(holder);
@@ -3492,7 +3492,7 @@ makePanelDraggable(document.getElementById('camModes'), 'pt3d-pos-cammodes');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.58.2';
+const PT3D_VER = '2.59.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
