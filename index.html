@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.81.0">
+<meta name="pt3d-ver" content="2.81.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -81,7 +81,7 @@
   #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
   .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; font-size:12.5px; padding:5px 11px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); color:#ffe9bd; white-space:nowrap; }
   #worldBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); font-size:16px; line-height:1; padding:0; }
+  .wChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.82); font-size:12.5px; color:#ffe9bd; line-height:1; padding:6px 11px; white-space:nowrap; }
   #seatBtns { position:fixed; z-index:30; display:none; gap:8px; transform:translate(-50%,-100%); pointer-events:none; }
   .seatChip { pointer-events:auto; cursor:pointer; min-width:38px; height:38px; border-radius:999px; border:1px solid rgba(255,205,120,.55); background:rgba(24,16,9,.85); font-size:16px; color:#ffe9bd; line-height:1; padding:0 8px; }
   #xamCard { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(20,12,4,0.55); }
@@ -181,7 +181,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.81.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.81.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2381,24 +2381,26 @@ function updateWorldChips() {
     seen.add(p.userData.pid);
     let el = pileChips.get(p.userData.pid);
     if (!el) {
-      el = document.createElement('button'); el.className = 'wChip'; el.textContent = '🍂';
+      el = document.createElement('button'); el.className = 'wChip';
       el.addEventListener('click', () => { const pile = leafPiles.find(q => q.userData.pid === p.userData.pid); if (!pile) return; if (P.mode === 'seated') standUp(); const d = player.position.distanceTo(pile.position); if (d < 1.0) startSweep(pile); else { const t = pile.position.clone(); t.y = 0; setWalkTarget(t); P.sweepPile = pile; } });
       worldBtnWrap.appendChild(el); pileChips.set(p.userData.pid, el);
     }
+    const pt = '🍂 ' + L().aSweep; if (el.textContent !== pt) el.textContent = pt;
     if (player.position.distanceTo(p.position) >= 24) { el.style.display = 'none'; continue; }
     projectChip(el, p.position, 0.62);
   }
   for (const [pid, el] of pileChips) if (!seen.has(pid)) { el.remove(); pileChips.delete(pid); }
   if (yardOk && sala && sala.userData.sala && sala.userData.sala.state !== 'fly') {
-    if (!salaChipEl) { salaChipEl = document.createElement('button'); salaChipEl.className = 'wChip'; salaChipEl.textContent = '🌼'; salaChipEl.addEventListener('click', () => catchSala()); worldBtnWrap.appendChild(salaChipEl); }
+    if (!salaChipEl) { salaChipEl = document.createElement('button'); salaChipEl.className = 'wChip'; salaChipEl.addEventListener('click', () => catchSala()); worldBtnWrap.appendChild(salaChipEl); }
+    const st = '🌼 ' + L().aSala; if (salaChipEl.textContent !== st) salaChipEl.textContent = st;
     if (player.position.distanceTo(sala.position) >= 24) salaChipEl.style.display = 'none'; else projectChip(salaChipEl, sala.position, 0.66);
   } else if (salaChipEl) salaChipEl.style.display = 'none';
 }
 const seatBtnWrap = document.createElement('div'); seatBtnWrap.id = 'seatBtns'; document.body.appendChild(seatBtnWrap);
 const seatChipDefs = [
-  { icon: '🧍', tap: () => standUp() },
-  { icon: '🙏', tap: () => doBow() },
-  { icon: '📿', tap: () => doMala(), label: () => '📿 ' + mala + '/108' },
+  { icon: '🧍', tap: () => standUp(), label: () => '🧍 ' + L().aStand },
+  { icon: '🙏', tap: () => doBow(), label: () => '🙏 ' + L().aBow },
+  { icon: '📿', tap: () => doMala(), label: () => '📿 ' + L().aMala + ' ' + mala + '/108' },
 ];
 for (const d of seatChipDefs) { const b = document.createElement('button'); b.className = 'seatChip'; b.textContent = d.icon; b.addEventListener('click', d.tap); seatBtnWrap.appendChild(b); d.el = b; }
 function updateSeatBtns() {
@@ -4050,7 +4052,7 @@ makePanelDraggable(document.getElementById('actions'), 'pt3d-pos-actions2');
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.81.0';
+const PT3D_VER = '2.81.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
