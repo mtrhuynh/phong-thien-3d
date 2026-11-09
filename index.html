@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.85.5">
+<meta name="pt3d-ver" content="2.86.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -160,6 +160,7 @@
   <a id="gateDen" href="/tha-den/" target="_blank" rel="noopener" data-i18n="gateDen">🏮 Cổng thả đèn →</a>
   <button class="cmode" id="btnHall"><span class="ic">🏛️</span><span class="lb"></span></button>
   <button class="cmode" id="btnSky"><span class="ic">🏮</span><span class="lb"></span></button>
+  <button class="cmode" id="btnDove"><span class="ic">🕊️</span><span class="lb"></span></button>
   <button class="cmode" id="btnLang">🌐 EN</button>
 </div>
 
@@ -184,7 +185,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.85.5</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.86.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1079,7 +1080,7 @@ const I18N = {
     nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
     nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
     pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
-    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé',
+    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.',
     aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
     xamAgain: '🎋 Xin quẻ khác', xamClose: 'Đóng', xamCap: (n, g) => '🎋 Quẻ số ' + n + ' · ' + g,
     gain: n => '+' + n + ' phước đức 🪷', merit: 'phước đức', phuc: 'phước',
@@ -1115,7 +1116,7 @@ const I18N = {
     nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
     nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
     pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
-    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another',
+    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.',
     aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
     xamAgain: '🎋 Draw again', xamClose: 'Close', xamCap: (n, g) => '🎋 Fortune ' + n + ' · ' + g,
     gain: n => '+' + n + ' merit 🪷', merit: 'merit', phuc: 'merit',
@@ -1251,6 +1252,7 @@ function setActionLabels() {
   set('btnSit', sitting ? d.aStand : d.aSit); set('btnBow', d.aBow); set('btnMala', d.aMala); set('btnXam', d.aXam); set('btnSala', d.aSala);
   set('btnHall', room === 'hall' ? d.aHallOut : d.aHallIn);
   set('btnSky', d.skyBtn);
+  refreshDoveBtn();
   set('btnSweep', d.aSweep + ' (' + leafPiles.length + ')');
 }
 function applyLang() {
@@ -2024,12 +2026,147 @@ function syncPet() {
   if (myPet && myPet.userData.type !== want) { scene.remove(myPet); foxPets.delete(myPet); myPet = null; }
   if (want && !myPet) { myPet = makePet(want); myPet.position.copy(player.position); scene.add(myPet); }
 }
+
+/* ============ DOVES v2.86.0 — placeholder doves built from primitives (Anita swaps in a real model later).
+   An ambient flock circles the yard, lands, pecks, takes off. An adopted dove escorts its owner,
+   lands in front of them when they sit, and grows through 3 stages on seeds earned by practice. ============ */
+const DOVE_KEY = 'pt3d-dove';
+let doveHat = 0, doveAdopted = false, doveSitT = 0;
+try { const dv0 = JSON.parse(localStorage.getItem(DOVE_KEY) || 'null'); if (dv0) { doveAdopted = !!dv0.a; doveHat = dv0.hat | 0; } } catch (e) {}
+function saveDove() { try { localStorage.setItem(DOVE_KEY, JSON.stringify({ a: doveAdopted ? 1 : 0, hat: doveHat })); } catch (e) {} }
+function doveStageNow() { if (!doveAdopted) return 0; return doveHat >= 90 ? 3 : doveHat >= 30 ? 2 : 1; }
+function doveScaleOf(stage) { return [0, 0.55, 0.8, 1.05][stage] || 0.55; }
+const doveMat = new THREE.MeshStandardMaterial({ color: 0xf6f2e9, roughness: 0.9, side: THREE.DoubleSide });
+const doveBeakMat = new THREE.MeshStandardMaterial({ color: 0xd88f3a, roughness: 0.7 });
+function makeDove(scale) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), doveMat);
+  body.scale.set(0.82, 0.78, 1.25); body.castShadow = true; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 8), doveMat);
+  head.position.set(0, 0.075, 0.16); g.add(head); g.userData.head = head;
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.055, 6), doveBeakMat);
+  beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.07, 0.26); g.add(beak);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.014, 0.17), doveMat);
+  tail.position.set(0, 0.025, -0.23); tail.rotation.x = -0.28; g.add(tail);
+  const mkWing = side => {
+    const w = new THREE.Group(); w.position.set(0.06 * side, 0.05, 0.02);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.012, 0.16), doveMat);
+    m.position.set(0.18 * side, 0, -0.02); m.rotation.y = -0.22 * side; w.add(m); g.add(w); return w;
+  };
+  g.userData.wr = mkWing(1); g.userData.wl = mkWing(-1);
+  g.userData.flap = Math.random() * 6.28;
+  g.scale.setScalar(scale);
+  return g;
+}
+function dovePose(g, t, air, climb) {
+  const u = g.userData;
+  const f = Math.sin(t * 16 + u.flap);
+  if (!air) { u.wr.rotation.z = -0.95; u.wl.rotation.z = 0.95; if (u.head) u.head.rotation.x = Math.max(0, Math.sin(t * 2.2 + u.flap)) * 0.35; }
+  else if (climb) { u.wr.rotation.z = 0.15 + f * 0.85; u.wl.rotation.z = -0.15 - f * 0.85; if (u.head) u.head.rotation.x = 0; }
+  else { u.wr.rotation.z = 0.38 + f * 0.12; u.wl.rotation.z = -0.38 - f * 0.12; if (u.head) u.head.rotation.x = 0; }
+}
+function doveFlyTo(g, tx, ty, tz, speed, dt) {
+  const dx = tx - g.position.x, dy = ty - g.position.y, dz = tz - g.position.z;
+  const d = Math.hypot(dx, dy, dz);
+  if (d < 0.05) return 0;
+  const step = Math.min(d, speed * dt);
+  g.position.x += dx / d * step; g.position.y += dy / d * step; g.position.z += dz / d * step;
+  if (Math.abs(dx) + Math.abs(dz) > 0.02) {
+    const want = Math.atan2(dx, dz);
+    const diff = ((want - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    g.rotation.y += diff * Math.min(1, dt * 6);
+  }
+  return d - step;
+}
+function doveEscort(g, ox, oy, oz, ory, sitting, dt, t) {
+  let tx, ty, tz;
+  if (sitting) { tx = ox + Math.sin(ory) * 0.55; tz = oz + Math.cos(ory) * 0.55; ty = groundY(tx, tz) + 0.03; }
+  else { tx = ox - Math.sin(ory) * 0.4; tz = oz - Math.cos(ory) * 0.4; ty = oy + 1.55 + Math.sin(t * 2 + g.userData.flap) * 0.07; }
+  doveFlyTo(g, tx, ty, tz, 3.4, dt);
+  const air = g.position.y > groundY(g.position.x, g.position.z) + 0.3;
+  dovePose(g, t, air, air && ty > g.position.y + 0.2);
+}
+const doveFlock = [];
+function initDoveFlock() {
+  const defs = [
+    { s: 0.62, R: 13, H: 7.5, cx: 0, cz: -2, w: 0.14 }, { s: 0.8, R: 10, H: 9, cx: 2, cz: 0, w: -0.11 },
+    { s: 1.0, R: 16, H: 6, cx: -2, cz: 2, w: 0.09 }, { s: 1.12, R: 8, H: 10.5, cx: 0, cz: -4, w: 0.17 },
+    { s: 1.28, R: 18, H: 8, cx: 1, cz: 1, w: -0.08 }
+  ];
+  defs.forEach((d, i) => {
+    const g = makeDove(d.s); scene.add(g);
+    doveFlock.push({ g, ...d, ph: i * 1.7, mode: 'circle', timer: 14 + i * 9 + Math.random() * 20, lx: 0, lz: 0, idle: 0 });
+  });
+}
+initDoveFlock();
+let myDove = null;
+function syncDove() {
+  if (!doveAdopted) { if (myDove) { scene.remove(myDove); myDove = null; } return; }
+  const st = doveStageNow();
+  if (myDove && myDove.userData.stage !== st) { scene.remove(myDove); myDove = null; }
+  if (!myDove) { myDove = makeDove(doveScaleOf(st)); myDove.userData.stage = st; myDove.position.copy(player.position); myDove.position.y += 1.4; scene.add(myDove); }
+}
+function doveFeed(n) {
+  if (!doveAdopted) return;
+  const before = doveStageNow();
+  doveHat += n; saveDove();
+  if (doveStageNow() !== before) { syncDove(); ptTrack(true); }
+  refreshDoveBtn();
+}
+function refreshDoveBtn() {
+  const b = document.getElementById('btnDove'); if (!b) return;
+  const lb = b.querySelector('.lb'); if (!lb) return;
+  const d = L();
+  lb.textContent = doveAdopted ? d.doveBtnOn + ' · ' + d.doveStages[doveStageNow()] : d.doveBtn;
+}
+const btnDoveEl = document.getElementById('btnDove');
+if (btnDoveEl) btnDoveEl.addEventListener('click', () => {
+  const d = L();
+  if (!doveAdopted) { doveAdopted = true; saveDove(); syncDove(); ptTrack(true); refreshDoveBtn(); toast(d.doveGot); }
+  else toast(d.doveInfo.replace('{n}', doveHat).replace('{s}', d.doveStages[doveStageNow()]));
+});
+function updateDoves(dt, now) {
+  const t = now / 1000;
+  for (const dv of doveFlock) {
+    const g = dv.g;
+    if (dv.mode === 'circle') {
+      dv.ph += dt * dv.w;
+      const nx = dv.cx + Math.cos(dv.ph) * dv.R, nz = dv.cz + Math.sin(dv.ph) * dv.R;
+      const ny = dv.H + Math.sin(t * 0.6 + dv.ph * 2) * 0.5;
+      doveFlyTo(g, nx, ny, nz, 3.2, dt);
+      dovePose(g, t, true, false);
+      dv.timer -= dt;
+      if (dv.timer <= 0) {
+        dv.mode = 'land';
+        let lx = Math.random() * 22 - 11, lz = Math.random() * 15 - 5;
+        if (Math.abs(lx) < 2.6 && lz > -8 && lz < 13) lx += lx < 0 ? -3 : 3;
+        dv.lx = lx; dv.lz = lz;
+      }
+    } else if (dv.mode === 'land') {
+      const gy = groundY(dv.lx, dv.lz);
+      const rem = doveFlyTo(g, dv.lx, gy + 0.02, dv.lz, 2.4, dt);
+      dovePose(g, t, rem > 0.4, false);
+      if (rem <= 0.4) { dv.mode = 'idle'; dv.idle = 6 + Math.random() * 7; }
+    } else {
+      dovePose(g, t, false, false);
+      dv.idle -= dt;
+      if (dv.idle <= 0) { dv.mode = 'circle'; dv.timer = 22 + Math.random() * 30; }
+    }
+  }
+  if (myDove) {
+    const seated = P.mode === 'seated';
+    if (seated) { doveSitT += dt; if (doveSitT >= 20) { doveSitT = 0; doveFeed(1); } }
+    if (room === 'yard') doveEscort(myDove, player.position.x, player.position.y, player.position.z, player.rotation.y, seated, dt, t);
+    else { const gy = groundY(2.6, -11.0); doveFlyTo(myDove, 2.6, gy + 0.02, -11.0, 3, dt); dovePose(myDove, t, myDove.position.y > gy + 0.3, false); }
+  }
+}
 function startSweep(pile) {
   if (sweeping || !leafPiles.includes(pile)) return;
   sweeping = { pile, t: 0 };
   if (!player.userData.broom) { player.userData.broom = makeBroom(); player.add(player.userData.broom); }
   player.userData.broom.visible = true;
   ptSend({ k: 'sweep', id: pile.userData.pid });
+  doveFeed(2);
 }
 for (let i = 0; i < 11; i++) spawnLeafPile(i);
 let sala = null, salaTimer = 10;
@@ -2175,6 +2312,7 @@ function catchSala() {
   sala.userData.sala.state = 'fly'; sala.userData.sala.t = 0;
   sala.userData.from = sala.position.clone();
   ptSend({ k: 'salaCatch', id: sala.userData.salaId });
+  doveFeed(2);
 }
 
 /* ============ Chibi monk model — Hunyuan white mesh, hand-painted vertex colours.
@@ -3209,6 +3347,7 @@ function animate() {
   }
 
   if (myPet) petFollow(myPet, player.position.x, player.position.z, player.rotation.y, dt, performance.now());
+  updateDoves(dt, performance.now());
   renderer.render(scene, camera);
   if (firstFrame) {
     bootMark('frame-1');
@@ -3273,7 +3412,7 @@ function ptState() {
   /* STATIC profile + world snapshots only. Positions used to ride in here, and re-tracking
      them ~1/s while walking got the realtime socket closed by the server (~20 s) - which is
      why visitors kept vanishing for each other. Movement now travels by broadcast (ptMove). */
-  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, pt: look.pet | 0, bc: bacOf(sen),
+  return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, pt: look.pet | 0, dv: doveStageNow(), bc: bacOf(sen),
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft / 30) : 0, hallLit ? Math.ceil(hallLeft / 30) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -3410,6 +3549,10 @@ function ptSync() {
     const ptWant = p.pt | 0;
     if (r.pet && r.pet.userData.type !== ptWant) { scene.remove(r.pet); foxPets.delete(r.pet); r.pet = null; }
     if (ptWant && !r.pet) { r.pet = makePet(ptWant); r.pet.position.set(r.g.position.x, r.g.position.y, r.g.position.z); scene.add(r.pet); }
+    const dvWant = Math.max(0, Math.min(3, p.dv | 0));
+    if (r.dove && r.doveStage !== dvWant) { scene.remove(r.dove); r.dove = null; }
+    if (dvWant && !r.dove) { r.dove = makeDove(doveScaleOf(dvWant)); r.dove.position.copy(r.g.position); scene.add(r.dove); }
+    r.doveStage = dvWant;
     if ((p.bd || 0) !== r.bd) {
       r.bd = p.bd || 0;
       const bm = r.g.userData.beadMats;
@@ -3441,6 +3584,7 @@ function ptRemoveRemote(key) {
   if (r.sitCushion && r.sitCushion.userData.remoteOcc === key) r.sitCushion.userData.remoteOcc = null;
   scene.remove(r.g);
   if (r.pet) { scene.remove(r.pet); foxPets.delete(r.pet); r.pet = null; }
+  if (r.dove) { scene.remove(r.dove); r.dove = null; }
   remotes.delete(key); pendingMv.delete(key);
 }
 function ptSweep() {
@@ -3484,6 +3628,7 @@ function ptAnim(now) {
       else g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55;
     }
     if (r.pet) petFollow(r.pet, g.position.x, g.position.z, g.rotation.y, dt, now);
+    if (r.dove) doveEscort(r.dove, g.position.x, g.position.y, g.position.z, g.rotation.y, r.sit, dt, now);
   });
 }
 function ptSend(payload) {
@@ -4188,7 +4333,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.85.5';
+const PT3D_VER = '2.86.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -4259,6 +4404,7 @@ function hexCss(h) { return '#' + h.toString(16).padStart(6, '0'); }
 const BEAD_NAMES = I18N.vi.beadNames;
 function applyLook() {
   syncPet();
+  syncDove();
   if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
   const bm = player.userData.beadMats;
   if (bm) { const bsv = BEAD_SETS[look.bd % BEAD_SETS.length]; bm[0].color.setHex(bsv[0]); bm[1].color.setHex(bsv[1]); }
