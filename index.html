@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.87.0">
+<meta name="pt3d-ver" content="2.88.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -44,6 +44,23 @@
   #camModes.open { display:flex; }
   #utilBar { position:fixed; top:84px; right:12px; display:flex; align-items:center; gap:6px; z-index:30; flex-wrap:wrap; justify-content:flex-end; max-width:97vw; }
   #utilBar .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
+
+  /* Dove care panel (v2.88.0) */
+  #dovePanel { position:fixed; top:136px; right:12px; z-index:31; width:min(302px, 88vw); display:none;
+    background:linear-gradient(160deg, rgba(52,34,16,.95), rgba(26,17,9,.95)); border:1px solid rgba(255,205,120,.55);
+    border-radius:16px; padding:10px 14px 12px; color:#f3e5c3; box-shadow:0 10px 30px rgba(0,0,0,.5); backdrop-filter:blur(6px); }
+  .dp-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  #dovePanelTitle { font-weight:700; font-size:14.5px; color:#ffe1a8; }
+  #dovePanelClose { background:none; border:none; color:#d8c9ae; font-size:14px; cursor:pointer; padding:2px 4px; }
+  #doveStageLine { font-size:13.5px; color:#f3e5c3; margin:4px 0 8px; }
+  .dp-bar { position:relative; height:16px; border-radius:999px; background:rgba(0,0,0,.45); border:1px solid rgba(255,205,120,.35); overflow:hidden; }
+  #doveBarFill { height:100%; width:0%; background:linear-gradient(90deg, #caa14f, #ffd76e); transition:width .4s ease; }
+  #dovePct { position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:700; color:#fff7e0; text-shadow:0 1px 3px rgba(0,0,0,.8); }
+  .dp-btns { display:flex; gap:8px; margin-top:10px; }
+  .dp-feed { flex:1; padding:9px 6px; border-radius:999px; font-size:13px; cursor:pointer; font-family:inherit; border:1px solid rgba(0,0,0,.25); }
+  .dp-feed.mine { background:linear-gradient(160deg, #fffdf4, #e9e2cd); color:#3a2a10; font-weight:700; }
+  .dp-feed.flock { background:linear-gradient(160deg, #57b368, #2f7d3c); color:#fff; font-weight:700; border-color:rgba(255,255,255,.35); }
+  .dp-feed:disabled { opacity:.45; cursor:default; font-weight:400; }
   #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; flex-direction:column; align-items:flex-end; gap:6px; z-index:30; max-width:97vw; }
   #bottomCtl .ctlRow { display:flex; align-items:center; gap:6px; }
   #bottomCtl .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
@@ -164,6 +181,16 @@
   <button class="cmode" id="btnLang">🌐 EN</button>
 </div>
 
+<div class="ui" id="dovePanel">
+  <div class="dp-head"><span id="dovePanelTitle">🕊️ Bồ câu</span><button id="dovePanelClose">✕</button></div>
+  <div id="doveStageLine"></div>
+  <div class="dp-bar"><div id="doveBarFill"></div><span id="dovePct">0%</span></div>
+  <div class="dp-btns">
+    <button id="btnFeedMine" class="dp-feed mine">🌾 Cho ăn</button>
+    <button id="btnFeedFlock" class="dp-feed flock">🌾 Cho cả đàn</button>
+  </div>
+</div>
+
 <div class="ui" id="camModes">
   <button class="cmode" data-m="cao" data-i18n="camHigh">📷 Cao</button>
   <button class="cmode" data-m="mat" data-i18n="camEye">👁️ Tầm mắt</button>
@@ -185,7 +212,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.87.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.88.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1080,7 +1107,7 @@ const I18N = {
     nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
     nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
     pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
-    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.',
+    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.', dovePanelTitle: '🕊️ Bồ câu', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' hạt', doveFull: 'Đã lớn tối đa', doveFeedMine: '🌾 Cho ăn', doveFeedFlock: '🌾 Cho cả đàn', doveYardOnly: 'Ra sân mới cho bồ câu ăn được nhé',
     aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
     xamAgain: '🎋 Xin quẻ khác', xamClose: 'Đóng', xamCap: (n, g) => '🎋 Quẻ số ' + n + ' · ' + g,
     gain: n => '+' + n + ' phước đức 🪷', merit: 'phước đức', phuc: 'phước',
@@ -1116,7 +1143,7 @@ const I18N = {
     nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
     nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
     pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
-    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.',
+    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.', dovePanelTitle: '🕊️ Dove', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' seeds', doveFull: 'Fully grown', doveFeedMine: '🌾 Feed', doveFeedFlock: '🌾 Feed the flock', doveYardOnly: 'Head out to the yard to feed the doves',
     aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
     xamAgain: '🎋 Draw again', xamClose: 'Close', xamCap: (n, g) => '🎋 Fortune ' + n + ' · ' + g,
     gain: n => '+' + n + ' merit 🪷', merit: 'merit', phuc: 'merit',
@@ -2029,7 +2056,8 @@ function syncPet() {
 
 /* ============ DOVES — an ambient flock circles the yard, lands, pecks, takes off. An adopted
    dove escorts its owner, lands in front of them when they sit, and grows through 3 stages on
-   seeds earned by practice. (System v2.86.0; real Tripo models v2.87.0.) ============ */
+   seeds earned by practice. (System v2.86.0; real Tripo models v2.87.0;
+   care panel + grain feeding v2.88.0.) ============ */
 const DOVE_KEY = 'pt3d-dove';
 let doveHat = 0, doveAdopted = false, doveSitT = 0;
 try { const dv0 = JSON.parse(localStorage.getItem(DOVE_KEY) || 'null'); if (dv0) { doveAdopted = !!dv0.a; doveHat = dv0.hat | 0; } } catch (e) {}
@@ -2149,17 +2177,220 @@ function refreshDoveBtn() {
   const lb = b.querySelector('.lb'); if (!lb) return;
   const d = L();
   lb.textContent = doveAdopted ? d.doveBtnOn + ' · ' + d.doveStages[doveStageNow()] : d.doveBtn;
+  refreshDovePanel();
 }
 const btnDoveEl = document.getElementById('btnDove');
 if (btnDoveEl) btnDoveEl.addEventListener('click', () => {
   const d = L();
   if (!doveAdopted) { doveAdopted = true; saveDove(); syncDove(); ptTrack(true); refreshDoveBtn(); toast(d.doveGot); }
-  else toast(d.doveInfo.replace('{n}', doveHat).replace('{s}', d.doveStages[doveStageNow()]));
+  else setDovePanel(!dovePanelOpen);
 });
+
+/* ============ DOVE CARE PANEL + GRAIN FEEDING (v2.88.0) — Anita's design:
+   the dove chip opens a small panel with a growth progress bar for the pet
+   dove and two feed buttons sitting under the bar: WHITE feeds my dove
+   (+1 seed, 60 s cooldown), GREEN feeds the whole flock (delight only,
+   30 s cooldown). Feeding drops a little grain pile; the dove(s) come,
+   land by it and hold the peck pose while the pile shrinks away. ======== */
+var dovePanelRefs = null, dovePanelOpen = false;
+var feedMine = null, feedFlock = null, feedMineCd = 0, feedFlockCd = 0;
+var dovePanelTick = { m: -1, f: -1 };
+const FEED_MINE_EAT_S = 4, FEED_FLOCK_EAT_S = 6;
+function doveProgress() {
+  if (!doveAdopted) return { stage: 0, pct: 0, full: false };
+  const st = doveStageNow();
+  if (st >= 3) return { stage: 3, pct: 100, full: true };
+  const lo = st === 2 ? 30 : 0, hi = st === 2 ? 90 : 30;
+  return { stage: st, pct: Math.floor((doveHat - lo) / (hi - lo) * 100), full: false };
+}
+function feedCdLeft(until) { return Math.max(0, Math.ceil((until - performance.now()) / 1000)); }
+function refreshDovePanel() {
+  if (!dovePanelRefs) return;
+  const d = L(), r = dovePanelRefs, pr = doveProgress();
+  r.title.textContent = d.dovePanelTitle;
+  r.stage.textContent = doveAdopted ? d.doveLine(d.doveStages[pr.stage], doveHat) : d.doveBtn;
+  r.fill.style.width = pr.pct + '%';
+  r.pct.textContent = pr.full ? d.doveFull : pr.pct + '%';
+  const mLeft = feedCdLeft(feedMineCd), fLeft = feedCdLeft(feedFlockCd);
+  r.mine.disabled = doveAdopted && mLeft > 0;
+  r.mine.textContent = doveAdopted ? d.doveFeedMine + (mLeft > 0 ? ' · ' + mLeft + 's' : '') : d.doveBtn;
+  r.flock.disabled = fLeft > 0;
+  r.flock.textContent = d.doveFeedFlock + (fLeft > 0 ? ' · ' + fLeft + 's' : '');
+}
+function setDovePanel(open) {
+  dovePanelOpen = !!open;
+  if (dovePanelRefs) dovePanelRefs.panel.style.display = dovePanelOpen ? 'block' : 'none';
+  if (dovePanelOpen) refreshDovePanel();
+}
+const GRAIN_MAT = new THREE.MeshStandardMaterial({ color: 0xe9c86e, roughness: 1 });
+const GRAIN_MAT_DARK = new THREE.MeshStandardMaterial({ color: 0xd9ae4e, roughness: 1 });
+const GRAIN_SPECK_GEO = new THREE.BoxGeometry(0.034, 0.013, 0.013);
+function makeGrainPile() {
+  const g = new THREE.Group();
+  const mound = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.09, 12), GRAIN_MAT_DARK);
+  mound.scale.set(1, 0.75, 1); mound.position.y = 0.034; g.add(mound);
+  const specks = new THREE.Group();
+  for (let i = 0; i < 14; i++) {
+    const s = new THREE.Mesh(GRAIN_SPECK_GEO, GRAIN_MAT);
+    const a = Math.random() * Math.PI * 2, rr = 0.05 + Math.random() * 0.19;
+    s.position.set(Math.cos(a) * rr, 0.008, Math.sin(a) * rr);
+    s.rotation.y = Math.random() * Math.PI;
+    specks.add(s);
+  }
+  g.add(specks);
+  g.userData.mound = mound; g.userData.specks = specks; g.userData.born = performance.now();
+  g.scale.setScalar(0.01);
+  return g;
+}
+function grainPileSpawnTick(pile, now) {
+  const s = Math.min(1, (now - pile.userData.born) / 250);
+  pile.scale.setScalar(Math.max(0.01, s));
+}
+function grainPileEat(pile, p) {
+  const sp = pile.userData.specks, n = sp.children.length;
+  const vis = Math.ceil(n * (1 - p));
+  sp.children.forEach((s, i) => { s.visible = i < vis; });
+  const ms = 1 - 0.7 * p;
+  pile.userData.mound.scale.set(ms, ms * 0.75, ms);
+}
+function doveFacePile(g, px, pz, dt) {
+  const want = Math.atan2(px - g.position.x, pz - g.position.z);
+  const diff = ((want - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  g.rotation.y += diff * Math.min(1, dt * 8);
+}
+function startFeedMine() {
+  const now = performance.now();
+  if (feedMine || now < feedMineCd || !myDove) return;
+  if (room !== 'yard') { toast(L().doveYardOnly); return; }
+  feedMineCd = now + 60000;
+  const ry = player.rotation.y;
+  const fx = player.position.x + Math.sin(ry) * 0.55, fz = player.position.z + Math.cos(ry) * 0.55;
+  const pile = makeGrainPile();
+  pile.position.set(fx, groundY(fx, fz) + 0.02, fz);
+  scene.add(pile);
+  const dx = fx - Math.sin(ry) * 0.24, dz = fz - Math.cos(ry) * 0.24;
+  feedMine = { g: myDove, pile, phase: 'go', t: 0, dx, dy: groundY(dx, dz) + 0.02, dz };
+  refreshDovePanel();
+}
+function endFeedMine(giveSeed) {
+  if (!feedMine) return;
+  scene.remove(feedMine.pile);
+  feedMine = null;
+  refreshDovePanel();
+  if (giveSeed) doveFeed(1);
+}
+function updateFeedMine(dt, now) {
+  const f = feedMine; if (!f) return;
+  if (room !== 'yard' || !myDove || f.g !== myDove) { endFeedMine(false); return; }
+  const g = f.g, t = now / 1000;
+  grainPileSpawnTick(f.pile, now);
+  if (f.phase === 'go') {
+    const rem = doveFlyTo(g, f.dx, f.dy, f.dz, 3.4, dt);
+    const air = g.position.y > groundY(g.position.x, g.position.z) + 0.3;
+    dovePose(g, t, air, false);
+    if (rem <= 0.15) { f.phase = 'eat'; f.t = 0; doveShow(g, 'peck'); }
+  } else {
+    f.t += dt;
+    doveFacePile(g, f.pile.position.x, f.pile.position.z, dt);
+    g.rotation.z = 0;
+    doveShow(g, 'peck');
+    grainPileEat(f.pile, Math.min(1, f.t / FEED_MINE_EAT_S));
+    if (f.t >= FEED_MINE_EAT_S) endFeedMine(true);
+  }
+}
+function startFeedFlock() {
+  const now = performance.now();
+  if (feedFlock || now < feedFlockCd) return;
+  if (room !== 'yard') { toast(L().doveYardOnly); return; }
+  feedFlockCd = now + 30000;
+  const fx = player.position.x + Math.sin(player.rotation.y) * 2, fz = player.position.z + Math.cos(player.rotation.y) * 2;
+  const pile = makeGrainPile();
+  pile.position.set(fx, groundY(fx, fz) + 0.02, fz);
+  scene.add(pile);
+  const near = [...doveFlock].sort((a, b) =>
+    (Math.pow(a.g.position.x - fx, 2) + Math.pow(a.g.position.z - fz, 2)) -
+    (Math.pow(b.g.position.x - fx, 2) + Math.pow(b.g.position.z - fz, 2))).slice(0, 3);
+  const members = near.map((dv, i) => {
+    const saved = { mode: dv.mode, timer: dv.timer, idle: dv.idle, lx: dv.lx, lz: dv.lz };
+    dv.mode = 'feed';
+    const a = (i / Math.max(1, near.length)) * Math.PI * 2 + 0.6;
+    return { dv, saved, sx: fx + Math.sin(a) * 0.3, sz: fz + Math.cos(a) * 0.3, arrived: false };
+  });
+  feedFlock = { pile, members, phase: 'gather', t: 0 };
+  refreshDovePanel();
+}
+function endFeedFlock() {
+  if (!feedFlock) return;
+  for (const m of feedFlock.members) Object.assign(m.dv, m.saved);
+  scene.remove(feedFlock.pile);
+  feedFlock = null;
+  refreshDovePanel();
+}
+function updateFeedFlock(dt, now) {
+  const F = feedFlock; if (!F) return;
+  if (room !== 'yard') { endFeedFlock(); return; }
+  const t = now / 1000;
+  grainPileSpawnTick(F.pile, now);
+  let allIn = true;
+  for (const m of F.members) {
+    const g = m.dv.g;
+    if (!m.arrived) {
+      const rem = doveFlyTo(g, m.sx, groundY(m.sx, m.sz) + 0.02, m.sz, 3.2, dt);
+      const air = g.position.y > groundY(g.position.x, g.position.z) + 0.3;
+      dovePose(g, t, rem > 0.4 || air, false);
+      if (rem <= 0.2) m.arrived = true; else allIn = false;
+    }
+    if (m.arrived) {
+      doveFacePile(g, F.pile.position.x, F.pile.position.z, dt);
+      if (F.phase === 'eat') { g.rotation.z = 0; doveShow(g, 'peck'); }
+      else dovePose(g, t, false, false);
+    }
+  }
+  if (F.phase === 'gather') {
+    F.t += dt;
+    if (allIn || F.t >= 4) {
+      F.phase = 'eat'; F.t = 0;
+      for (const m of F.members) if (m.arrived) { m.dv.g.rotation.z = 0; doveShow(m.dv.g, 'peck'); }
+    }
+  } else {
+    F.t += dt;
+    grainPileEat(F.pile, Math.min(1, F.t / FEED_FLOCK_EAT_S));
+    if (F.t >= FEED_FLOCK_EAT_S) endFeedFlock();
+  }
+}
+function onFeedMineBtn() {
+  const d = L();
+  if (!doveAdopted) { doveAdopted = true; saveDove(); syncDove(); ptTrack(true); refreshDoveBtn(); toast(d.doveGot); refreshDovePanel(); return; }
+  startFeedMine();
+}
+{
+  const panelEl = document.getElementById('dovePanel');
+  if (panelEl) {
+    dovePanelRefs = {
+      panel: panelEl,
+      title: document.getElementById('dovePanelTitle'),
+      stage: document.getElementById('doveStageLine'),
+      fill: document.getElementById('doveBarFill'),
+      pct: document.getElementById('dovePct'),
+      mine: document.getElementById('btnFeedMine'),
+      flock: document.getElementById('btnFeedFlock')
+    };
+    document.getElementById('dovePanelClose').addEventListener('click', () => setDovePanel(false));
+    dovePanelRefs.mine.addEventListener('click', onFeedMineBtn);
+    dovePanelRefs.flock.addEventListener('click', startFeedFlock);
+    makePanelDraggable(panelEl, 'pt3d-dovepanel-pos');
+  }
+}
 function updateDoves(dt, now) {
   const t = now / 1000;
+  updateFeedFlock(dt, now);
+  if (dovePanelOpen) {
+    const m = feedCdLeft(feedMineCd), f = feedCdLeft(feedFlockCd);
+    if (m !== dovePanelTick.m || f !== dovePanelTick.f) { dovePanelTick.m = m; dovePanelTick.f = f; refreshDovePanel(); }
+  }
   for (const dv of doveFlock) {
     const g = dv.g;
+    if (dv.mode === 'feed') continue;
     if (dv.mode === 'circle') {
       dv.ph += dt * dv.w;
       const nx = dv.cx + Math.cos(dv.ph) * dv.R, nz = dv.cz + Math.sin(dv.ph) * dv.R;
@@ -2187,9 +2418,10 @@ function updateDoves(dt, now) {
   if (myDove) {
     const seated = P.mode === 'seated';
     if (seated) { doveSitT += dt; if (doveSitT >= 20) { doveSitT = 0; doveFeed(1); } }
-    if (room === 'yard') doveEscort(myDove, player.position.x, player.position.y, player.position.z, player.rotation.y, seated, dt, t);
+    if (feedMine) updateFeedMine(dt, now);
+    else if (room === 'yard') doveEscort(myDove, player.position.x, player.position.y, player.position.z, player.rotation.y, seated, dt, t);
     else { const gy = groundY(2.6, -11.0); doveFlyTo(myDove, 2.6, gy + 0.02, -11.0, 3, dt); dovePose(myDove, t, myDove.position.y > gy + 0.3, false); }
-  }
+  } else if (feedMine) endFeedMine(false);
 }
 function startSweep(pile) {
   if (sweeping || !leafPiles.includes(pile)) return;
@@ -4364,7 +4596,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.87.0';
+const PT3D_VER = '2.88.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
