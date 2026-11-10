@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.89.2">
+<meta name="pt3d-ver" content="2.89.3">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -96,7 +96,12 @@
   #bubbleLayer { position:fixed; inset:0; z-index:28; pointer-events:none; overflow:hidden; }
   .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
   #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; padding:2px 6px; border:none; background:none; color:#ffe9bd; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
+  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; padding:3px 9px; border:1px solid rgba(255,233,189,.30); border-radius:999px; background:rgba(24,14,4,.42); backdrop-filter:blur(3px); color:#ffe9bd; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 2px rgba(0,0,0,.6); }
+  /* v2.89.3: incense chip refined - no cartoon flame icon, just a quiet pill;
+     warm tint while burning. The label is a single token (see updateIncenseChips). */
+  .incChip .chipIc { font-size:11.5px; line-height:1.25; letter-spacing:.05em; }
+  .incChip .chipTx { display:none; }
+  .incChip.lit { border-color:rgba(255,180,90,.5); color:#ffd9a0; }
   .chipIc { font-size:17px; line-height:1.1; }
   .chipTx { font-size:12px; line-height:1.15; white-space:nowrap; }
   #worldBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
@@ -212,7 +217,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.89.2</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.89.3</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2914,7 +2919,10 @@ function updateIncenseChips() {
     const g = ch.grp();
     if (!g || window.__layoutEdit || (ch.hall ? room !== 'hall' : room !== 'yard') || player.position.distanceTo(g.position) >= 24) { ch.el.style.display = 'none'; continue; }
     const lit = ch.hall ? hallLit : incenseLit, left = ch.hall ? hallLeft : incenseLeft;
-    const txt = lit ? '🔥 ' + L().tBurnLeft(Math.floor(Math.max(0, left) / 60) + ':' + String(Math.floor(Math.max(0, left) % 60)).padStart(2, '0')) : '🕯️ ' + L().aInc;
+    /* v2.89.3: quiet labels - burning shows just the clock, unlit the action
+       with a non-breaking space so setChip keeps it as one token. */
+    const txt = lit ? Math.floor(Math.max(0, left) / 60) + ':' + String(Math.floor(Math.max(0, left) % 60)).padStart(2, '0') : L().aInc.replace(' ', '\u00A0');
+    ch.el.classList.toggle('lit', lit);
     setChip(ch.el, txt);
     __incV.copy(g.position); __incV.y += ch.dy; __incV.project(camera);
     if (__incV.z > 1 || __incV.z < -1) { ch.el.style.display = 'none'; continue; }
@@ -4648,7 +4656,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.89.2';
+const PT3D_VER = '2.89.3';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
