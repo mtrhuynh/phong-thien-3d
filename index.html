@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.88.0">
+<meta name="pt3d-ver" content="2.88.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -45,7 +45,7 @@
   #utilBar { position:fixed; top:84px; right:12px; display:flex; align-items:center; gap:6px; z-index:30; flex-wrap:wrap; justify-content:flex-end; max-width:97vw; }
   #utilBar .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
 
-  /* Dove care panel (v2.88.0) */
+  /* Dove care panel (v2.88.1) */
   #dovePanel { position:fixed; top:136px; right:12px; z-index:31; width:min(302px, 88vw); display:none;
     background:linear-gradient(160deg, rgba(52,34,16,.95), rgba(26,17,9,.95)); border:1px solid rgba(255,205,120,.55);
     border-radius:16px; padding:10px 14px 12px; color:#f3e5c3; box-shadow:0 10px 30px rgba(0,0,0,.5); backdrop-filter:blur(6px); }
@@ -212,7 +212,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.88.0</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.88.1</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2057,7 +2057,7 @@ function syncPet() {
 /* ============ DOVES — an ambient flock circles the yard, lands, pecks, takes off. An adopted
    dove escorts its owner, lands in front of them when they sit, and grows through 3 stages on
    seeds earned by practice. (System v2.86.0; real Tripo models v2.87.0;
-   care panel + grain feeding v2.88.0.) ============ */
+   care panel + grain feeding v2.88.1.) ============ */
 const DOVE_KEY = 'pt3d-dove';
 let doveHat = 0, doveAdopted = false, doveSitT = 0;
 try { const dv0 = JSON.parse(localStorage.getItem(DOVE_KEY) || 'null'); if (dv0) { doveAdopted = !!dv0.a; doveHat = dv0.hat | 0; } } catch (e) {}
@@ -2186,7 +2186,7 @@ if (btnDoveEl) btnDoveEl.addEventListener('click', () => {
   else setDovePanel(!dovePanelOpen);
 });
 
-/* ============ DOVE CARE PANEL + GRAIN FEEDING (v2.88.0) — Anita's design:
+/* ============ DOVE CARE PANEL + GRAIN FEEDING (v2.88.1) — Anita's design:
    the dove chip opens a small panel with a growth progress bar for the pet
    dove and two feed buttons sitting under the bar: WHITE feeds my dove
    (+1 seed, 60 s cooldown), GREEN feeds the whole flock (delight only,
@@ -2601,7 +2601,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk2.glb?v=100', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
+new GLTFLoader().load('models/monk2.glb?v=101', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -4596,7 +4596,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.88.0';
+const PT3D_VER = '2.88.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
