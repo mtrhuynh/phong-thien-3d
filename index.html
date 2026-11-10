@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.89.1">
+<meta name="pt3d-ver" content="2.89.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -212,7 +212,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.89.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.89.2</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1181,7 +1181,7 @@ function bacSub(b) { return L().tagSub(b); }
    backdrop dimming, lantern glows, stars, moon, fireflies. All cheap tricks -
    no heavy assets, so the free static host only ever ships small files and
    each visitor's own device does the rendering.
-   v2.89.1: the moon is no longer a plain glow ball - its disc is painted
+   v2.89.2: the moon is no longer a plain glow ball - its disc is painted
    with the REAL lunar phase of tonight's date (see the moon block below). */
 let dnMode = 'auto';
 try { dnMode = localStorage.getItem('pt3d-daynight') || 'auto'; } catch (e) {}
@@ -1209,7 +1209,7 @@ const starMat = new THREE.PointsMaterial({ size: 0.55, map: glowTex, color: 0xd6
   scene.add(new THREE.Points(gg, starMat));
 }
 const moonMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xdceaff, transparent: true, opacity: 0, depthWrite: false });
-/* Real lunar-phase moon (v2.89.1) - Anita: "trăng theo ngày rằm, có trăng
+/* Real lunar-phase moon (v2.89.2) - Anita: "trăng theo ngày rằm, có trăng
    tròn trăng khuyết". The phase always comes from the REAL date, in every
    mode: Auto follows the real clock, and a manual Night still shows
    tonight's true moon. The disc is painted on a 256px canvas - earthshine
@@ -2653,7 +2653,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk2.glb?v=102', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
+new GLTFLoader().load('models/monk2.glb?v=103', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -4648,7 +4648,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.89.1';
+const PT3D_VER = '2.89.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
