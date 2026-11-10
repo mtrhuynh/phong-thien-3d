@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.88.1">
+<meta name="pt3d-ver" content="2.89.0">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -212,7 +212,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.88.1</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.89.0</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1180,7 +1180,9 @@ function bacSub(b) { return L().tagSub(b); }
    One blend factor drives everything: sky + fog colour, sun -> moonlight,
    backdrop dimming, lantern glows, stars, moon, fireflies. All cheap tricks -
    no heavy assets, so the free static host only ever ships small files and
-   each visitor's own device does the rendering. */
+   each visitor's own device does the rendering.
+   v2.89.0: the moon is no longer a plain glow ball - its disc is painted
+   with the REAL lunar phase of tonight's date (see the moon block below). */
 let dnMode = 'auto';
 try { dnMode = localStorage.getItem('pt3d-daynight') || 'auto'; } catch (e) {}
 let dnCur = -1;
@@ -1207,10 +1209,59 @@ const starMat = new THREE.PointsMaterial({ size: 0.55, map: glowTex, color: 0xd6
   scene.add(new THREE.Points(gg, starMat));
 }
 const moonMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xdceaff, transparent: true, opacity: 0, depthWrite: false });
-const moonCoreMat = new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
+/* Real lunar-phase moon (v2.89.0) - Anita: "trăng theo ngày rằm, có trăng
+   tròn trăng khuyết". The phase always comes from the REAL date, in every
+   mode: Auto follows the real clock, and a manual Night still shows
+   tonight's true moon. The disc is painted on a 256px canvas - earthshine
+   base, lit half (right when waxing, left when waning), the terminator
+   ellipse either erased out (crescent) or added (gibbous), maria on top.
+   Near new moon the canvas ends up ~fully transparent: no moon tonight.
+   Repainted at boot and whenever the age crosses a 0.1-day step. */
+const MOON_SYNODIC = 29.530588853, MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14);
+function moonPhaseAt(date) {
+  let age = ((date.getTime() - MOON_EPOCH) / 86400000) % MOON_SYNODIC;
+  if (age < 0) age += MOON_SYNODIC;
+  return { age, illum: (1 - Math.cos(2 * Math.PI * age / MOON_SYNODIC)) / 2, waxing: age < MOON_SYNODIC / 2 };
+}
+const moonState = { age: 0, illum: 0, waxing: true };
+const moonTex = canvasTexture(256, 256, () => {});
+const moonDiscMat = new THREE.SpriteMaterial({ map: moonTex, transparent: true, opacity: 0, depthWrite: false });
+let moonBucket = -1;
+function moonDraw() {
+  const g = moonTex.image.getContext('2d'), C = 128, R = 118;
+  const c = Math.cos(2 * Math.PI * moonState.age / MOON_SYNODIC), wax = moonState.waxing;
+  g.clearRect(0, 0, 256, 256);
+  g.save();
+  g.beginPath(); g.arc(C, C, R, 0, Math.PI * 2); g.clip();
+  g.fillStyle = 'rgba(198,210,235,0.055)'; g.fillRect(C - R, C - R, R * 2, R * 2);
+  const lg = g.createRadialGradient(C + (wax ? R * 0.38 : -R * 0.38), C - R * 0.22, R * 0.2, C, C, R * 1.65);
+  lg.addColorStop(0, '#ffffff'); lg.addColorStop(1, '#d7e1f4');
+  g.fillStyle = lg;
+  if (wax) g.fillRect(C, C - R, R, R * 2); else g.fillRect(C - R, C - R, R, R * 2);
+  if (c > 0.001) { g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.ellipse(C, C, R * c, R, 0, 0, Math.PI * 2); g.fill(); g.globalCompositeOperation = 'source-over'; }
+  else if (c < -0.001) { g.fillStyle = '#e9effc'; g.beginPath(); g.ellipse(C, C, -R * c, R, 0, 0, Math.PI * 2); g.fill(); }
+  g.restore();
+  g.globalCompositeOperation = 'source-atop';
+  g.fillStyle = 'rgba(148,163,198,0.14)';
+  for (const [mx, my, mr] of [[-0.30, -0.28, 0.30], [0.16, -0.05, 0.24], [-0.08, 0.30, 0.20], [0.34, 0.33, 0.15], [-0.42, 0.08, 0.14]]) {
+    g.beginPath(); g.arc(C + mx * R, C + my * R, mr * R, 0, Math.PI * 2); g.fill();
+  }
+  g.globalCompositeOperation = 'source-over';
+  moonTex.needsUpdate = true;
+}
+function moonRefresh(force) {
+  const ph = moonPhaseAt(new Date());
+  moonState.age = ph.age; moonState.illum = ph.illum; moonState.waxing = ph.waxing;
+  const b = Math.floor(ph.age * 10);
+  if (force || b !== moonBucket) { moonBucket = b; moonDraw(); }
+  /* dnApply only runs while the blend is moving, so keep the halo tracking
+     the (slowly changing) illumination here too - same formula as dnApply. */
+  if (dnCur >= 0) moonMat.opacity = dnCur * 0.85 * moonState.illum;
+}
+moonRefresh(true);
 {
   const halo = new THREE.Sprite(moonMat); halo.scale.set(13, 13, 1); halo.position.set(36, 31, -50); scene.add(halo);
-  const core = new THREE.Sprite(moonCoreMat); core.scale.set(3.6, 3.6, 1); core.position.set(36, 31, -50); scene.add(core);
+  const disc = new THREE.Sprite(moonDiscMat); disc.scale.set(3.6, 3.6, 1); disc.position.set(36, 31, -50); scene.add(disc);
 }
 const FLY_N = 80;
 const flyBase = new Float32Array(FLY_N * 3), flyPh = new Float32Array(FLY_N);
@@ -1233,10 +1284,11 @@ function dnApply(f) {
   skyDome.material.color.lerpColors(DN.domeD, DN.domeN, f);
   renderer.toneMappingExposure = 1.12 + (0.60 - 1.12) * f;
   lampGlowMat.opacity = f * 0.8;;
-  starMat.opacity = f * 0.95; moonMat.opacity = f * 0.85; moonCoreMat.opacity = f;
+  starMat.opacity = f * 0.95; moonMat.opacity = f * 0.85 * moonState.illum; moonDiscMat.opacity = f;
   fallsMat.color.lerpColors(DN.fallD, DN.fallN, f);
 }
 function dnTick(dt) {
+  moonRefresh(false);
   const tgt = dnTarget();
   if (dnCur < 0) { dnCur = tgt; dnApply(dnCur); }
   else if (Math.abs(tgt - dnCur) > 0.0005) {
@@ -4596,7 +4648,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.88.1';
+const PT3D_VER = '2.89.0';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
