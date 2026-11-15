@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.6">
+<meta name="pt3d-ver" content="2.90.7">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -217,7 +217,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.6 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.7 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -447,7 +447,7 @@ function initLayout() {
   resolveLayoutCols();
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); }
   layoutInitDone = true;
-  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility();
+  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
 }
 
 /* ============ Renderer / Scene / Camera ============ */
@@ -1155,7 +1155,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objFence: '🚧 Hàng rào', creditGarden: ' · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objLeafPile: '🍂 Đống lá', objFence: '🚧 Hàng rào', creditGarden: ' · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1191,7 +1191,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objFence: '🚧 Fence', creditGarden: ' · Garden props: broom, basket — Poly by Google; trowel — involuntary tsetse (CC-BY)', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objLeafPile: '🍂 Leaf pile', objFence: '🚧 Fence', creditGarden: ' · Garden props: broom, basket — Poly by Google; trowel — involuntary tsetse (CC-BY)', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -2056,13 +2056,52 @@ const leafGeo = (() => {
 const LEAF_SPOTS = [[-11.5, -8], [11.5, -8], [-11.2, -6.9], [10.9, -6.9], [-8.6, 4.9], [9.7, 7.8], [-4.5, 9.5], [4.5, 9.5], [-8.2, 12.4], [12.6, 9.4], [-4.6, -5.6]];
 const leafGoneAt = new Map();
 let remoteSweeps = [];
+/* v2.90.7 (Anita): leaf-pile SPOTS are layout parts - she wants to move,
+   rotate, duplicate and delete the piles to scatter them herself. Each
+   spot owns a wrapper group (the layout part); the pile is a child of
+   its wrapper, so sweeping / respawn / multiplayer keep working on
+   pids exactly as before. Base spots keep their shared numeric pids;
+   duplicated spots are local-only with string pids. */
+const leafWraps = {};
+function leafSpotId(pid) { return typeof pid === 'number' ? 'leaf' + pid : pid; }
+function makeLeafSpot(pid, x, z) {
+  const w = new THREE.Group();
+  w.position.set(x, 0, z);
+  w.name = 'leafspot-' + leafSpotId(pid);
+  scene.add(w);
+  leafWraps[pid] = w;
+  regPart(leafSpotId(pid), w, true, { x, z, ry: 0, rot: true, yard: true, ps: { w: 1.3, d: 1.3, h: 0.5 } });
+  return w;
+}
+function buildLeafSpots() {
+  for (let i = 0; i < LEAF_SPOTS.length; i++) makeLeafSpot(i, LEAF_SPOTS[i][0], LEAF_SPOTS[i][1]);
+  for (const id in layoutStore) {
+    if (/^leaf-dup\d+$/.test(id) && layoutStore[id].dup && !leafWraps[id]) makeLeafSpot(id, layoutStore[id].x, layoutStore[id].z);
+  }
+}
+function refreshLeafVisibility() {
+  for (const key in leafWraps) {
+    const pid = /^\d+$/.test(key) ? +key : key;
+    const sid = leafSpotId(pid), w = leafWraps[key];
+    const del = !!(layoutStore[sid] && layoutStore[sid].del);
+    if (!w.parent && !del) scene.add(w);
+    w.visible = !del;
+    const pile = leafPiles.find(q => q.userData.pid === pid);
+    if (del) {
+      if (pile) { pile.removeFromParent(); leafPiles.splice(leafPiles.indexOf(pile), 1); updateLeafBtn(); }
+    } else if (!pile && !leafGoneAt.has(pid)) spawnLeafPile(pid);
+  }
+}
 function updateLeafBtn() {
   const b = document.getElementById('btnSweep');
   if (b && b.querySelector('.lb')) b.querySelector('.lb').textContent = L().aSweep + ' (' + leafPiles.length + ')';
 }
 function spawnLeafPile(pid) {
   if (leafPiles.some(p => p.userData.pid === pid)) return;
-  const g = new THREE.Group(); g.position.set(LEAF_SPOTS[pid][0], 0, LEAF_SPOTS[pid][1]);
+  if (layoutStore[leafSpotId(pid)] && layoutStore[leafSpotId(pid)].del) return; // v2.90.7: a deleted spot stays deleted
+  const wrap = leafWraps[pid];
+  const g = new THREE.Group();
+  if (!wrap) g.position.set(LEAF_SPOTS[pid][0], 0, LEAF_SPOTS[pid][1]);
   for (let i = 0; i < 20; i++) {
     const lf = new THREE.Mesh(leafGeo, leafMats[Math.floor(Math.random() * leafMats.length)]);
     const mound = i < 12;
@@ -2073,7 +2112,9 @@ function spawnLeafPile(pid) {
     const sc = 0.85 + Math.random() * 0.55; lf.scale.set(sc, sc, sc);
     g.add(lf);
   }
-  g.userData.isLeafPile = true; g.userData.pid = pid; scene.add(g); leafPiles.push(g);
+  g.userData.isLeafPile = true; g.userData.pid = pid;
+  if (wrap) wrap.add(g); else scene.add(g);
+  leafPiles.push(g);
   updateLeafBtn(); return g;
 }
 let sweeping = null;
@@ -2393,14 +2434,17 @@ function startFeedFlock() {
   const pile = makeGrainPile();
   pile.position.set(fx, groundY(fx, fz) + 0.02, fz);
   scene.add(pile);
+  /* v2.90.7 (Anita): the WHOLE flock comes down to eat - the old code
+     called only the nearest 3 of the 5, the rest kept circling. The
+     eating ring widens a touch so five birds fit without overlap. */
   const near = [...doveFlock].sort((a, b) =>
     (Math.pow(a.g.position.x - fx, 2) + Math.pow(a.g.position.z - fz, 2)) -
-    (Math.pow(b.g.position.x - fx, 2) + Math.pow(b.g.position.z - fz, 2))).slice(0, 3);
+    (Math.pow(b.g.position.x - fx, 2) + Math.pow(b.g.position.z - fz, 2)));
   const members = near.map((dv, i) => {
     const saved = { mode: dv.mode, timer: dv.timer, idle: dv.idle, lx: dv.lx, lz: dv.lz };
     dv.mode = 'feed';
     const a = (i / Math.max(1, near.length)) * Math.PI * 2 + 0.6;
-    return { dv, saved, sx: fx + Math.sin(a) * 0.3, sz: fz + Math.cos(a) * 0.3, arrived: false };
+    return { dv, saved, sx: fx + Math.sin(a) * 0.48, sz: fz + Math.cos(a) * 0.48, arrived: false };
   });
   feedFlock = { pile, members, phase: 'gather', t: 0 };
   refreshDovePanel();
@@ -2517,6 +2561,7 @@ function startSweep(pile) {
   ptSend({ k: 'sweep', id: pile.userData.pid });
   doveFeed(2);
 }
+buildLeafSpots();
 for (let i = 0; i < 11; i++) spawnLeafPile(i);
 let sala = null, salaTimer = 10;
 function spawnSala(shared) {
@@ -2847,13 +2892,18 @@ const GARDEN = [
   ['props/free/basket.glb', -15.0, -26.7, -0.5, 0.5, 'x'],
   ['props/setenull/ca-rot.glb', -12.3, -25.8, 0, 0.35, 'y'],
   // leaning tools
-  ['props/gcz3/riu.glb', -11.7, -28.5, 0.8, 0.65, 'y', -0.32],
-  ['props/gcz3/cuoc-chim.glb', -14.1, -28.3, -0.7, 0.7, 'y', -0.3],
+  // v2.90.7 (Anita): hand tools LYING FLAT on the ground - the old
+  // ~17 deg lean still read as "standing upright, how would anyone use
+  // them". Flat = tip ~-1.5 rad + a small lift so the body rests on the
+  // ground instead of sinking. (xeng stays planted: that model is a
+  // shovel stuck in a dirt mound, standing is its natural pose.)
+  ['props/gcz3/riu.glb', -11.7, -28.5, 0.8, 0.65, 'y', -1.45, 0, 0.29],
+  ['props/gcz3/cuoc-chim.glb', -14.1, -28.3, -0.7, 0.7, 'y', -1.45, 0, 0.17],
   ['props/gcz3/xeng.glb', -15.3, -28.3, 0.9, 1.2, 'y', -0.3],
-  ['props/free/broom.glb', -11.9, -28.0, -0.9, 1.25, 'y', -0.3],
-  ['props/anonymous/cuoc-chu-t.glb', -13.0, -25.9, -0.3, 1.1, 'y', -0.28],
-  ['props/anonymous/liem.glb', -12.5, -26.1, 0.7, 0.45, 'y', -0.3],
-  ['props/free/hoe.glb', -14.6, -26.6, 1.0, 1.2, 'x', 0, 1.22, 0.56],
+  ['props/free/broom.glb', -11.9, -28.0, -0.9, 1.25, 'y', -1.5, 0, 0.06],
+  ['props/anonymous/cuoc-chu-t.glb', -13.0, -25.9, -0.3, 1.1, 'y', -1.5, 0, 0.06],
+  ['props/anonymous/liem.glb', -12.5, -26.1, 0.7, 0.45, 'y', -1.5, 0, 0.03],
+  ['props/free/hoe.glb', -14.6, -26.6, 1.0, 1.2, 'x', 0, 0, 0.02],
   ['props/anonymous/met-tre.glb', -12.7, -26.6, 0.6, 0.6, 'x', -0.55, 0, 0.05],
   ['props/anonymous/non-la.glb', -14.9, -25.9, 0.3, 0.45, 'x', -0.35, 0, 0.03],
   ['props/anonymous/ao-toi.glb', -13.6, -29.7, 0.3, 0.7, 'y', -0.12, 0, 0.55],
@@ -2877,8 +2927,78 @@ const GARDEN_PS = {
   'met-tre': { w: 0.9, d: 0.9, h: 0.7 }, 'non-la': { w: 0.8, d: 0.8, h: 0.6 },
   'ao-toi': { w: 0.9, d: 0.9, h: 1.2 }, 'trowel': { w: 0.7, d: 0.7, h: 0.6 }
 };
+/* v2.90.7 (Anita): every garden prop gets its own name in the Layout
+   panel - "some tiny things I could not identify, so I deleted them".
+   [vi, en] per GLB base name. */
+const GARDEN_NAMES = {
+  'gieng': ['⛲ Giếng nước', '⛲ Well'], 'chuong-ga': ['🐔 Chuồng gà', '🐔 Chicken coop'],
+  'sap-hoa': ['🌸 Sạp hoa', '🌸 Flower stall'], 'cay-vong': ['🌳 Cây treo võng', '🌳 Hammock tree'],
+  'de-bua': ['🔨 Đe thợ rèn', '🔨 Anvil'], 'ban-cua': ['🪚 Bàn cưa', '🪚 Saw bench'],
+  'ban-mai': ['Bàn mài', 'Grindstone'], 'ga-trang': ['🐔 Gà trắng', '🐔 White hen'],
+  'ga-trong': ['🐓 Gà trống', '🐓 Rooster'], 'ga-mai': ['🐔 Gà mái', '🐔 Hen'],
+  'binh-tuoi': ['Bình tưới', 'Watering can'], 'xo-1': ['🪣 Xô nước', '🪣 Bucket'],
+  'bucket': ['🪣 Xô nhỏ', '🪣 Small pail'], 'den-bao': ['🏮 Đèn bão', '🏮 Storm lantern'],
+  'bao-tai': ['Bao tải', 'Sack'], 'basket': ['🧺 Giỏ tre', '🧺 Basket'],
+  'ca-rot': ['🥕 Cà rốt', '🥕 Carrots'], 'riu': ['🪓 Rìu', '🪓 Axe'],
+  'cuoc-chim': ['⛏️ Cuốc chim', '⛏️ Pickaxe'], 'xeng': ['Xẻng', 'Shovel'],
+  'broom': ['🧹 Chổi', '🧹 Broom'], 'cuoc-chu-t': ['Cuốc chữ T', 'Mattock'],
+  'liem': ['Liềm', 'Sickle'], 'hoe': ['Cuốc', 'Hoe'],
+  'met-tre': ['Mẹt tre', 'Bamboo tray'], 'non-la': ['👒 Nón lá', '👒 Leaf hat'],
+  'ao-toi': ['🧥 Áo tơi', '🧥 Rain cape'], 'trowel': ['Xẻng tay', 'Hand trowel']
+};
 const GARDEN_BY_ID = {};
 for (const p of GARDEN) GARDEN_BY_ID['gd-' + p[0].split('/').pop().replace('.glb', '')] = p;
+const CHICKENS = [];
+/* v2.90.7 (Anita): the chickens LIVE - they wander around their home
+   spot, peck at the ground, look about. Purely procedural (the models
+   are static): the inner group walks/pecks inside the layout wrapper,
+   so dragging a chicken in Layout moves its whole range with it. The
+   models face +X (same convention as the Tripo doves). */
+function updateChickens(dt) {
+  for (const c of CHICKENS) {
+    if (!c.wrap.parent || c.wrap.visible === false) continue;
+    if (window.__layoutEdit && typeof layoutSel !== 'undefined' && layoutSel === c.id) continue; // held still while she drags this one
+    c.t -= dt;
+    const inn = c.inner, now = performance.now();
+    if (c.st === 'walk') {
+      const dx = c.tx - inn.position.x, dz = c.tz - inn.position.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 0.05) { c.st = 'peck'; c.t = 1.2 + Math.random() * 1.6; inn.position.y = 0; inn.rotation.x = 0; }
+      else {
+        const sp = Math.min(0.55 * dt, d);
+        inn.position.x += dx / d * sp; inn.position.z += dz / d * sp;
+        const want = Math.atan2(-dz, dx);
+        const diff = ((want - inn.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        inn.rotation.y += diff * Math.min(1, dt * 10);
+        inn.position.y = Math.abs(Math.sin(now / 90 + c.ph)) * 0.03;
+        inn.rotation.x = Math.sin(now / 90 + c.ph) * 0.05;
+      }
+    } else if (c.st === 'peck') {
+      inn.rotation.z = -0.42 * Math.pow(Math.max(0, Math.sin(now / 130 + c.ph)), 1.5);
+      if (c.t <= 0) { c.st = 'idle'; c.t = 0.8 + Math.random() * 2.4; inn.rotation.z = 0; }
+    } else {
+      inn.rotation.z = 0; inn.position.y = 0; inn.rotation.x = 0;
+      if (Math.random() < dt * 0.7) inn.rotation.y += (Math.random() - 0.5) * 1.2;
+      if (c.t <= 0) {
+        if (Math.random() < 0.45) { c.st = 'peck'; c.t = 0.7 + Math.random() * 1.0; }
+        else {
+          let tx = 0, tz = 0;
+          for (let tries = 0; tries < 3; tries++) {
+            const a = Math.random() * Math.PI * 2, r = 0.5 + Math.random() * 1.3;
+            tx = Math.cos(a) * r; tz = Math.sin(a) * r;
+            const cw = layoutParts.find(p => p.id === 'gd-chuong-ga');
+            if (!cw || !cw.obj.parent) break;
+            const dxw = cw.obj.position.x - c.wrap.position.x, dzw = cw.obj.position.z - c.wrap.position.z;
+            const co = Math.cos(c.wrap.rotation.y), si = Math.sin(c.wrap.rotation.y);
+            const lx = dxw * co - dzw * si, lz = dxw * si + dzw * co;
+            if (Math.hypot(tx - lx, tz - lz) > 1.6) break;
+          }
+          c.tx = tx; c.tz = tz; c.st = 'walk';
+        }
+      }
+    }
+  }
+}
 function gardenPlace(p, id, home) {
   const [url, gx, gz, ry, size, dim, leanX, leanZ, liftY] = p;
   const ax = home ? home.x : gx, az = home ? home.z : gz;
@@ -2910,6 +3030,7 @@ function gardenPlace(p, id, home) {
     if (home) wrap.userData.dupCreated = true;
     scene.add(wrap);
     regPart(id, wrap, true, { x: ax, z: az, ry: ry || 0, rot: true, yard: true, ps: GARDEN_PS[base] || { w: 1.2, d: 1.2, h: 1.2 } });
+    if (base === 'ga-trang' || base === 'ga-trong' || base === 'ga-mai') CHICKENS.push({ id, inner, wrap, st: 'idle', t: Math.random() * 2, tx: 0, tz: 0, ph: Math.random() * 9 });
     window.__garden.loaded++;
   }, undefined, () => { window.__garden.errors.push(url); });
 }
@@ -3128,7 +3249,7 @@ function updateWorldChips() {
     let el = pileChips.get(p.userData.pid);
     if (!el) {
       el = document.createElement('button'); el.className = 'wChip'; chipLines(el);
-      el.addEventListener('click', () => { const pile = leafPiles.find(q => q.userData.pid === p.userData.pid); if (!pile) return; if (P.mode === 'seated') standUp(); const d = player.position.distanceTo(pile.position); if (d < 1.0) startSweep(pile); else { const t = pile.position.clone(); t.y = 0; setWalkTarget(t); P.sweepPile = pile; } });
+      el.addEventListener('click', () => { const pile = leafPiles.find(q => q.userData.pid === p.userData.pid); if (!pile) return; if (P.mode === 'seated') standUp(); const t = pile.getWorldPosition(new THREE.Vector3()); const d = player.position.distanceTo(t); if (d < 1.0) startSweep(pile); else { t.y = 0; setWalkTarget(t); P.sweepPile = pile; } });
       worldBtnWrap.appendChild(el); pileChips.set(p.userData.pid, el);
     }
     setChip(el, '🍂 ' + L().aSweep);
@@ -3257,7 +3378,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
       while (o && !o.userData.isLeafPile) o = o.parent;
       if (o) {
         if (P.mode === 'seated') standUp();
-        const p = o.position.clone(); p.y = 0;
+        const p = o.getWorldPosition(new THREE.Vector3()); p.y = 0;
         if (player.position.distanceTo(p) < 1.0) startSweep(o);
         else { setWalkTarget(p); P.sweepPile = o; }
         return;
@@ -3359,7 +3480,7 @@ function doSweep() {
   if (room !== 'yard') { goToRoom('yard'); pendingAfterZone = { zone: 'yard', cb: () => doSweep() }; return; }
   if (!leafPiles.length) { toast(L().tYardClean); return; }
   let best = null, bd = 1e9;
-  leafPiles.forEach(p => { const d = player.position.distanceTo(p.position); if (d < bd) { bd = d; best = p; } });
+  leafPiles.forEach(p => { const d = player.position.distanceTo(p.getWorldPosition(new THREE.Vector3())); if (d < bd) { bd = d; best = p; } });
   if (best) {
     if (P.mode === 'seated') standUp();
     const p = best.position.clone(); p.y = 0;
@@ -3749,7 +3870,7 @@ function animate() {
     if (player.userData.broom) player.userData.broom.rotation.y = Math.sin(k * Math.PI * 5) * 0.45;
     if (k >= 1) {
       if (player.userData.broom) player.userData.broom.visible = false;
-      scene.remove(pl);
+      pl.removeFromParent();
       leafPiles.splice(leafPiles.indexOf(pl), 1);
       sweeping = null; addSen(2); updateLeafBtn();
       if (!daily.swPids.includes(pl.userData.pid)) { daily.swPids.push(pl.userData.pid); saveDaily(); meritDirty = true; }
@@ -3766,11 +3887,12 @@ function animate() {
     if (rr && rr.g.userData.broom) rr.g.userData.broom.rotation.y = Math.sin(rs.t * Math.PI * 5) * 0.45;
     if (rs.t >= 1) {
       if (rr && rr.g.userData.broom) { rr.g.remove(rr.g.userData.broom); rr.g.userData.broom = null; }
-      scene.remove(rs.pile);
+      rs.pile.removeFromParent();
       const ix = leafPiles.indexOf(rs.pile); if (ix >= 0) leafPiles.splice(ix, 1);
       remoteSweeps.splice(i, 1); updateLeafBtn();
     }
   }
+  updateChickens(dt);
   leafGoneAt.forEach((goneAt, pid) => {
     if (performance.now() - goneAt > 40000) {
       leafGoneAt.delete(pid);
@@ -4044,7 +4166,7 @@ function ptSync() {
       r.lfApplied = true;
       p.lf.forEach(([pid, ago]) => {
         const pl = leafPiles.find(q => q.userData.pid === pid);
-        if (pl) { scene.remove(pl); leafPiles.splice(leafPiles.indexOf(pl), 1); }
+        if (pl) { pl.removeFromParent(); leafPiles.splice(leafPiles.indexOf(pl), 1); }
         if (!leafGoneAt.has(pid)) leafGoneAt.set(pid, performance.now() - (ago || 0) * 1000);
       });
       updateLeafBtn();
@@ -4314,6 +4436,20 @@ const layoutPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const layoutHitP = new THREE.Vector3();
 let layoutRing = null;
 const LAYOUT_NAMES = { falls: 'objFalls', shrine: 'objShrine', burner: 'objBurner', pavilion: 'objPavilion', bridgescene: 'objBridge', lamppost1: 'objLampPost', lamppost2: 'objLampPost', lamppost3: 'objLampPost', lamppost4: 'objLampPost', lp1: 'objLampPaper', lp2: 'objLampPaper', lp3: 'objLampPaper', lp4: 'objLampPaper', lp5: 'objLampPaper', lp6: 'objLampPaper', well: 'objWell' };
+/* v2.90.7: garden props show their own name (GARDEN_NAMES), leaf-pile
+   spots show the pile name; duplicates resolve through their source. */
+function layoutDisplayName(id) {
+  if (id.indexOf('gd-') === 0) {
+    let base = id.slice(3);
+    if (/^dup\d+$/.test(base)) { const s = layoutStore[id] && layoutStore[id].src; base = s ? s.replace(/^gd-/, '') : base; }
+    base = base.replace(/-dup\d+$/, '');
+    const nm = GARDEN_NAMES[base];
+    if (nm) return LANG === 'en' ? nm[1] : nm[0];
+    return L().objGarden;
+  }
+  if (id.indexOf('leaf') === 0) return L().objLeafPile;
+  return L()[LAYOUT_NAMES[id] || (id.indexOf('fence') === 0 ? 'objFence' : 'objTree')];
+}
 const layoutPanel = document.createElement('div');
 layoutPanel.id = 'layoutPanel';
 layoutPanel.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:70;display:none;background:rgba(24,17,9,.94);border:1.5px solid #c9a45c;border-radius:16px;padding:10px 12px;color:#ffe9bd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:94vw';
@@ -4395,10 +4531,10 @@ function layoutSelect(id) {
   document.getElementById('layRotR').style.display = rot ? '' : 'none';
   const isTree = !!(id && LAYOUT_ANCHORS[id].scalable);
   const isLamp = !!(id && /^(lp|lamppost)\d+$/.test(id));
-  const isYardFam = !!(id && /^(gd-|fence)/.test(id)); // v2.90.0: garden props + fence runs get Duplicate/Delete too
+  const isYardFam = !!(id && /^(gd-|fence|leaf)/.test(id)); // v2.90.0: garden props + fence runs get Duplicate/Delete too; v2.90.7: leaf-pile spots join them
   for (const b of ['laySizeDn', 'laySizeUp']) document.getElementById(b).style.display = isTree ? '' : 'none';
   for (const b of ['layDup', 'layDel']) document.getElementById(b).style.display = (isTree || isLamp || isYardFam) ? '' : 'none';
-  nameEl.textContent = id ? L()[LAYOUT_NAMES[id] || (id.indexOf('gd-') === 0 ? 'objGarden' : id.indexOf('fence') === 0 ? 'objFence' : 'objTree')] : '🔧 Layout';
+  nameEl.textContent = id ? layoutDisplayName(id) : '🔧 Layout';
   hintEl.textContent = L().layoutHint;
   if (id) syncLayoutProxy(id);
   else if (layoutRing) layoutRing.visible = false;
@@ -4508,7 +4644,7 @@ document.getElementById('layCode').addEventListener('click', () => {
     layoutStore = o;
     try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
     for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
-    refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility();
+    refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
     toast('✓ Layout');
   } catch (e) { /* invalid code pasted: ignore */ }
 });
@@ -4521,7 +4657,7 @@ document.getElementById('layReset').addEventListener('click', () => {
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
   rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden();
-  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility();
+  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
 });
 /* v2.72.0: shared layout lock (Supabase table pt3d_shared_layout + PIN-guarded RPC).
    Anita saves once in the editor; devices that have not made personal edits adopt
@@ -4534,7 +4670,7 @@ function applyLayoutStore() {
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
   rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden();
-  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility();
+  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
 }
 async function fetchSharedLayout() {
   if (!sbClient || layoutFetchBusy || Date.now() - layoutFetchAt < 5000) return;
@@ -4618,7 +4754,7 @@ function layoutUndo() {
     if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.obj.parent && !(layoutStore[p.id] && layoutStore[p.id].del) && treeTypeOf(p.id) !== p.builtType) swapTreeModel(p.id);
   }
   rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden();
-  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility();
+  refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
   if (layoutEdit) { buildLayoutProxies(); layoutSelect(layoutSel && LAYOUT_ANCHORS[layoutSel] ? layoutSel : null); for (const id in LAYOUT_ANCHORS) syncLayoutProxy(id); }
   toast(L().layoutUndoDone);
 }
@@ -4805,6 +4941,26 @@ document.getElementById('laySizeUp').addEventListener('click', () => layoutResiz
 document.getElementById('laySizeDn').addEventListener('click', () => layoutResize(1 / 1.15));
 document.getElementById('layDup').addEventListener('click', () => {
   if (!layoutSel) return;
+  if (/^leaf/.test(layoutSel)) {
+    /* v2.90.7: duplicate a leaf-pile spot - a local-only spot with a
+       string pid; the shared base piles keep their numeric pids. */
+    const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
+    if (!parts.length) return;
+    layoutSnapshot();
+    const cur = layoutCur[layoutSel];
+    let seq = 100; let nid = 'leaf-dup' + seq++; while (layoutStore[nid] || LAYOUT_ANCHORS[nid]) nid = 'leaf-dup' + seq++;
+    const nx = Math.max(-28, Math.min(28, cur.x + 1.4)), nz = Math.max(-32, Math.min(24, cur.z + 1.4));
+    LAYOUT_ANCHORS[nid] = { x: nx, z: nz, ry: cur.ry, rot: true, yard: true, ps: { w: 1.3, d: 1.3, h: 0.5 } };
+    layoutStore[nid] = { x: nx, z: nz, ry: cur.ry, sc: 1, dup: 1, src: 'leaf' };
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+    makeLeafSpot(nid, nx, nz);
+    layoutCur[nid] = layoutEntry(nid);
+    applyLayoutId(nid);
+    spawnLeafPile(nid);
+    addLayoutProxy(nid);
+    layoutSelect(nid);
+    return;
+  }
   if (/^(gd-|fence)/.test(layoutSel)) {
     /* v2.90.0: duplicate a garden prop / fence run — clone the wrap in
        place; the store entry carries src so rebuildDupGarden can rebuild
@@ -4903,11 +5059,19 @@ document.getElementById('layType').addEventListener('click', () => {
 document.getElementById('layDel').addEventListener('click', () => {
   if (!layoutSel) return;
   const isLampSel = /^(lp|lamppost)\d+$/.test(layoutSel);
-  const isYardSel = /^(gd-|fence)/.test(layoutSel); // v2.90.0: garden props + fence runs are deletable too
+  const isYardSel = /^(gd-|fence|leaf)/.test(layoutSel); // v2.90.0: garden props + fence runs are deletable too; v2.90.7: leaf spots too
   if (!LAYOUT_ANCHORS[layoutSel].scalable && !isLampSel && !isYardSel) return;
   if (!confirm(isLampSel || isYardSel ? L().layoutDelQObj : L().layoutDelQ)) return;
   layoutSnapshot();
   const id = layoutSel;
+  if (/^leaf/.test(id)) {
+    /* v2.90.7: deleting a spot also retires its pile for good - drop it
+       from the sweep list and clear any pending respawn. */
+    const pid = /^leaf\d+$/.test(id) ? +id.slice(4) : id;
+    const pile = leafPiles.find(q => q.userData.pid === pid);
+    if (pile) { if (sweeping && sweeping.pile === pile) sweeping = null; leafPiles.splice(leafPiles.indexOf(pile), 1); updateLeafBtn(); }
+    leafGoneAt.delete(pid);
+  }
   for (const p of layoutParts.filter(p => p.id === id)) {
     const ti = treeProcs.indexOf(p.obj);
     if (ti >= 0) treeProcs.splice(ti, 1);
@@ -4978,7 +5142,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.6';
+const PT3D_VER = '2.90.7';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -5010,7 +5174,7 @@ addEventListener('beforeunload', ptSaveSession);
   if (Array.isArray(sv.leaves) && sv.leaves.length) {
     sv.leaves.forEach(([pid, remain]) => {
       const pl = leafPiles.find(q => q.userData.pid === pid);
-      if (pl) { scene.remove(pl); leafPiles.splice(leafPiles.indexOf(pl), 1); }
+      if (pl) { pl.removeFromParent(); leafPiles.splice(leafPiles.indexOf(pl), 1); }
       leafGoneAt.set(pid, performance.now() - (40 - Math.min(40, remain || 0)) * 1000);
     });
     updateLeafBtn();
