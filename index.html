@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.2">
+<meta name="pt3d-ver" content="2.90.3">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -217,7 +217,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.2 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.3 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -386,8 +386,13 @@ function regPart(id, obj, anchor, anchorDef, prePlaced) {
   if (layoutStore[id] && layoutStore[id].del) obj.visible = false;
   if (layoutInitDone) applyLayoutId(id);
 }
+const OLD_FENCE_DEFAULTS = { fence1: { x: -17.5, z: -0.5 }, fence2: { x: 17.5, z: -0.5 }, fence3: { x: 0, z: 14.5 } }; // pre-v2.90.3 fence anchors
 function layoutEntry(id) {
   const a = LAYOUT_ANCHORS[id], sv = layoutStore[id];
+  /* v2.90.3: a stored fence entry still sitting on the OLD default spot
+     is the untouched default - let it fall through to the new anchor at
+     the paving edge. A fence Anita dragged herself stays put. */
+  if (sv && OLD_FENCE_DEFAULTS[id]) { const o = OLD_FENCE_DEFAULTS[id]; if (Math.abs(sv.x - o.x) < 0.06 && Math.abs(sv.z - o.z) < 0.06) return { x: a.x, z: a.z, ry: a.ry, sc: 1 }; }
   return sv ? { x: sv.x, z: sv.z, ry: (sv.ry !== undefined ? sv.ry : a.ry), sc: (sv.sc !== undefined ? sv.sc : 1) } : { x: a.x, z: a.z, ry: a.ry, sc: 1 };
 }
 function resolveLayoutCols() {
@@ -940,9 +945,12 @@ function fenceRun(x, z, len, rotY, gapC) {
    the yard herself) — drag / rotate / duplicate / delete like the trees.
    ps is the tap-proxy size in WORLD axes. No colliders: the fence was
    never a collider, the yard bounds live in collide(). */
-regPart('fence1', fenceRun(-17.5, -0.5, 31, Math.PI / 2), true, { x: -17.5, z: -0.5, ry: Math.PI / 2, rot: true, yard: true, flen: 31, ps: { w: 0.7, d: 31, h: 1.1 } });
-regPart('fence2', fenceRun(17.5, -0.5, 31, Math.PI / 2), true, { x: 17.5, z: -0.5, ry: Math.PI / 2, rot: true, yard: true, flen: 31, ps: { w: 0.7, d: 31, h: 1.1 } });
-regPart('fence3', fenceRun(0, 14.5, 35, 0, 0), true, { x: 0, z: 14.5, ry: 0, rot: true, yard: true, flen: 35, ps: { w: 35, d: 0.7, h: 1.1 } });
+/* v2.90.3 (Anita): the fences move OUT to the paving edge (the paving
+   runs x +-29, z -33..25) and the whole yard opens up - side runs hug
+   x = +-28.65 from the back edge to the front run at z = 24.65. */
+regPart('fence1', fenceRun(-28.65, -4.2, 57.6, Math.PI / 2), true, { x: -28.65, z: -4.2, ry: Math.PI / 2, rot: true, yard: true, flen: 57.6, ps: { w: 0.7, d: 57.6, h: 1.1 } });
+regPart('fence2', fenceRun(28.65, -4.2, 57.6, Math.PI / 2), true, { x: 28.65, z: -4.2, ry: Math.PI / 2, rot: true, yard: true, flen: 57.6, ps: { w: 0.7, d: 57.6, h: 1.1 } });
+regPart('fence3', fenceRun(0, 24.65, 57.3, 0, 0), true, { x: 0, z: 24.65, ry: 0, rot: true, yard: true, flen: 57.3, ps: { w: 57.3, d: 0.7, h: 1.1 } });
 
 /* ============ Forest panorama backdrop (2D ring) ============ */
 let bgRingMesh = null;
@@ -3014,12 +3022,12 @@ function collide() {
   /* v2.90.0: yard bounds - the front fence line (z 14.5) holds everywhere
      except the gap at the end of the red carpet (|x| <= 1.6), where the
      monk may walk out onto the grass up to z 30. */
-  if (p.z > 13.8 && Math.abs(p.x) > 1.6) p.z = 13.8;
+  if (p.z > 24.1 && Math.abs(p.x) > 1.6) p.z = 24.1; // v2.90.3: front fence now on the paving edge (z 24.65)
   if (p.z > 30) p.z = 30;
-  /* v2.90.2: hard outer bounds (garden south edge, yard sides) - a lag
-     spike can step 0.34 m in one frame; these keep him in the world. */
-  if (p.z < -31.2) p.z = -31.2;
-  if (p.x < -17.2) p.x = -17.2; else if (p.x > 17.2) p.x = 17.2;
+  /* v2.90.2: hard outer bounds - a lag spike can step 0.34 m in one
+     frame; these keep him in the world. v2.90.3: widened with the yard. */
+  if (p.z < -32.8) p.z = -32.8;
+  if (p.x < -28.3) p.x = -28.3; else if (p.x > 28.3) p.x = 28.3;
   /* v2.69.0: pavilion railing fence - a radial check in the pavilion's own
      frame, exact at ANY layout rotation (the v2.65 AABB ring misaligned
      when Anita rotated the pavilion and fenced her out). The gap sector
@@ -3050,10 +3058,8 @@ function turnToward(obj, targetAngle, dt) {
 }
 function setWalkTarget(v, cushion = null, incense = false) {
   P.target = v.clone();
-  P.target.x = THREE.MathUtils.clamp(P.target.x, -17.0, 17.0);
-  P.target.z = THREE.MathUtils.clamp(P.target.z, -31, Math.abs(P.target.x) <= 1.6 ? 30 : 13.8); // v2.90.0: out through the fence gap at the carpet end; v2.90.2: the garden plot behind the hall (z -25..-30.5) is walkable too - the old -24.3 clamp turned every garden tap into a target pressed against the back wall
-  if (P.target.z < -24.65) P.target.x = THREE.MathUtils.clamp(P.target.x, -12.5, 12.5); // garden width
-  else if (P.target.z < -10.3) P.target.x = THREE.MathUtils.clamp(P.target.x, -10.2, 10.2);
+  P.target.x = THREE.MathUtils.clamp(P.target.x, -28, 28);
+  P.target.z = THREE.MathUtils.clamp(P.target.z, -32.6, Math.abs(P.target.x) <= 1.6 ? 30 : 24.1); // v2.90.3: the whole paved yard is walkable (paving x +-29, z -33..25; fences on the edge) - out through the front fence gap at the carpet end onto the grass to z 30
   P.sitCushion = cushion;
   P.incenseAfterWalk = incense;
   P.sweepPile = null;
@@ -4650,7 +4656,7 @@ renderer.domElement.addEventListener('pointermove', (e) => {
   const cur = layoutCur[layoutDragId];
   const wide = !!LAYOUT_ANCHORS[layoutDragId].wide;
   const yard = !!LAYOUT_ANCHORS[layoutDragId].yard; // v2.90.0: garden + fence may roam the whole yard incl. the backyard strip (z to -32.5)
-  const xLim = (wide || yard) ? 20.5 : 16.6, zLo = yard ? -32.5 : wide ? -28 : -11.6, zHi = (wide || yard) ? 15.5 : 13.4;
+  const xLim = (wide || yard) ? 28.6 : 16.6, zLo = (wide || yard) ? -32.8 : -11.6, zHi = (wide || yard) ? 24.6 : 13.4; // v2.90.3: drag range widened to the paving edge with the yard
   cur.x = Math.max(-xLim, Math.min(xLim, p.x + layoutGrabDX));
   cur.z = Math.max(zLo, Math.min(zHi, p.z + layoutGrabDZ));
   applyLayoutId(layoutDragId);
@@ -4679,9 +4685,8 @@ function rescuePlayer(force) {
   try {
     const p = player.position, R = 0.2;
     const free = (x, z) => {
-      if (x < -17 || x > 17 || z < -31 || z > 30) return false; // v2.90.2: garden included
-      if (z > 13.8 && Math.abs(x) > 1.6) return false;
-      if (z < -10.3 && Math.abs(x) > (z < -24.65 ? 12.5 : 10.4)) return false;
+      if (x < -28 || x > 28 || z < -32.6 || z > 30) return false; // v2.90.3: whole paved yard, garden included
+      if (z > 24.1 && Math.abs(x) > 1.6) return false;
       for (const c of COLLIDERS) if (x > c.x0 - R && x < c.x1 + R && z > c.z0 - R && z < c.z1 + R) return false;
       return true;
     };
@@ -4949,7 +4954,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.2';
+const PT3D_VER = '2.90.3';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
