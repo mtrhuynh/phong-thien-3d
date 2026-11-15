@@ -12,7 +12,7 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(fetch(e.request).catch(() => caches.match('index.html')));
     return;
   }
-  if (/\/(models|music|bg|sounds)\//.test(url.pathname)) {
+  if (/\/(models|music|bg|sounds|props)\//.test(url.pathname)) {
     e.respondWith(caches.open(CACHE).then(async (c) => {
       const hit = await c.match(e.request);
       if (hit) return hit;
