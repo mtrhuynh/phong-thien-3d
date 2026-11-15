@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.7">
+<meta name="pt3d-ver" content="2.90.8">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -60,6 +60,7 @@
   .dp-feed { flex:1; padding:9px 6px; border-radius:999px; font-size:13px; cursor:pointer; font-family:inherit; border:1px solid rgba(0,0,0,.25); }
   .dp-feed.mine { background:linear-gradient(160deg, #fffdf4, #e9e2cd); color:#3a2a10; font-weight:700; }
   .dp-feed.flock { background:linear-gradient(160deg, #57b368, #2f7d3c); color:#fff; font-weight:700; border-color:rgba(255,255,255,.35); }
+  .dp-feed.link { background:rgba(255,235,190,.16); color:#ffe9bd; border-color:rgba(255,205,120,.45); }
   .dp-feed:disabled { opacity:.45; cursor:default; font-weight:400; }
   #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; flex-direction:column; align-items:flex-end; gap:6px; z-index:30; max-width:97vw; }
   #bottomCtl .ctlRow { display:flex; align-items:center; gap:6px; }
@@ -194,6 +195,9 @@
     <button id="btnFeedMine" class="dp-feed mine">🌾 Cho ăn</button>
     <button id="btnFeedFlock" class="dp-feed flock">🌾 Cho cả đàn</button>
   </div>
+  <div class="dp-btns">
+    <button id="btnDoveLink" class="dp-feed link">🔗 Mã của tôi</button>
+  </div>
 </div>
 
 <div class="ui" id="camModes">
@@ -217,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.7 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.8 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1142,7 +1146,7 @@ const I18N = {
     nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
     nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
     pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
-    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.', dovePanelTitle: '🕊️ Bồ câu', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' hạt', doveFull: 'Đã lớn tối đa', doveFeedMine: '🌾 Cho ăn', doveFeedFlock: '🌾 Cho cả đàn', doveYardOnly: 'Ra sân mới cho bồ câu ăn được nhé',
+    aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.', dovePanelTitle: '🕊️ Bồ câu', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' hạt', doveFull: 'Đã lớn tối đa', doveFeedMine: '🌾 Cho ăn', doveFeedFlock: '🌾 Cho cả đàn', doveYardOnly: 'Ra sân mới cho bồ câu ăn được nhé', doveLink: '🔗 Mã của tôi', doveLinkOn: '🔗 Đã liên kết ✓', doveLinkPrompt: 'Mã bí mật của bạn (ít nhất 6 ký tự). Nhập CÙNG mã này trên mọi máy/app để dùng chung đúng 1 con bồ câu:', doveLinkShort: 'Mã ngắn quá — ít nhất 6 ký tự nha', doveLinked: 'Đã liên kết ✓ Từ nay mọi máy dùng chung 1 con bồ câu', doveLinkErr: 'Chưa nối được máy chủ — chim vẫn lưu trên máy này, thử lại sau nhé',
     aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
     xamAgain: '🎋 Xin quẻ khác', xamClose: 'Đóng', xamCap: (n, g) => '🎋 Quẻ số ' + n + ' · ' + g,
     gain: n => '+' + n + ' phước đức 🪷', merit: 'phước đức', phuc: 'phước',
@@ -1178,7 +1182,7 @@ const I18N = {
     nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
     nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
     pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
-    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.', dovePanelTitle: '🕊️ Dove', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' seeds', doveFull: 'Fully grown', doveFeedMine: '🌾 Feed', doveFeedFlock: '🌾 Feed the flock', doveYardOnly: 'Head out to the yard to feed the doves',
+    aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.', dovePanelTitle: '🕊️ Dove', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' seeds', doveFull: 'Fully grown', doveFeedMine: '🌾 Feed', doveFeedFlock: '🌾 Feed the flock', doveYardOnly: 'Head out to the yard to feed the doves', doveLink: '🔗 My code', doveLinkOn: '🔗 Linked ✓', doveLinkPrompt: 'Your secret code (at least 6 characters). Enter the SAME code on every device/app to share exactly one dove:', doveLinkShort: 'Code too short — at least 6 characters', doveLinked: 'Linked ✓ All your devices now share one dove', doveLinkErr: 'Could not reach the server — your dove stays saved on this device, try again later',
     aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
     xamAgain: '🎋 Draw again', xamClose: 'Close', xamCap: (n, g) => '🎋 Fortune ' + n + ' · ' + g,
     gain: n => '+' + n + ' merit 🪷', merit: 'merit', phuc: 'merit',
@@ -2189,7 +2193,75 @@ function syncPet() {
 const DOVE_KEY = 'pt3d-dove';
 let doveHat = 0, doveAdopted = false, doveSitT = 0;
 try { const dv0 = JSON.parse(localStorage.getItem(DOVE_KEY) || 'null'); if (dv0) { doveAdopted = !!dv0.a; doveHat = dv0.hat | 0; } } catch (e) {}
-function saveDove() { try { localStorage.setItem(DOVE_KEY, JSON.stringify({ a: doveAdopted ? 1 : 0, hat: doveHat })); } catch (e) {} }
+function saveDove() { try { localStorage.setItem(DOVE_KEY, JSON.stringify({ a: doveAdopted ? 1 : 0, hat: doveHat })); } catch (e) {} doveSyncPush(); }
+/* v2.90.8 (Anita): ONE dove on every device. The profile also lives on
+   the server (Supabase table pt3d_doves, see supabase-dove-sync.sql),
+   keyed by the SHA-256 of a personal code entered once per device.
+   Merge rule: the record with MORE seeds wins, so the most-grown dove
+   becomes the shared one. Every server call fails soft — without the
+   table (or offline) the dove behaves exactly as before, local only. */
+const DOVE_CODE_KEY = 'pt3d-dove-code';
+let doveCodeHash = '';
+try { doveCodeHash = localStorage.getItem(DOVE_CODE_KEY) || ''; } catch (e) {}
+let dovePushT = null, dovePulled = false;
+async function doveHashCode(code) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('pt3d-dove:' + code.trim().toLowerCase()));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function doveSyncPush() {
+  if (!doveCodeHash) return;
+  clearTimeout(dovePushT);
+  dovePushT = setTimeout(async () => {
+    if (!sbClient) return;
+    try { await sbClient.rpc('pt3d_set_dove', { p_code: doveCodeHash, p_a: doveAdopted ? 1 : 0, p_hat: doveHat }); } catch (e) {}
+  }, 700);
+}
+async function doveSyncPull() {
+  if (dovePulled || !doveCodeHash || !sbClient) return false;
+  dovePulled = true;
+  try {
+    const { data, error } = await sbClient.from('pt3d_doves').select('a, hat').eq('code', doveCodeHash).maybeSingle();
+    if (error) { dovePulled = false; return false; }
+    if (data) {
+      const sA = !!data.a, sHat = data.hat | 0;
+      if (sHat > doveHat || (sHat === doveHat && sA && !doveAdopted)) {
+        doveAdopted = sA; doveHat = sHat; saveDove(); syncDove(); refreshDoveBtn(); refreshDovePanel();
+      } else if (doveHat > sHat || (doveAdopted && !sA)) doveSyncPush();
+    } else if (doveAdopted) doveSyncPush();
+    return true;
+  } catch (e) { dovePulled = false; return false; }
+}
+function askDoveCode() {
+  return new Promise(res => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,6,3,.66);z-index:200;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = '<div style="background:#2b1d10;border:1px solid rgba(255,205,120,.55);border-radius:14px;padding:18px 20px;width:min(320px,86vw);color:#ffe9bd;font-family:inherit">'
+      + '<div style="font-weight:700;margin-bottom:10px">' + L().doveLinkPrompt + '</div>'
+      + '<input id="doveCodeInp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,205,120,.4);background:#1d1208;color:#ffe9bd;font-size:16px">'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
+      + '<button id="doveCodeCancel" class="laybtn">✕</button><button id="doveCodeOk" class="laybtn">OK</button></div></div>';
+    document.body.appendChild(ov);
+    const inp = ov.querySelector('#doveCodeInp');
+    setTimeout(() => inp.focus(), 30);
+    const done = v => { ov.remove(); res(v); };
+    ov.querySelector('#doveCodeOk').addEventListener('click', () => done(inp.value || null));
+    ov.querySelector('#doveCodeCancel').addEventListener('click', () => done(null));
+    ov.addEventListener('click', e => { if (e.target === ov) done(null); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value || null); if (e.key === 'Escape') done(null); });
+  });
+}
+async function onDoveLink() {
+  const code = await askDoveCode();
+  if (code === null) return;
+  if (code.trim().length < 6) { toast(L().doveLinkShort); return; }
+  doveCodeHash = await doveHashCode(code);
+  try { localStorage.setItem(DOVE_CODE_KEY, doveCodeHash); } catch (e) {}
+  refreshDovePanel(); // label flips at once; the server merge below may take a moment
+  dovePulled = false;
+  const ok = await doveSyncPull();
+  refreshDovePanel();
+  toast(ok ? L().doveLinked : L().doveLinkErr);
+}
 function doveStageNow() { if (!doveAdopted) return 0; return doveHat >= 90 ? 3 : doveHat >= 30 ? 2 : 1; }
 function doveScaleOf(stage) { return [0, 0.55, 0.8, 1.05][stage] || 0.55; }
 /* v2.87.0: Anita's real Tripo doves replace the primitive placeholders. Four
@@ -2344,6 +2416,7 @@ function refreshDovePanel() {
   r.mine.textContent = doveAdopted ? d.doveFeedMine + (mLeft > 0 ? ' · ' + mLeft + 's' : '') : d.doveBtn;
   r.flock.disabled = fLeft > 0;
   r.flock.textContent = d.doveFeedFlock + (fLeft > 0 ? ' · ' + fLeft + 's' : '');
+  if (r.link) r.link.textContent = doveCodeHash ? d.doveLinkOn : d.doveLink;
 }
 function setDovePanel(open) {
   dovePanelOpen = !!open;
@@ -2503,11 +2576,13 @@ function onFeedMineBtn() {
       fill: document.getElementById('doveBarFill'),
       pct: document.getElementById('dovePct'),
       mine: document.getElementById('btnFeedMine'),
-      flock: document.getElementById('btnFeedFlock')
+      flock: document.getElementById('btnFeedFlock'),
+      link: document.getElementById('btnDoveLink')
     };
     document.getElementById('dovePanelClose').addEventListener('click', () => setDovePanel(false));
     dovePanelRefs.mine.addEventListener('click', onFeedMineBtn);
     dovePanelRefs.flock.addEventListener('click', startFeedFlock);
+    dovePanelRefs.link.addEventListener('click', onDoveLink);
     makePanelDraggable(panelEl, 'pt3d-dovepanel-pos');
   }
 }
@@ -4690,6 +4765,7 @@ async function fetchSharedLayout() {
       }
     }
   } catch (e) {}
+  doveSyncPull();
   layoutFetchBusy = false;
 }
 function askPin() {
@@ -5142,7 +5218,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.7';
+const PT3D_VER = '2.90.8';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
