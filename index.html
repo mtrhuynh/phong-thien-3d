@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.9">
+<meta name="pt3d-ver" content="2.90.10">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.8 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.10 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -554,6 +554,10 @@ const MAT = {
   robeGold: new THREE.MeshStandardMaterial({ color: 0xf2b53a, roughness: 0.4 }),
   robeBrown: new THREE.MeshStandardMaterial({ color: 0xbd8449, roughness: 0.55 }),
   lanternRed: new THREE.MeshStandardMaterial({ color: 0xd8402e, roughness: 0.5, emissive: 0x7a1503, emissiveIntensity: 0.7 }),
+  /* #30 (Phong Live v0.1.24): the altar tiers wear this one plain deep red —
+     0x751f14, roughness 0.72, NO texture (v0.1.22 painting-floor texture and
+     v0.1.23 rosewood texture were both rejected by Anita; final call: plain). */
+  altarRed: new THREE.MeshStandardMaterial({ color: 0x751f14, roughness: 0.72 }),
 };
 function box(w, h, d, mat, x, y, z, parent) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -757,18 +761,67 @@ carpet.receiveShadow = true; scene.add(carpet);
     T.remove(roof1); T.remove(roof2); T.remove(roof3); T.remove(fin); T.remove(eaveSlab); T.remove(fascia1); T.remove(fascia2); T.remove(fascia3);
   }, undefined, () => {});
   /* interior, visible from the yard through the colonnade */
-  box(9, 3.0, 0.1, MAT.woodDark, 0, 2.7, -7.62, T);                      // altar backdrop
-  box(6.4, 0.95, 1.75, MAT.woodDark, 0, 1.6, -6.72, T);                  // altar table
-  box(6.5, 0.09, 1.85, MAT.gold, 0, 2.1, -6.72, T);
-  const halo = new THREE.Mesh(new THREE.CircleGeometry(1.45, 26), new THREE.MeshBasicMaterial({ color: 0xffb45e }));
-  halo.position.set(0, 3.3, -7.5); T.add(halo);
+  /* ---------- #30: altar ported from Phong Live v0.1.24 ----------
+     Backdrop panel + extended platform + plain deep-red tiers, adapted to
+     this hall (17 m wide, ceiling 4.68 m; Phong Live is 24 x 30 m, 12 m).
+     Panel 9.0 m wide — same as the old dark backdrop — so h = 9.0*864/2640
+     = 2.945 m; centre y 2.845 puts its top at 4.32 (frame top 4.52, 0.16
+     below the ceiling) and its bottom behind the tier-1 top (1.57).
+     The statue (2.1 m on a 0.95 m table, head 4.17) stands centred on the
+     panel's empty middle; its head sits 0.15 m below the panel top edge —
+     the ceiling caps the panel, so Phong Live's headroom ratio is
+     unreachable here (see REPORT.md). No cover strip above the panel: the
+     cream back wall there is clean (Phong Live needed one for slats/beams).
+     The gold halo disc is removed, as in Phong Live v0.1.5 — the statue
+     stands directly in front of the painting. */
+  const PANEL = { w: 9.0, h: 9.0 * 864 / 2640, y: 2.845, z: -7.62 };
+  const panelGroup = new THREE.Group(); panelGroup.position.set(0, PANEL.y, PANEL.z); T.add(panelGroup);
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 0.85, metalness: 0 });
+  const panelMesh = new THREE.Mesh(new THREE.PlaneGeometry(PANEL.w, PANEL.h), panelMat);
+  panelGroup.add(panelMesh);
+  new THREE.TextureLoader().load('ARTWORK_tranh-nen-ban-tho_v3.webp', (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    panelMat.map = tex; panelMat.emissiveMap = tex;
+    panelMat.emissive = new THREE.Color(0xffffff); panelMat.emissiveIntensity = 0.3;
+    panelMat.needsUpdate = true;
+  });
+  /* Frame: dark wood border + thin gold inner trim, proud of the painting.
+     Frame 0.2 wide (Phong Live uses 0.25; 0.2 keeps the outer edge clear of
+     the merit/mantra boards flanking the altar at x ±4.725). */
+  const FRAME_W = 0.2, FRAME_D = 0.14;
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x3a2110, roughness: 0.55 });
+  const frameOuterW = PANEL.w + FRAME_W * 2, frameOuterH = PANEL.h + FRAME_W * 2;
+  [[0, frameOuterH / 2 - FRAME_W / 2, frameOuterW, FRAME_W],
+   [0, -(frameOuterH / 2 - FRAME_W / 2), frameOuterW, FRAME_W],
+   [-(frameOuterW / 2 - FRAME_W / 2), 0, FRAME_W, PANEL.h],
+   [frameOuterW / 2 - FRAME_W / 2, 0, FRAME_W, PANEL.h]].forEach(([x, y, w, h]) => {
+    const f = new THREE.Mesh(new THREE.BoxGeometry(w, h, FRAME_D), frameMat);
+    f.position.set(x, y, FRAME_D / 2 - 0.02); panelGroup.add(f);
+  });
+  const trimMat = new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.32, metalness: 0.75 });
+  const TRIM = 0.06;
+  [[0, PANEL.h / 2 - TRIM / 2, PANEL.w, TRIM],
+   [0, -(PANEL.h / 2 - TRIM / 2), PANEL.w, TRIM],
+   [-(PANEL.w / 2 - TRIM / 2), 0, TRIM, PANEL.h - TRIM * 2],
+   [PANEL.w / 2 - TRIM / 2, 0, TRIM, PANEL.h - TRIM * 2]].forEach(([x, y, w, h]) => {
+    const t = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.02), trimMat);
+    t.position.set(x, y, 0.015); panelGroup.add(t);
+  });
+  /* Altar tiers in plain deep red (MAT.altarRed); top of tier 2 = 2.07 —
+     the old table top — so the Buddha, offerings, burner and fortune
+     sticks keep their heights. Tier 1 reaches back to the panel's front
+     face, so no gap stays open between platform and backdrop. */
+  box(9.0, 0.45, 1.9, MAT.altarRed, 0, 1.345, -6.62, T);   // tier 1 (base), top 1.57
+  box(9.0, 0.5, 1.75, MAT.altarRed, 0, 1.82, -6.695, T);   // tier 2 (stage), top 2.07
+  box(9.1, 0.14, 1.95, MAT.altarRed, 0, 1.19, -6.62, T);   // baseboard, bottom on the floor (1.12)
+  box(3.2, 0.22, 0.8, MAT.altarRed, 0, 1.23, -5.25, T);    // front step, top 1.34 (floor 1.12 -> tier 1 top 1.57)
   { /* offerings on the widened altar: fruit plate (left), lotus vase (right), burner centre */
-    const fruitG = new THREE.Group(); fruitG.position.set(-1.35, 2.15, -6.25); T.add(fruitG);
+    const fruitG = new THREE.Group(); fruitG.position.set(-1.35, 2.07, -6.25); T.add(fruitG); // #30: re-seated on the new tier-2 top (2.07; was 2.15 on the gold trim)
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.2, 0.08, 18), MAT.bronze); plate.position.y = 0.04; plate.castShadow = true; fruitG.add(plate);
     const fruitMat = new THREE.MeshStandardMaterial({ color: 0xe8912d, roughness: 0.6 });
     [[-0.13, -0.1], [0.13, -0.1], [-0.13, 0.12], [0.13, 0.12]].forEach(p => { const f = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 10), fruitMat); f.position.set(p[0], 0.17, p[1]); f.castShadow = true; fruitG.add(f); });
     const fTop = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 10), fruitMat); fTop.position.set(0, 0.36, 0); fruitG.add(fTop);
-    const vaseG = new THREE.Group(); vaseG.position.set(1.35, 2.15, -6.25); T.add(vaseG);
+    const vaseG = new THREE.Group(); vaseG.position.set(1.35, 2.07, -6.25); T.add(vaseG); // #30: re-seated on the new tier-2 top (2.07; was 2.15 on the gold trim)
     const vase = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.14, 0.32, 12), new THREE.MeshStandardMaterial({ color: 0x7d9b8a, roughness: 0.5 })); vase.position.y = 0.16; vase.castShadow = true; vaseG.add(vase);
     [[-0.16, 0.62, 0.15], [0, 0.74, 0], [0.16, 0.62, -0.12]].forEach(p => {
       const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.45, 6), MAT.leaf); stem.position.set(p[0] * 0.4, 0.42, p[2] * 0.4); stem.rotation.z = -p[0] * 0.5; vaseG.add(stem);
@@ -778,9 +831,9 @@ carpet.receiveShadow = true; scene.add(carpet);
     });
   }
   [-2.2, 2.2].forEach(cx => {
-    cyl(0.05, 0.07, 0.5, MAT.bronze, cx, 2.36, -6.9, T, 10);
+    cyl(0.05, 0.07, 0.5, MAT.bronze, cx, 2.32, -6.9, T, 10); // #30: re-seated on the new tier-2 top (2.07; was 2.36 on the gold trim)
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flameTex, transparent: true, opacity: 0.95, depthWrite: false }));
-    fl.scale.set(0.38, 0.38, 1); fl.position.set(cx, 2.78, -6.9); T.add(fl);
+    fl.scale.set(0.38, 0.38, 1); fl.position.set(cx, 2.74, -6.9); T.add(fl); // #30: flame follows the candle down 0.04
   });
   [-3.4, 3.4].forEach(lx => {
     const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), MAT.lanternRed);
@@ -1900,7 +1953,7 @@ const hallCushions = [];
 const hallSmokes = [];
 let hallBurnerG = null;
 function hallBurner() {
-  const b = new THREE.Group(); b.position.set(0, 2.15, -22.72); b.scale.setScalar(0.34); scene.add(b); hallBurnerG = b;
+  const b = new THREE.Group(); b.position.set(0, 2.07, -22.72); b.scale.setScalar(0.34); scene.add(b); hallBurnerG = b; // #30: re-seated on the new tier-2 top (2.07; was 2.15 on the gold trim)
   const urnPtsH = [[0.0, 0.05], [0.4, 0.05], [0.5, 0.13], [0.68, 0.38], [0.78, 0.62], [0.72, 0.86], [0.55, 1.0], [0.62, 1.08], [0.66, 1.16]].map(p => new THREE.Vector2(p[0], p[1]));
   const urnH = new THREE.Mesh(new THREE.LatheGeometry(urnPtsH, 22), MAT.bronze);
   urnH.castShadow = true; urnH.receiveShadow = true; b.add(urnH);
@@ -3268,7 +3321,7 @@ function zoneOf(x, z) { return (z < -12.9 && z > -24.65 && Math.abs(x) < 10.6) ?
 /* collision (v2.12.4, Anita: walking into the altar / pillars / walls must STOP the avatar,
    and the platform must be climbed via the steps, never entered from the side) */
 const COLLIDERS = [
-  { x0: -3.3, x1: 3.3, z0: -24.15, z1: -22.2 },   // altar table
+  { x0: -4.55, x1: 4.55, z0: -24.15, z1: -21.3 },   // #30: altar tiers + front step (was the 6.4 m table: x ±3.3, z -24.15..-22.2)
   { x0: -7.55, x1: -4.65, z0: -24.45, z1: -23.6 }, // merit board (back wall)
   { x0: 4.65, x1: 7.55, z0: -24.45, z1: -23.6 },   // mantra board (back wall)
   { x0: -6.22, x1: -5.78, z0: -13.17, z1: -12.73 }, // pillars
@@ -5301,7 +5354,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.8';
+const PT3D_VER = '2.90.10';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
