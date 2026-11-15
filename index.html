@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.1">
+<meta name="pt3d-ver" content="2.90.2">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -217,7 +217,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.1 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.2 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2978,7 +2978,7 @@ function groundY(x, z) {
   }
   return 0;
 }
-function zoneOf(x, z) { return (z < -12.9 && Math.abs(x) < 10.6) ? 'hall' : 'yard'; }
+function zoneOf(x, z) { return (z < -12.9 && z > -24.65 && Math.abs(x) < 10.6) ? 'hall' : 'yard'; } // v2.90.2: the garden behind the back wall is yard, not hall
 /* collision (v2.12.4, Anita: walking into the altar / pillars / walls must STOP the avatar,
    and the platform must be climbed via the steps, never entered from the side) */
 const COLLIDERS = [
@@ -3016,6 +3016,10 @@ function collide() {
      monk may walk out onto the grass up to z 30. */
   if (p.z > 13.8 && Math.abs(p.x) > 1.6) p.z = 13.8;
   if (p.z > 30) p.z = 30;
+  /* v2.90.2: hard outer bounds (garden south edge, yard sides) - a lag
+     spike can step 0.34 m in one frame; these keep him in the world. */
+  if (p.z < -31.2) p.z = -31.2;
+  if (p.x < -17.2) p.x = -17.2; else if (p.x > 17.2) p.x = 17.2;
   /* v2.69.0: pavilion railing fence - a radial check in the pavilion's own
      frame, exact at ANY layout rotation (the v2.65 AABB ring misaligned
      when Anita rotated the pavilion and fenced her out). The gap sector
@@ -3047,8 +3051,9 @@ function turnToward(obj, targetAngle, dt) {
 function setWalkTarget(v, cushion = null, incense = false) {
   P.target = v.clone();
   P.target.x = THREE.MathUtils.clamp(P.target.x, -17.0, 17.0);
-  P.target.z = THREE.MathUtils.clamp(P.target.z, -24.3, Math.abs(P.target.x) <= 1.6 ? 30 : 13.8); // v2.90.0: out through the fence gap at the carpet end
-  if (P.target.z < -10.3) P.target.x = THREE.MathUtils.clamp(P.target.x, -10.2, 10.2);
+  P.target.z = THREE.MathUtils.clamp(P.target.z, -31, Math.abs(P.target.x) <= 1.6 ? 30 : 13.8); // v2.90.0: out through the fence gap at the carpet end; v2.90.2: the garden plot behind the hall (z -25..-30.5) is walkable too - the old -24.3 clamp turned every garden tap into a target pressed against the back wall
+  if (P.target.z < -24.65) P.target.x = THREE.MathUtils.clamp(P.target.x, -12.5, 12.5); // garden width
+  else if (P.target.z < -10.3) P.target.x = THREE.MathUtils.clamp(P.target.x, -10.2, 10.2);
   P.sitCushion = cushion;
   P.incenseAfterWalk = incense;
   P.sweepPile = null;
@@ -4674,24 +4679,28 @@ function rescuePlayer(force) {
   try {
     const p = player.position, R = 0.2;
     const free = (x, z) => {
-      if (x < -17 || x > 17 || z < -24.3 || z > 30) return false;
+      if (x < -17 || x > 17 || z < -31 || z > 30) return false; // v2.90.2: garden included
       if (z > 13.8 && Math.abs(x) > 1.6) return false;
-      if (z < -10.3 && Math.abs(x) > 10.4) return false;
+      if (z < -10.3 && Math.abs(x) > (z < -24.65 ? 12.5 : 10.4)) return false;
       for (const c of COLLIDERS) if (x > c.x0 - R && x < c.x1 + R && z > c.z0 - R && z < c.z1 + R) return false;
       return true;
     };
     if (!force && free(p.x, p.z)) return false;
-    /* v2.90.1: do not just hop to the first free point (0.35 m shuffles
-       kept Anita inside the same pocket at the hall steps) - search out
-       to 6 m and take the free point that scores closest to the open
-       yard spawn, so a rescue is a real extraction toward home. */
-    let best = null, bestScore = Infinity;
-    for (let r = 0.35; r <= 6.01; r += 0.35) for (let k = 0; k < 16; k++) {
+    /* v2.90.2: v2.90.1 scored candidates by crow-flies distance to the
+       yard spawn, which happily teleported Anita THROUGH the back wall
+       into the hall when she wedged at the garden pinch. Now: nearest
+       free point IN THE SAME ZONE (yard stays yard, hall stays hall);
+       only if the whole zone offers nothing within 6 m, fall back to
+       the nearest free point anywhere. */
+    const pz = zoneOf(p.x, p.z);
+    let bestSame = null, bestAny = null;
+    for (let r = 0.35; r <= 6.01 && !bestSame; r += 0.35) for (let k = 0; k < 16; k++) {
       const a = k / 16 * Math.PI * 2, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
       if (!free(x, z)) continue;
-      const score = Math.hypot(x - 0, z - 6.5) + r * 0.15;
-      if (score < bestScore) { bestScore = score; best = { x, z }; }
+      if (!bestAny) bestAny = { x, z };
+      if (zoneOf(x, z) === pz) { bestSame = { x, z }; break; }
     }
+    const best = bestSame || bestAny;
     if (!best) return false;
     if (!force && Math.hypot(best.x - p.x, best.z - p.z) < 0.3) return false;
     p.x = best.x; p.z = best.z; p.y = groundY(best.x, best.z);
@@ -4940,7 +4949,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.1';
+const PT3D_VER = '2.90.2';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
