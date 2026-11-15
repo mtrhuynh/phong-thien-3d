@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.8">
+<meta name="pt3d-ver" content="2.90.9">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -3135,6 +3135,88 @@ function rebuildDupGarden() {
 }
 rebuildDupGarden();
 
+/* ============ Series cast — ticket #27 (v2.90.8+cast-v1): 5 rigged characters ============
+   The six characters Cuu rigged on 14 Nov go on air (Anita, 15 Nov). This is the
+   TEMPLE cast (5); the mountain master (Noel) is placed by a separate agent.
+   FIXED scene objects (NOT layout-editable, NOT localStorage) — they appear for
+   everyone, like the player monk. Behaviour for this pass: in place only, idle
+   loop; bow clip is enough for interaction. No walking routes, no dialogue.
+   Scale: measured from the rigs (idle headTopY) against the little monk (~1.15 m):
+   adults 1.6-1.7 m, chibi/fat masters 1.45-1.5 m, baby monk 1.0 m (a child).
+   Facing: models face +Z in bind pose (toes +Z, heels -Z, verified by probe),
+   so ry = atan2(tx - x, tz - z) toward the face target. */
+window.__cast = { total: 5, loaded: 0, errors: [] };
+const CAST = [
+  // [file, x, y, z, faceX, faceZ, scale]
+  // chibi master — main meditation hall, before the altar, facing the cushion rows
+  ['su-phu-chibi-rigged.glb', 0, 1.12, -21.0, 0, -13.0, 1.75],
+  // visiting pair — hall, back of the cushion rows, facing the master
+  ['co-gai-v3-rigged.glb', -1.8, 1.12, -14.2, 0, -21.0, 1.75],
+  ['anh-nam-rigged.glb', 1.8, 1.12, -14.2, 0, -21.0, 1.85],
+  // fat master — temple grounds, west of the hall steps, facing the hall
+  ['su-phu-v1-rigged.glb', -12, 0, -8, 0, -13.0, 1.85],
+  // little novice — beside the fat master, facing the hall
+  ['baby-monk-rigged.glb', -10.6, 0, -6.8, 0, -13.0, 1.3],
+];
+const castMixers = [];
+const castChars = {};
+function castPlace(c) {
+  const [file, x, y, z, fx, fz, scale] = c;
+  new GLTFLoader().load('models/cast/' + file, (gltf) => {
+    const m = gltf.scene;
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    // Recenter: the rigs are ~1 m tall in bind pose with the robe hem at y~0.
+    // Use the skinned mesh's own posed bounding box (Box3.setFromObject is
+    // unreliable for skinned meshes) so the feet sit exactly on the ground.
+    let skin = null;
+    m.traverse(o => { if (o.isSkinnedMesh) skin = o; });
+    if (skin) {
+      m.updateMatrixWorld(true);
+      skin.computeBoundingBox();
+      const bb = skin.boundingBox;
+      const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
+      m.position.set(-cx, -bb.min.y, -cz);
+    }
+    const inner = new THREE.Group();
+    inner.add(m);
+    inner.scale.setScalar(scale);
+    const wrap = new THREE.Group();
+    wrap.add(inner);
+    wrap.position.set(x, y, z);
+    wrap.rotation.y = Math.atan2(fx - x, fz - z);
+    wrap.name = 'cast-' + file.replace('.glb', '');
+    scene.add(wrap);
+    const mixer = new THREE.AnimationMixer(m);
+    const idle = gltf.animations.find(a => a.name === 'idle');
+    if (idle) mixer.clipAction(idle).play();
+    castMixers.push(mixer);
+    castChars[file] = { wrap, mixer, clips: gltf.animations.map(a => a.name), gltf };
+    window.__cast.loaded++;
+  }, undefined, () => { window.__cast.errors.push(file); });
+}
+CAST.forEach(castPlace);
+function castTick(dt) { for (const mx of castMixers) mx.update(dt); }
+/* Bow once, then return to idle (test / interaction hook). Returns false if the
+   character or the bow clip is not available. */
+window.__castBow = function (file) {
+  const ch = castChars[file]; if (!ch) return false;
+  const bow = ch.gltf.animations.find(a => a.name === 'bow');
+  const idle = ch.gltf.animations.find(a => a.name === 'idle');
+  if (!bow) return false;
+  if (idle) ch.mixer.clipAction(idle).stop();
+  const act = ch.mixer.clipAction(bow);
+  act.reset(); act.setLoop(THREE.LoopOnce); act.clampWhenFinished = true; act.play();
+  const onFin = (e) => {
+    if (e.action !== act) return;
+    ch.mixer.removeEventListener('finished', onFin);
+    if (idle) { const ia = ch.mixer.clipAction(idle); ia.reset(); ia.play(); }
+  };
+  ch.mixer.addEventListener('finished', onFin);
+  return true;
+};
+/* Debug/test handle: mixers + characters (lets a test drive a clip directly). */
+window.__cast.debug = { mixers: castMixers, chars: castChars };
+
 /* ============ Player state / movement ============ */
 /* v2.90.0: Layout monk-pin state - declared HERE, before animate() first
    runs, because the walk block reads it every frame (a let down in the
@@ -3759,6 +3841,7 @@ function animate() {
   prAcc += rawDt; prN++;
   if (prAcc >= 2.5) { const avgF = prAcc / prN; prAcc = 0; prN = 0; if (avgF > 0.024 && prLevel > 1.0) { prLevel = Math.max(1.0, prLevel - 0.25); renderer.setPixelRatio(prLevel); } }
   dnTick(dt);
+  if (typeof castTick === 'function') castTick(dt); // series cast idle/bow mixers (#27)
   fallsTex.offset.y = (fallsTex.offset.y - dt * 0.45) % 1;
   const t = clock.elapsedTime;
   fallsFlowU.value = t;
