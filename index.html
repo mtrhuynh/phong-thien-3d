@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.0">
+<meta name="pt3d-ver" content="2.90.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -217,7 +217,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.0 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.1 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -397,6 +397,17 @@ function resolveLayoutCols() {
     if (!spec.entry) { spec.entry = { x0: spec.x0, x1: spec.x1, z0: spec.z0, z1: spec.z1 }; COLLIDERS.push(spec.entry); } // v2.76.0: specs with no static twin (bridge rails, lamps) were silently dead - create their box
     const a = LAYOUT_ANCHORS[id];
     spec.rel = { x0: spec.x0 - a.x, x1: spec.x1 - a.x, z0: spec.z0 - a.z, z1: spec.z1 - a.z };
+    /* v2.90.1 (Anita): the locked zones were eating the paths between
+       objects - pull every yard-object box in by 14% of its size (cap
+       0.35 m a side). Entry and rel shrink together so the box the
+       layout editor drags is the box collide() uses. Hall architecture
+       is not spec-driven, so the walls keep their full size. */
+    if (!spec.entry._shrunk) {
+      spec.entry._shrunk = 1;
+      const sx = Math.min(0.35, (spec.x1 - spec.x0) * 0.14), sz = Math.min(0.35, (spec.z1 - spec.z0) * 0.14);
+      spec.entry.x0 += sx; spec.entry.x1 -= sx; spec.entry.z0 += sz; spec.entry.z1 -= sz;
+      spec.rel.x0 += sx; spec.rel.x1 -= sx; spec.rel.z0 += sz; spec.rel.z1 -= sz;
+    }
   }
 }
 function applyLayoutId(id) {
@@ -2992,7 +3003,7 @@ const COLLIDERS = [
   { x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 },     // waterfall rock (v2.29.0: west-mid yard)
 ];
 function collide() {
-  const p = player.position, R = 0.26;
+  const p = player.position, R = 0.17; // v2.90.1: slimmer body radius (was 0.26) - gaps between objects and walls stay passable
   for (const c of COLLIDERS) {
     if (p.x > c.x0 - R && p.x < c.x1 + R && p.z > c.z0 - R && p.z < c.z1 + R) {
       const dl = p.x - (c.x0 - R), dr = (c.x1 + R) - p.x, dn = p.z - (c.z0 - R), df = (c.z1 + R) - p.z;
@@ -3473,7 +3484,7 @@ let zoneDeadline = null;
 function goToRoom(next) {
   if (P.mode === 'seated') standUp();
   P.sitCushion = null;
-  zoneDeadline = { zone: next, by: Date.now() + 9000 };
+  zoneDeadline = { zone: next, by: Date.now() + 5000 }; // v2.90.1: 5 s (was 9) - if he cannot walk there, he is pulled there; this is the guaranteed way out of a wedge
   if (next === 'hall') { setWalkTarget(new THREE.Vector3(0, 0, -15.2)); toast(L().tGoHall, 2400); }
   else { setWalkTarget(new THREE.Vector3(0, 0, -6.0)); toast(L().tGoYard, 1800); }
 }
@@ -4661,7 +4672,7 @@ function unstickPlayer() { if (monkLocked) return; try { collide(); collide(); }
    way out is wedged (the stuck watches call it that way). */
 function rescuePlayer(force) {
   try {
-    const p = player.position, R = 0.28;
+    const p = player.position, R = 0.2;
     const free = (x, z) => {
       if (x < -17 || x > 17 || z < -24.3 || z > 30) return false;
       if (z > 13.8 && Math.abs(x) > 1.6) return false;
@@ -4670,10 +4681,21 @@ function rescuePlayer(force) {
       return true;
     };
     if (!force && free(p.x, p.z)) return false;
-    for (let r = 0.35; r <= 4.01; r += 0.35) for (let k = 0; k < 16; k++) {
+    /* v2.90.1: do not just hop to the first free point (0.35 m shuffles
+       kept Anita inside the same pocket at the hall steps) - search out
+       to 6 m and take the free point that scores closest to the open
+       yard spawn, so a rescue is a real extraction toward home. */
+    let best = null, bestScore = Infinity;
+    for (let r = 0.35; r <= 6.01; r += 0.35) for (let k = 0; k < 16; k++) {
       const a = k / 16 * Math.PI * 2, x = p.x + Math.cos(a) * r, z = p.z + Math.sin(a) * r;
-      if (free(x, z)) { p.x = x; p.z = z; p.y = groundY(x, z); return true; }
+      if (!free(x, z)) continue;
+      const score = Math.hypot(x - 0, z - 6.5) + r * 0.15;
+      if (score < bestScore) { bestScore = score; best = { x, z }; }
     }
+    if (!best) return false;
+    if (!force && Math.hypot(best.x - p.x, best.z - p.z) < 0.3) return false;
+    p.x = best.x; p.z = best.z; p.y = groundY(best.x, best.z);
+    return true;
   } catch (e) { /* player not built yet */ }
   return false;
 }
@@ -4918,7 +4940,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.0';
+const PT3D_VER = '2.90.1';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
