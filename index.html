@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.4">
+<meta name="pt3d-ver" content="2.90.5">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -217,7 +217,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.4 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.5 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1155,7 +1155,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền để quay/trượt camera', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objFence: '🚧 Hàng rào', creditGarden: ' · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objFence: '🚧 Hàng rào', creditGarden: ' · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1191,7 +1191,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag the background to orbit/pan the camera', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objFence: '🚧 Fence', creditGarden: ' · Garden props: broom, basket — Poly by Google; trowel — involuntary tsetse (CC-BY)', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objFence: '🚧 Fence', creditGarden: ' · Garden props: broom, basket — Poly by Google; trowel — involuntary tsetse (CC-BY)', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -4629,6 +4629,7 @@ function layoutUndo() {
 }
 document.getElementById('layUndo').addEventListener('click', layoutUndo);
 let layoutGrabDX = 0, layoutGrabDZ = 0;
+let layoutLastGroundTap = null; // v2.90.5: double-tap ground = camera jump
 function layoutPointerGround(e) {
   const nd = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   layoutRay.setFromCamera(nd, camera);
@@ -4657,16 +4658,33 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
     const p = layoutPointerGround(e), cur = layoutCur[id];
     if (p && cur) { layoutGrabDX = cur.x - p.x; layoutGrabDZ = cur.z - p.z; }
     layoutDragId = id;
+    layoutLastGroundTap = null;
     controls.enabled = false; // v2.90.4: camera suspended while this part is being dragged (restored on pointerup)
-  } else { layoutSelect(null); layoutLastTap = null; }
+  } else {
+    layoutSelect(null); layoutLastTap = null;
+    /* v2.90.5 (Anita): double-tap on empty ground jumps the camera view
+       to that spot - the target moves, the camera keeps its offset, so
+       crossing the 58 m yard is one gesture instead of a long pan. Pan
+       (right-drag / two fingers) stays for fine adjustments. */
+    const now = performance.now(), gp = layoutPointerGround(e);
+    if (gp && layoutLastGroundTap && now - layoutLastGroundTap.t < 400 && Math.hypot(e.clientX - layoutLastGroundTap.cx, e.clientY - layoutLastGroundTap.cy) < 24) {
+      const tx = THREE.MathUtils.clamp(gp.x, -28.6, 28.6), tz = THREE.MathUtils.clamp(gp.z, -32.8, 24.6);
+      camera.position.x += tx - controls.target.x; camera.position.z += tz - controls.target.z;
+      controls.target.x = tx; controls.target.z = tz;
+      layoutLastGroundTap = null;
+    } else layoutLastGroundTap = { t: now, cx: e.clientX, cy: e.clientY };
+  }
 });
 renderer.domElement.addEventListener('pointermove', (e) => {
   if (!layoutEdit || !layoutDragId) return;
   const p = layoutPointerGround(e); if (!p) return;
   const cur = layoutCur[layoutDragId];
-  const wide = !!LAYOUT_ANCHORS[layoutDragId].wide;
-  const yard = !!LAYOUT_ANCHORS[layoutDragId].yard; // v2.90.0: garden + fence may roam the whole yard incl. the backyard strip (z to -32.5)
-  const xLim = (wide || yard) ? 28.6 : 16.6, zLo = (wide || yard) ? -32.8 : -11.6, zHi = (wide || yard) ? 24.6 : 13.4; // v2.90.3: drag range widened to the paving edge with the yard
+  /* v2.90.5 (Anita): EVERY part drags to the paving edge now. The fixed
+     scenery (falls, shrine, pavilion, bridge, well, burner, lamps) had
+     no wide/yard flag and stopped at the old inner boundary (|x| 16.6,
+     z -11.6..13.4) - she could not push the waterfall up against the
+     fence. One uniform range for everything. */
+  const xLim = 28.6, zLo = -32.8, zHi = 24.6;
   cur.x = Math.max(-xLim, Math.min(xLim, p.x + layoutGrabDX));
   cur.z = Math.max(zLo, Math.min(zHi, p.z + layoutGrabDZ));
   applyLayoutId(layoutDragId);
@@ -4965,7 +4983,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.4';
+const PT3D_VER = '2.90.5';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
