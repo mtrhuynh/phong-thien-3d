@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.12">
+<meta name="pt3d-ver" content="2.90.13">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.12 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.13 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2995,7 +2995,7 @@ player.rotation.y = Math.PI;
    the normal layout store + shared lock. No colliders are added for the
    props (same as the verified v1 build). CC-BY credit for the 3 free
    items lives in the #credit line. */
-window.__garden = { total: 28, loaded: 0, errors: [] };
+window.__garden = { total: 29, loaded: 0, errors: [] };
 const GARDEN = [
   // [url, x, z, ry, size, dim, leanX, leanZ, liftY]
   // anchors: well + coop + flower stall + 2 trees/ring
@@ -3036,6 +3036,12 @@ const GARDEN = [
   ['props/anonymous/non-la.glb', -14.9, -25.9, 0.3, 0.45, 'x', -0.35, 0, 0.03],
   ['props/anonymous/ao-toi.glb', -13.6, -29.7, 0.3, 0.7, 'y', -0.12, 0, 0.55],
   ['props/free/trowel.glb', -12.9, -26.4, 0.5, 0.35, 'x'],
+  // v2.90.13 (Anita via Cuu): the Tripo log stool she picked from her
+  // Likes, placed at the baby monk's sit waypoint (CAST_WALK wp3) and
+  // scaled so the seat top is 0.12 m - the seat height his sit clip
+  // needs. Registered as a garden Layout part like the rest, so Anita
+  // can drag / duplicate it in Layout.
+  ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.12, 'y'],
 ];
 /* Layout tap-proxy sizes per prop (world axes, metres) — also the
    selection ring size. Keyed by file base name. */
@@ -3053,7 +3059,8 @@ const GARDEN_PS = {
   'broom': { w: 1.0, d: 1.0, h: 1.4 }, 'cuoc-chu-t': { w: 1.1, d: 1.1, h: 1.2 },
   'liem': { w: 0.8, d: 0.8, h: 0.8 }, 'hoe': { w: 1.1, d: 1.1, h: 1.3 },
   'met-tre': { w: 0.9, d: 0.9, h: 0.7 }, 'non-la': { w: 0.8, d: 0.8, h: 0.6 },
-  'ao-toi': { w: 0.9, d: 0.9, h: 1.2 }, 'trowel': { w: 0.7, d: 0.7, h: 0.6 }
+  'ao-toi': { w: 0.9, d: 0.9, h: 1.2 }, 'trowel': { w: 0.7, d: 0.7, h: 0.6 },
+  'ghe-go': { w: 0.5, d: 0.5, h: 0.5 }
 };
 /* v2.90.7 (Anita): every garden prop gets its own name in the Layout
    panel - "some tiny things I could not identify, so I deleted them".
@@ -3072,7 +3079,8 @@ const GARDEN_NAMES = {
   'broom': ['🧹 Chổi', '🧹 Broom'], 'cuoc-chu-t': ['Cuốc chữ T', 'Mattock'],
   'liem': ['Liềm', 'Sickle'], 'hoe': ['Cuốc', 'Hoe'],
   'met-tre': ['Mẹt tre', 'Bamboo tray'], 'non-la': ['👒 Nón lá', '👒 Leaf hat'],
-  'ao-toi': ['🧥 Áo tơi', '🧥 Rain cape'], 'trowel': ['Xẻng tay', 'Hand trowel']
+  'ao-toi': ['🧥 Áo tơi', '🧥 Rain cape'], 'trowel': ['Xẻng tay', 'Hand trowel'],
+  'ghe-go': ['🪑 Ghế gỗ', '🪑 Wooden stool']
 };
 const GARDEN_BY_ID = {};
 for (const p of GARDEN) GARDEN_BY_ID['gd-' + p[0].split('/').pop().replace('.glb', '')] = p;
@@ -5563,7 +5571,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.12';
+const PT3D_VER = '2.90.13';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
