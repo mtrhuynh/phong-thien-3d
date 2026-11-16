@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.10">
+<meta name="pt3d-ver" content="2.90.11">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.10 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.11 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3240,15 +3240,56 @@ function castPlace(c) {
     wrap.name = 'cast-' + file.replace('.glb', '');
     scene.add(wrap);
     const mixer = new THREE.AnimationMixer(m);
-    const idle = gltf.animations.find(a => a.name === 'idle');
-    if (idle) mixer.clipAction(idle).play();
+    /* #32: keep the clips by name so the walker can switch poses. The walk
+       clip carries root motion (Hips Z drifts forward): clone it and pin
+       Hips Z to the first frame (keeps X sway + Y bob) so the character
+       walks in place while the group is moved manually at the clip's own
+       pace — the Noel pattern (vach-nui-noel-v2). Speed is measured from
+       the clip itself (drift / duration x scale) so the feet never slide. */
+    const clipMap = {};
+    let walkSpeed = 0.5;
+    for (const name of ['idle', 'walk', 'bow', 'sit']) {
+      let clip = gltf.animations.find(a => a.name === name);
+      if (!clip) continue;
+      if (name === 'walk') {
+        const tr0 = clip.tracks.find(t => /Hips\.position$/.test(t.name));
+        const drift = (tr0 && tr0.values.length >= 6) ? Math.abs(tr0.values[tr0.values.length - 1] - tr0.values[2]) : 0;
+        clip = clip.clone();
+        const tr = clip.tracks.find(t => /Hips\.position$/.test(t.name));
+        if (tr) { const z0 = tr.values[2]; for (let i = 0; i < tr.values.length / 3; i++) tr.values[i * 3 + 2] = z0; }
+        if (drift > 0) walkSpeed = (drift / clip.duration) * scale;
+      }
+      clipMap[name] = { clip, action: mixer.clipAction(clip) };
+      if (name === 'walk') {
+        /* #32: target ~0.5 m/s (ticket: slow and calm). The girl/boy rigs
+           stride 1.34-1.42 m per cycle (natural 1.06-1.07 m/s — twice the
+           target); slow the WALK ACTION itself so the feet still match the
+           clip (movement = natural speed x timeScale, no sliding).
+           NOTE: clipMap.walk must be assigned FIRST (above) — an earlier
+           version applied the timeScale before the assignment, so
+           clipMap.walk was undefined and the clip kept playing at full
+           speed while the body moved at 0.5 m/s (feet sliding). Caught
+           by probe32b: speed read 0.5 but walkTS read 1. */
+        const walkTimeScale = Math.min(1, 0.5 / walkSpeed);
+        clipMap.walk.action.timeScale = walkTimeScale;
+        walkSpeed = walkSpeed * walkTimeScale;
+      }
+    }
+    /* NO foot lowering here (unlike Noel): castPlace already recentres the
+       rig by its skinned bounding box, so the feet/hem sit at inner y=0.
+       Noel's -0.06 x scale lowering was for a loader WITHOUT that recenter;
+       adding it here sank the whole cast 0.06 x scale (8-11 cm) into the
+       floor — caught by the headless feet check (probe32), now removed. */
+    if (clipMap.idle) clipMap.idle.action.play();
     castMixers.push(mixer);
-    castChars[file] = { wrap, mixer, clips: gltf.animations.map(a => a.name), gltf };
+    castChars[file] = { wrap, inner, mixer, clips: gltf.animations.map(a => a.name), clipMap, walkSpeed, walkTimeScale: (clipMap.walk ? clipMap.walk.action.timeScale : 1), gltf, home: { x, y, z }, faceRy: Math.atan2(fx - x, fz - z) };
+    if (CAST_WALK[file]) castWalkInit(file);
     window.__cast.loaded++;
   }, undefined, () => { window.__cast.errors.push(file); });
 }
 CAST.forEach(castPlace);
-function castTick(dt) { for (const mx of castMixers) mx.update(dt); }
+const castWalkMixerSet = new Set(); // mixers driven by castWalkTick (scaled dt)
+function castTick(dt) { for (const mx of castMixers) { if (castWalkMixerSet.has(mx)) continue; mx.update(dt); } }
 /* Bow once, then return to idle (test / interaction hook). Returns false if the
    character or the bow clip is not available. */
 window.__castBow = function (file) {
@@ -3256,6 +3297,16 @@ window.__castBow = function (file) {
   const bow = ch.gltf.animations.find(a => a.name === 'bow');
   const idle = ch.gltf.animations.find(a => a.name === 'idle');
   if (!bow) return false;
+  /* #32: a walking character bows through its walker — pause the route,
+     bow once, then the walker resumes via idle. (The chibi has no walker
+     and keeps the direct path below.) */
+  const w = castWalkers[file];
+  if (w) {
+    if (w.state === 'bow') return true; // already bowing
+    w.state = 'bow'; w.stateT = 0;
+    castPlayClip(file, 'bow', false);
+    return true;
+  }
   if (idle) ch.mixer.clipAction(idle).stop();
   const act = ch.mixer.clipAction(bow);
   act.reset(); act.setLoop(THREE.LoopOnce); act.clampWhenFinished = true; act.play();
@@ -3269,6 +3320,163 @@ window.__castBow = function (file) {
 };
 /* Debug/test handle: mixers + characters (lets a test drive a clip directly). */
 window.__cast.debug = { mixers: castMixers, chars: castChars };
+
+/* ============ Series cast v2 — waypoint walking (ticket #32) ============
+   Anita (15 Nov): the cast must have MORE LIFE — walk + all 4 poses
+   (walk / idle / bow / sit, all 4 clips exist on the rigs). Reuses the
+   pattern Koda proved in vach-nui-noel-v2: walk -> pause/idle 2-4 s at
+   each waypoint -> sometimes bow (6 s) -> walk on; every 3rd loop, sit
+   once at the sit waypoint (~7.5 s). Walk clip root motion is zeroed
+   (see castPlace) and the group moves at the clip's own measured pace,
+   so the feet never slide. Speeds are slow and calm (temple mood).
+   ROUTES (surveyed in the scene; see MICA_GHI_CHU.md):
+   - girl: west hall side strip, x -7.4..-6.6, z -14.5..-19.5 (clear of
+     cushions, front pillars, merit board, walls). Sit at the south end.
+   - boy: east hall side strip, mirrored. Sit at the south end.
+   - fat master + baby monk: one shared west-yard loop, staggered starts
+     (fat at Y1, baby at Y3), x -12.8..-9.8, z -8.8..-5.4 (clear of the
+     big tree, hall steps/door, carpet, burner, clock, coop/chickens).
+     Baby sits at Y4 every 3rd loop; fat master bow-only, no sit.
+   - chibi master: NO route — stays by the altar as the anchor
+     (idle + bow only, per the ticket).
+   Idle/bow facing: hall pair face the altar (ry PI); yard pair face the
+   hall door (0, -13). The characters are NOT movement blockers (no
+   colliders added — same as Noel). No visible UI is added. */
+const CAST_WALK = {
+  // [file]: { route [[x,z]...], startWp, sitWp (-1 = never sits), face [fx,fz] }
+  /* #32: sitWp -1 for everyone — the sit clip is a Mixamo CHAIR-sit (hips
+     lowered, feet flat, seat ~0.31 m off the floor), not a floor/meditation
+     sit. Rendered (probe32c/d): the girl/boy float on an invisible chair and
+     the baby barely reads at all (hips drop only 0.12 m, robe hides the
+     legs). Same call Koda made in v1 (sit clip left unused). Walk/idle/bow
+     only. Re-enable by restoring sitWp (girl/boy 0, baby 3) — one line each. */
+  'co-gai-v3-rigged.glb': { route: [[-7.4, -14.5], [-7.4, -19.5], [-6.6, -19.5], [-6.6, -14.5]], startWp: 0, sitWp: -1, face: [null, -30] },
+  'anh-nam-rigged.glb': { route: [[7.4, -14.5], [7.4, -19.5], [6.6, -19.5], [6.6, -14.5]], startWp: 0, sitWp: -1, face: [null, -30] },
+  'su-phu-v1-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 0, sitWp: -1, face: [0, -13.0] },
+  'baby-monk-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 2, sitWp: -1, face: [0, -13.0] },
+};
+const castWalkers = {}; // file -> { state, wp, stateT, pauseT, loops, nextAfterIdle, clipName, fadingOut }
+let castWalkTimeScale = 1; // test hook: scale the walkers' clock (mixer + timers + movement)
+function castPlayClip(file, name, loop) {
+  const ch = castChars[file]; if (!ch || !ch.clipMap || !ch.clipMap[name]) return;
+  const w = castWalkers[file];
+  const entry = ch.clipMap[name];
+  const act = entry.action;
+  if (w && w.clipName && ch.clipMap[w.clipName] && ch.clipMap[w.clipName].action !== act) {
+    const old = ch.clipMap[w.clipName].action;
+    old.fadeOut(0.3);
+    w.fadingOut = { action: old, t: 0 };
+  }
+  act.reset();
+  act.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+  act.clampWhenFinished = !loop;
+  act.fadeIn(0.3).play();
+  if (w) w.clipName = name;
+}
+function castWalkInit(file) {
+  const cfg = CAST_WALK[file];
+  const ch = castChars[file];
+  if (!cfg || !ch) return;
+  // Start ON the route (teleport before the first frame — the #27 home
+  // spots are superseded by the routes, which begin near the old spots).
+  const start = cfg.route[cfg.startWp];
+  ch.wrap.position.x = start[0]; ch.wrap.position.z = start[1];
+  ch.wrap.rotation.y = Math.atan2(cfg.route[(cfg.startWp + 1) % cfg.route.length][0] - start[0], cfg.route[(cfg.startWp + 1) % cfg.route.length][1] - start[1]);
+  castWalkers[file] = {
+    route: cfg.route, sitWp: cfg.sitWp, face: cfg.face,
+    state: 'idle', wp: cfg.startWp, stateT: 0,
+    pauseT: 1 + Math.random() * 2, loops: 0, nextAfterIdle: 'walk',
+    clipName: 'idle', fadingOut: null,
+  };
+  castWalkMixerSet.add(ch.mixer);
+}
+function castWalkTick(dt) {
+  const dtW = dt * castWalkTimeScale; // test time-scale (default 1); movement MUST use dtW, not raw dt
+  for (const file of Object.keys(castWalkers)) {
+    const ch = castChars[file]; if (!ch || !ch.clipMap) continue;
+    const w = castWalkers[file];
+    ch.mixer.update(dtW);
+    if (w.fadingOut) { w.fadingOut.t += dtW; if (w.fadingOut.t >= 0.35) { w.fadingOut.action.stop(); w.fadingOut = null; } }
+    w.stateT += dtW;
+    if (w.state === 'walk') {
+      const wp = w.route[w.wp];
+      const dx = wp[0] - ch.wrap.position.x, dz = wp[1] - ch.wrap.position.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < 0.15) {
+        ch.wrap.position.x = wp[0]; ch.wrap.position.z = wp[1];
+        const fx = (w.face[0] === null) ? wp[0] : w.face[0];
+        ch.wrap.rotation.y = Math.atan2(fx - wp[0], w.face[1] - wp[1]);
+        if (w.wp === 0) w.loops++;
+        const sitHere = (w.wp === w.sitWp) && (w.loops % 3 === 2);
+        const bowHere = !sitHere && (Math.random() < 0.5);
+        w.nextAfterIdle = sitHere ? 'sit' : (bowHere ? 'bow' : 'walk');
+        w.state = 'idle'; w.stateT = 0;
+        w.pauseT = 2 + Math.random() * 2; // 2-4 s
+        castPlayClip(file, 'idle', true);
+        continue;
+      }
+      const step = Math.min(dist, ch.walkSpeed * dtW);
+      ch.wrap.position.x += (dx / dist) * step;
+      ch.wrap.position.z += (dz / dist) * step;
+      ch.wrap.rotation.y = Math.atan2(dx, dz); // face movement direction
+      if (w.clipName !== 'walk') castPlayClip(file, 'walk', true);
+    } else if (w.state === 'idle') {
+      if (w.stateT >= w.pauseT) {
+        if (w.nextAfterIdle === 'bow') {
+          w.state = 'bow'; w.stateT = 0;
+          castPlayClip(file, 'bow', false);
+        } else if (w.nextAfterIdle === 'sit') {
+          w.state = 'sit'; w.stateT = 0;
+          castPlayClip(file, 'sit', true);
+        } else {
+          w.wp = (w.wp + 1) % w.route.length;
+          w.state = 'walk'; w.stateT = 0;
+          castPlayClip(file, 'walk', true);
+        }
+      }
+    } else if (w.state === 'bow') {
+      if (w.stateT >= 6.2) { // bow clip is 6.00 s
+        w.wp = (w.wp + 1) % w.route.length;
+        w.state = 'walk'; w.stateT = 0;
+        castPlayClip(file, 'walk', true);
+      }
+    } else if (w.state === 'sit') {
+      if (w.stateT >= 7.5) { // one sit cycle (7.17 s) + a breath
+        w.wp = (w.wp + 1) % w.route.length;
+        w.state = 'walk'; w.stateT = 0;
+        castPlayClip(file, 'walk', true);
+      }
+    }
+  }
+}
+/* Walker debug/test handle: per-member state + position, feet height, clock scale. */
+window.__cast.debug.walk = {
+  walkers: castWalkers,
+  setTimeScale: (m) => { castWalkTimeScale = m; },
+  state: () => {
+    const out = {};
+    for (const f of Object.keys(castWalkers)) {
+      const ch = castChars[f]; const w = castWalkers[f];
+      if (ch && w) out[f] = { state: w.state, wp: w.wp, loops: w.loops, x: +ch.wrap.position.x.toFixed(2), z: +ch.wrap.position.z.toFixed(2), speed: +ch.walkSpeed.toFixed(2), walkTS: +ch.walkTimeScale.toFixed(2) };
+    }
+    return out;
+  },
+  feet: () => {
+    const out = {};
+    for (const f of Object.keys(castWalkers)) {
+      const ch = castChars[f]; if (!ch) continue;
+      let skin = null;
+      ch.wrap.traverse(o => { if (o.isSkinnedMesh) skin = o; });
+      if (!skin) { out[f] = null; continue; }
+      ch.wrap.updateMatrixWorld(true);
+      skin.computeBoundingBox();
+      const bb = skin.boundingBox;
+      const v = new THREE.Vector3(bb.min.x, bb.min.y, bb.min.z).applyMatrix4(skin.matrixWorld);
+      out[f] = +v.y.toFixed(3);
+    }
+    return out;
+  },
+};
 
 /* ============ Player state / movement ============ */
 /* v2.90.0: Layout monk-pin state - declared HERE, before animate() first
@@ -3894,7 +4102,8 @@ function animate() {
   prAcc += rawDt; prN++;
   if (prAcc >= 2.5) { const avgF = prAcc / prN; prAcc = 0; prN = 0; if (avgF > 0.024 && prLevel > 1.0) { prLevel = Math.max(1.0, prLevel - 0.25); renderer.setPixelRatio(prLevel); } }
   dnTick(dt);
-  if (typeof castTick === 'function') castTick(dt); // series cast idle/bow mixers (#27)
+  if (typeof castTick === 'function') castTick(dt);
+  if (typeof castWalkTick === 'function') castWalkTick(dt); // #32: waypoint walkers // series cast idle/bow mixers (#27)
   fallsTex.offset.y = (fallsTex.offset.y - dt * 0.45) % 1;
   const t = clock.elapsedTime;
   fallsFlowU.value = t;
@@ -5354,7 +5563,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.10';
+const PT3D_VER = '2.90.11';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
