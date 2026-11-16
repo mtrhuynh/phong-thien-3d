@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.11">
+<meta name="pt3d-ver" content="2.90.12">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.11 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.12 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3344,16 +3344,16 @@ window.__cast.debug = { mixers: castMixers, chars: castChars };
    colliders added — same as Noel). No visible UI is added. */
 const CAST_WALK = {
   // [file]: { route [[x,z]...], startWp, sitWp (-1 = never sits), face [fx,fz] }
-  /* #32: sitWp -1 for everyone — the sit clip is a Mixamo CHAIR-sit (hips
-     lowered, feet flat, seat ~0.31 m off the floor), not a floor/meditation
-     sit. Rendered (probe32c/d): the girl/boy float on an invisible chair and
-     the baby barely reads at all (hips drop only 0.12 m, robe hides the
-     legs). Same call Koda made in v1 (sit clip left unused). Walk/idle/bow
-     only. Re-enable by restoring sitWp (girl/boy 0, baby 3) — one line each. */
-  'co-gai-v3-rigged.glb': { route: [[-7.4, -14.5], [-7.4, -19.5], [-6.6, -19.5], [-6.6, -14.5]], startWp: 0, sitWp: -1, face: [null, -30] },
-  'anh-nam-rigged.glb': { route: [[7.4, -14.5], [7.4, -19.5], [6.6, -19.5], [6.6, -14.5]], startWp: 0, sitWp: -1, face: [null, -30] },
+  /* #32: sit is a Mixamo CHAIR-sit (hips lowered, feet flat, seat ~0.31 m
+     off the floor), not a floor/meditation sit — the girl/boy float on an
+     invisible chair and the baby barely reads as sitting (probe32c/d).
+     Anita decided 2026-11-16 (command #33) to KEEP the sitting pose in
+     the build and review it herself, so sit is ON: girl/boy sit at wp0,
+     baby at wp3, every 3rd loop. Fat master stays bow-only (sitWp -1). */
+  'co-gai-v3-rigged.glb': { route: [[-7.4, -14.5], [-7.4, -19.5], [-6.6, -19.5], [-6.6, -14.5]], startWp: 0, sitWp: 0, face: [null, -30] },
+  'anh-nam-rigged.glb': { route: [[7.4, -14.5], [7.4, -19.5], [6.6, -19.5], [6.6, -14.5]], startWp: 0, sitWp: 0, face: [null, -30] },
   'su-phu-v1-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 0, sitWp: -1, face: [0, -13.0] },
-  'baby-monk-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 2, sitWp: -1, face: [0, -13.0] },
+  'baby-monk-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 2, sitWp: 3, face: [0, -13.0] },
 };
 const castWalkers = {}; // file -> { state, wp, stateT, pauseT, loops, nextAfterIdle, clipName, fadingOut }
 let castWalkTimeScale = 1; // test hook: scale the walkers' clock (mixer + timers + movement)
@@ -5563,7 +5563,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.11';
+const PT3D_VER = '2.90.12';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
