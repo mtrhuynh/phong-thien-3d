@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.13">
+<meta name="pt3d-ver" content="2.90.14">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.13 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.14 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3306,8 +3306,9 @@ window.__castBow = function (file) {
   const idle = ch.gltf.animations.find(a => a.name === 'idle');
   if (!bow) return false;
   /* #32: a walking character bows through its walker — pause the route,
-     bow once, then the walker resumes via idle. (The chibi has no walker
-     and keeps the direct path below.) */
+     bow once, then the walker resumes via idle. (#32b: the chibi is a
+     walker now, so he bows through his walker too; the direct path
+     below is kept only for a member without a walker.) */
   const w = castWalkers[file];
   if (w) {
     if (w.state === 'bow') return true; // already bowing
@@ -3329,39 +3330,50 @@ window.__castBow = function (file) {
 /* Debug/test handle: mixers + characters (lets a test drive a clip directly). */
 window.__cast.debug = { mixers: castMixers, chars: castChars };
 
-/* ============ Series cast v2 — waypoint walking (ticket #32) ============
-   Anita (15 Nov): the cast must have MORE LIFE — walk + all 4 poses
-   (walk / idle / bow / sit, all 4 clips exist on the rigs). Reuses the
-   pattern Koda proved in vach-nui-noel-v2: walk -> pause/idle 2-4 s at
-   each waypoint -> sometimes bow (6 s) -> walk on; every 3rd loop, sit
-   once at the sit waypoint (~7.5 s). Walk clip root motion is zeroed
-   (see castPlace) and the group moves at the clip's own measured pace,
-   so the feet never slide. Speeds are slow and calm (temple mood).
-   ROUTES (surveyed in the scene; see MICA_GHI_CHU.md):
-   - girl: west hall side strip, x -7.4..-6.6, z -14.5..-19.5 (clear of
-     cushions, front pillars, merit board, walls). Sit at the south end.
-   - boy: east hall side strip, mirrored. Sit at the south end.
-   - fat master + baby monk: one shared west-yard loop, staggered starts
-     (fat at Y1, baby at Y3), x -12.8..-9.8, z -8.8..-5.4 (clear of the
-     big tree, hall steps/door, carpet, burner, clock, coop/chickens).
-     Baby sits at Y4 every 3rd loop; fat master bow-only, no sit.
-   - chibi master: NO route — stays by the altar as the anchor
-     (idle + bow only, per the ticket).
-   Idle/bow facing: hall pair face the altar (ry PI); yard pair face the
-   hall door (0, -13). The characters are NOT movement blockers (no
-   colliders added — same as Noel). No visible UI is added. */
+/* ============ Series cast v2b — expanded walking (follow-up to #32) ============
+   Anita (16 Nov): the cast only walks around its own spots — EXPAND the
+   boundaries so they go outside their zones. Chibi walks the main hall
+   ONLY (his job is at the altar); the other 4 go out to the yard/grounds.
+   Reuses the #32 walker (walk -> pause/idle 2-4 s -> sometimes bow (6 s)
+   -> walk on; sit stays OFF until Anita's wooden log exists, sitWp -1).
+   Walk clip root motion is zeroed (see castPlace) and the group moves at
+   the clip's own measured pace, so the feet never slide. Speeds slow and
+   calm (temple mood, ~0.5 m/s). Walker y FOLLOWS groundY (see
+   castWalkTick) so hall -> steps -> yard crossings stay on the ground:
+   hall 1.12, steps 1.0/0.67/0.34, yard 0.
+   ROUTES (surveyed; yard features: burner (0,-8.6), carpet x +-1.7
+   z -7.4..13.7, bridge (-12.01,1.96), falls (-12.85,10.01), clock
+   (-15.12,-1.94), shrine (13.61,0.8), well (13.2,5.6), pavilion
+   (9.99,11.89); fences x +-28.65, z 24.65):
+   - girl: west hall side -> front door -> steps -> west front yard
+     (out to z 9, back north closer to the carpet), then hall again.
+     West of the burner, clear of trees/bridge/falls/clock.
+   - boy: east hall side -> front door -> steps -> east front yard,
+     mirrored (clear of the shrine, well, pavilion, east trees).
+   - fat master + baby monk: one shared WIDER west-yard loop, staggered
+     starts (fat at wp 0, baby at wp 4), x -14..-9, z -7.5..7 (clear of
+     the bridge, falls rock, clock, trees, garden corner, coop).
+   - chibi master: hall ONLY — back-and-forth along the altar front
+     (z -20.9, x -5.5..5.5), clear of the altar platform (z -21.3),
+     the back cushion row (z -20.48) and the merit/mantra boards.
+     Idle/bow faces the cushion rows (south).
+   Idle/bow facing: hall pair + chibi face the temple/cushions; yard pair
+   face the hall door (0, -13). No colliders added (same as Noel).
+   No visible UI is added. */
 const CAST_WALK = {
   // [file]: { route [[x,z]...], startWp, sitWp (-1 = never sits), face [fx,fz] }
-  /* #32: sit is a Mixamo CHAIR-sit (hips lowered, feet flat, seat ~0.31 m
-     off the floor), not a floor/meditation sit — the girl/boy float on an
-     invisible chair and the baby barely reads as sitting (probe32c/d).
-     Anita decided 2026-11-16 (command #33) to KEEP the sitting pose in
-     the build and review it herself, so sit is ON: girl/boy sit at wp0,
-     baby at wp3, every 3rd loop. Fat master stays bow-only (sitWp -1). */
-  'co-gai-v3-rigged.glb': { route: [[-7.4, -14.5], [-7.4, -19.5], [-6.6, -19.5], [-6.6, -14.5]], startWp: 0, sitWp: 0, face: [null, -30] },
-  'anh-nam-rigged.glb': { route: [[7.4, -14.5], [7.4, -19.5], [6.6, -19.5], [6.6, -14.5]], startWp: 0, sitWp: 0, face: [null, -30] },
-  'su-phu-v1-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 0, sitWp: -1, face: [0, -13.0] },
-  'baby-monk-rigged.glb': { route: [[-12.8, -6.0], [-11.0, -5.4], [-9.8, -6.4], [-11.2, -8.8]], startWp: 2, sitWp: 3, face: [0, -13.0] },
+  /* v2.90.14 MERGE (Cuu): Mica's v2b expanded routes, with sit RESTORED per
+     Anita (command #33, KEEP the chair-sit clip). The log stool now exists
+     (Layout prop ghe-go, v2.90.13), so the baby sits ON it: his route gains
+     a 10th waypoint AT the stool (-11.2,-8.8) as sitWp 9, seat 0.12 m.
+     Girl/boy sit at hall wp0 as before (no hall seat yet — Anita places
+     logs via Layout; until then they float on the invisible chair, as
+     on live v2.90.12/13). Fat master + chibi stay bow-only (sitWp -1). */
+  'co-gai-v3-rigged.glb': { route: [[-7.4,-14.5],[-7.4,-19.5],[-6.6,-19.5],[-6.6,-14.5],[-4.5,-13.8],[-2.0,-13.0],[-2.5,-11.2],[-3.5,-9.5],[-5.0,-5.0],[-5.5,0.0],[-5.0,5.0],[-4.0,8.0],[-2.0,9.0],[-2.5,5.0],[-3.0,0.0],[-3.5,-5.0],[-2.5,-9.0],[-2.0,-11.2],[-2.0,-13.0],[-4.5,-13.8]], startWp: 0, sitWp: 0, face: [null, -30] },
+  'anh-nam-rigged.glb': { route: [[7.4,-14.5],[7.4,-19.5],[6.6,-19.5],[6.6,-14.5],[4.5,-13.8],[2.0,-13.0],[2.5,-11.2],[3.5,-9.5],[5.0,-5.0],[5.5,0.0],[5.0,5.0],[4.0,8.0],[2.0,9.0],[2.5,5.0],[3.0,0.0],[3.5,-5.0],[2.5,-9.0],[2.0,-11.2],[2.0,-13.0],[4.5,-13.8]], startWp: 0, sitWp: 0, face: [null, -30] },
+  'su-phu-v1-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5]], startWp: 0, sitWp: -1, face: [0, -13.0] },
+  'baby-monk-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5],[-11.2,-8.8]], startWp: 4, sitWp: 9, face: [0, -13.0] },
+  'su-phu-chibi-rigged.glb': { route: [[-5.5,-20.9],[5.5,-20.9]], startWp: 0, sitWp: -1, face: [0, -15.0] },
 };
 const castWalkers = {}; // file -> { state, wp, stateT, pauseT, loops, nextAfterIdle, clipName, fadingOut }
 let castWalkTimeScale = 1; // test hook: scale the walkers' clock (mixer + timers + movement)
@@ -3390,6 +3402,7 @@ function castWalkInit(file) {
   const start = cfg.route[cfg.startWp];
   ch.wrap.position.x = start[0]; ch.wrap.position.z = start[1];
   ch.wrap.rotation.y = Math.atan2(cfg.route[(cfg.startWp + 1) % cfg.route.length][0] - start[0], cfg.route[(cfg.startWp + 1) % cfg.route.length][1] - start[1]);
+  ch.wrap.position.y = groundY(start[0], start[1]); // #32b: start on the ground (hall 1.12 / yard 0)
   castWalkers[file] = {
     route: cfg.route, sitWp: cfg.sitWp, face: cfg.face,
     state: 'idle', wp: cfg.startWp, stateT: 0,
@@ -3412,6 +3425,7 @@ function castWalkTick(dt) {
       const dist = Math.hypot(dx, dz);
       if (dist < 0.15) {
         ch.wrap.position.x = wp[0]; ch.wrap.position.z = wp[1];
+        ch.wrap.position.y = groundY(wp[0], wp[1]); // #32b: snap to the ground at the waypoint
         const fx = (w.face[0] === null) ? wp[0] : w.face[0];
         ch.wrap.rotation.y = Math.atan2(fx - wp[0], w.face[1] - wp[1]);
         if (w.wp === 0) w.loops++;
@@ -3426,6 +3440,11 @@ function castWalkTick(dt) {
       const step = Math.min(dist, ch.walkSpeed * dtW);
       ch.wrap.position.x += (dx / dist) * step;
       ch.wrap.position.z += (dz / dist) * step;
+      /* #32b: y follows the ground (hall -> steps -> yard) so the feet
+         stay on the floor across the steps; lerped so the descent is
+         smooth instead of a 0.33 m jump at each tread edge. */
+      const gy = groundY(ch.wrap.position.x, ch.wrap.position.z);
+      ch.wrap.position.y += (gy - ch.wrap.position.y) * Math.min(1, dtW * 6);
       ch.wrap.rotation.y = Math.atan2(dx, dz); // face movement direction
       if (w.clipName !== 'walk') castPlayClip(file, 'walk', true);
     } else if (w.state === 'idle') {
@@ -5571,7 +5590,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.13';
+const PT3D_VER = '2.90.14';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
