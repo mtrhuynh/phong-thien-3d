@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.14">
+<meta name="pt3d-ver" content="2.90.15">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.14 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.15 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3041,7 +3041,12 @@ const GARDEN = [
   // scaled so the seat top is 0.12 m - the seat height his sit clip
   // needs. Registered as a garden Layout part like the rest, so Anita
   // can drag / duplicate it in Layout.
-  ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.12, 'y'],
+  // v2.90.15 (Mica): the v2.90.13 scale-by-height (dim 'y', size 0.12)
+  // made the stool only 0.15 m wide - far too small for the baby to sit
+  // on (Anita, 2026-11-17 06:55). Scale by WIDTH instead (dim 'x',
+  // size 0.5 -> 0.5 m wide, seat 0.40 m) and sink it (liftY -0.28) so
+  // the seat top stays at 0.12 m.
+  ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.5, 'x', 0, 0, -0.28],
 ];
 /* Layout tap-proxy sizes per prop (world axes, metres) — also the
    selection ring size. Keyed by file base name. */
@@ -3060,7 +3065,7 @@ const GARDEN_PS = {
   'liem': { w: 0.8, d: 0.8, h: 0.8 }, 'hoe': { w: 1.1, d: 1.1, h: 1.3 },
   'met-tre': { w: 0.9, d: 0.9, h: 0.7 }, 'non-la': { w: 0.8, d: 0.8, h: 0.6 },
   'ao-toi': { w: 0.9, d: 0.9, h: 1.2 }, 'trowel': { w: 0.7, d: 0.7, h: 0.6 },
-  'ghe-go': { w: 0.5, d: 0.5, h: 0.5 }
+  'ghe-go': { w: 0.5, d: 0.4, h: 0.4 }
 };
 /* v2.90.7 (Anita): every garden prop gets its own name in the Layout
    panel - "some tiny things I could not identify, so I deleted them".
@@ -5590,7 +5595,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.14';
+const PT3D_VER = '2.90.15';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
