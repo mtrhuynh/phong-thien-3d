@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.24">
+<meta name="pt3d-ver" content="2.90.25">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.24 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.25 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -324,9 +324,56 @@ import { GLTFLoader as _GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 /* v2.90.24: every GLTFLoader gets the Meshopt decoder, so meshopt-compressed
    models (EXT_meshopt_compression, used by the #42/#43 compression batches)
-   load; plain models are unaffected. */
+   load; plain models are unaffected.
+   v2.90.25 (#50): staged loading — hall + cast first, yard scenery deferred.
+   Group 1 (hall + cast + essential UI, ~10.5 MB cold-cache) loads at boot as
+   before. Group 2 (yard scenery, STAGE2_URLS below) GLB requests are queued
+   here and fired after entry, near-to-far from the hall door, a few at a
+   time. Sky lanterns stay lazy (loadSkyProtos, on first use) and music stays
+   deferred (preload="none", on first play press) — both already were. */
+const STAGE2_URLS = {
+  'models/burner.glb': 1, 'models/xam-set.glb': 1,
+  'models/waterfall2.glb': 2, 'models/falls-water.glb': 2, 'models/falls2-water2.glb': 2,
+  'models/bridge.glb': 3, 'models/temple.glb': 3, 'models/roof.glb': 3,
+  'models/well.glb': 4, 'models/well-water.glb': 4, 'models/pavilion2.glb': 4,
+  'models/lamp-paper.glb': 5, 'models/lamp-rustic.glb': 5,
+  'models/tree-green.glb': 5, 'models/tree-maple.glb': 5, 'models/tree-palm.glb': 5,
+  'models/fox.glb': 6,
+  'models/dove-fly.glb': 6, 'models/dove-peck.glb': 6, 'models/dove-rest.glb': 6, 'models/dove-stand.glb': 6,
+};
+const __stageQueue = [];
+let __stageStarted = false;
+let __stageLoaded = 0, __stageErrors = 0;
+window.__staged = { queued: 0, loaded: 0, errors: 0, done: false };
+function __stageKey(url) { return String(url).split('?')[0]; }
+function __stageIsDeferred(url) { return Object.prototype.hasOwnProperty.call(STAGE2_URLS, __stageKey(url)); }
+function startStagedLoads() {
+  if (__stageStarted) return;
+  __stageStarted = true;
+  __stageQueue.sort((a, b) => a.pri - b.pri);
+  const step = () => {
+    const batch = __stageQueue.splice(0, 3);
+    for (const item of batch) {
+      new GLTFLoader().load(item.url,
+        (g) => { __stageLoaded++; window.__staged.loaded = __stageLoaded; if (item.onLoad) item.onLoad(g); },
+        item.onProgress,
+        (e) => { __stageErrors++; window.__staged.errors = __stageErrors; if (item.onError) item.onError(e); });
+    }
+    if (__stageQueue.length) setTimeout(step, 300);
+    else window.__staged.done = true;
+  };
+  step();
+}
 class GLTFLoader extends _GLTFLoader {
   constructor(manager) { super(manager); this.setMeshoptDecoder(MeshoptDecoder); }
+  load(url, onLoad, onProgress, onError) {
+    if (!__stageStarted && __stageIsDeferred(url)) {
+      __stageQueue.push({ url, onLoad, onProgress, onError, pri: STAGE2_URLS[__stageKey(url)] });
+      window.__staged.queued = __stageQueue.length;
+      return this;
+    }
+    return super.load(url, onLoad, onProgress, onError);
+  }
 }
 const bootMark = window.bootMark || function () {};
 bootMark('imports-ok');
@@ -491,7 +538,7 @@ const skyDome = new THREE.Mesh(new THREE.SphereGeometry(160, 24, 16),
 scene.add(skyDome);
 
 const camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, 0.1, 300);
-camera.position.set(0, 5.2, 11.5);
+camera.position.set(0, 3.6, -7.6);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -500,7 +547,7 @@ controls.maxPolarAngle = Math.PI * 0.58;
 controls.minDistance = 4;
 controls.maxDistance = 26;
 controls.enablePan = false;
-controls.target.set(0, 1.1, 4);
+controls.target.set(0, 1.35, -15.2);
 window.__pt3d = { camera, controls, scene, THREE }; // test/clip camera handle
 
 /* ============ Lights ============ */
@@ -2985,7 +3032,7 @@ npcData.forEach((d, i) => {
 
 /* Player */
 const player = buildAvatar({ name: 'Ivy', sub: 'Bậc ' + bacOf(stats.sen || 0), bald: false, robeMat: MAT.robe, player: true });
-player.position.set(0, 0, 6.5);
+player.position.set(0, 1.12, -15.2);
 window.__pt3d.player = player; // test/clip handle: stand the monk in the garden for scale
 player.rotation.y = Math.PI;
 
@@ -3480,7 +3527,7 @@ const P = {
   sweepPile: null,
 };
 const SPEED = 3.4;
-let room = 'yard';
+let room = 'hall';
 /* v2.11: ONE space. groundY = the height under a point (yard 0, steps, platform, hall floor) */
 function groundY(x, z) {
   if (Math.abs(x) < 10.6 && z < -10.3 && z > -24.9) {
@@ -4031,12 +4078,12 @@ try {
     const rq = new URLSearchParams(location.search).get('room');
     if (rq === 'hall' || rq === 'yard') localStorage.setItem('pt3d-room', rq);
   } catch (e) {}
-  if (localStorage.getItem('pt3d-room') === 'hall') {
-    room = 'hall';
-    player.position.set(0, 1.12, -15.2);
+  if (localStorage.getItem('pt3d-room') === 'yard') {
+    room = 'yard';
+    player.position.set(0, 0, 6.5);
     player.rotation.y = Math.PI;
-    camera.position.set(0, 3.6, -7.6);
-    controls.target.set(0, 1.35, -15.2);
+    camera.position.set(0, 5.2, 11.5);
+    controls.target.set(0, 1.1, 4);
   }
 } catch (e) {}
 applyZoneUI();
@@ -4387,6 +4434,17 @@ function animate() {
   if (firstFrame) {
     bootMark('frame-1');
     firstFrame = false;
+    // v2.90.25 (#50): start the deferred yard-scenery loads once the hall is
+    // usable (cast fully loaded), or after 10 s at the latest so a slow cast
+    // never blocks the yard from appearing.
+    (function () {
+      const t0 = Date.now();
+      const tick = () => {
+        if ((window.__cast && window.__cast.loaded >= 5) || Date.now() - t0 > 10000) { startStagedLoads(); return; }
+        setTimeout(tick, 250);
+      };
+      tick();
+    })();
     const ld = document.getElementById('loading');
     ld.style.opacity = '0';
     setTimeout(() => ld.remove(), 700);
@@ -5549,7 +5607,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.24';
+const PT3D_VER = '2.90.25';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
