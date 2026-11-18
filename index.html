@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.25">
+<meta name="pt3d-ver" content="2.90.28">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -62,6 +62,17 @@
   .dp-feed.flock { background:linear-gradient(160deg, #57b368, #2f7d3c); color:#fff; font-weight:700; border-color:rgba(255,255,255,.35); }
   .dp-feed.link { background:rgba(255,235,190,.16); color:#ffe9bd; border-color:rgba(255,205,120,.45); }
   .dp-feed:disabled { opacity:.45; cursor:default; font-weight:400; }
+  /* Filming staging panel (#53) */
+  #stagePanel { position:fixed; top:136px; right:12px; z-index:31; width:min(302px, 88vw); display:none;
+    background:linear-gradient(160deg, rgba(52,34,16,.95), rgba(26,17,9,.95)); border:1px solid rgba(255,205,120,.55);
+    border-radius:16px; padding:10px 14px 12px; color:#f3e5c3; box-shadow:0 10px 30px rgba(0,0,0,.5); backdrop-filter:blur(6px); }
+  #stagePanelTitle { font-weight:700; font-size:14.5px; color:#ffe1a8; }
+  #stageClose { background:none; border:none; color:#d8c9ae; font-size:14px; cursor:pointer; padding:2px 4px; }
+  .st-char { padding:7px 9px; border-radius:999px; font-size:12.5px; cursor:pointer; font-family:inherit;
+    border:1px solid rgba(255,205,120,.45); background:rgba(255,235,190,.12); color:#ffe9bd; }
+  .st-char.on { background:rgba(146,96,28,.95); color:#fff; font-weight:700; }
+  .st-char.parked { border-color:#7fd48a; }
+  #stageHint { font-size:12px; color:#d8c9ae; margin-top:8px; line-height:1.5; min-height:18px; }
   #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; flex-direction:column; align-items:flex-end; gap:6px; z-index:30; max-width:97vw; }
   #bottomCtl .ctlRow { display:flex; align-items:center; gap:6px; }
   #bottomCtl .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
@@ -185,6 +196,28 @@
   <button class="cmode" id="btnSky"><span class="ic">🏮</span><span class="lb"></span></button>
   <button class="cmode" id="btnDove"><span class="ic">🕊️</span><span class="lb"></span></button>
   <button class="cmode" id="btnLang">🌐 EN</button>
+  <button class="cmode" id="btnStage">🎬 Quay phim</button>
+</div>
+
+<div class="ui" id="stagePanel">
+  <div class="dp-head"><span id="stagePanelTitle">🎬 Quay phim — dàn dựng</span><button id="stageClose">✕</button></div>
+  <div id="stageChars" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+  <div class="dp-btns">
+    <button id="stagePark" class="dp-feed mine">📍 Đứng đây</button>
+    <button id="stageFaceCam" class="dp-feed mine">📷 Quay ra máy</button>
+  </div>
+  <div class="dp-btns">
+    <button id="stageTalk" class="dp-feed flock">🗣️ Nói</button>
+    <button id="stageListen" class="dp-feed link">👂 Nghe / gật</button>
+  </div>
+  <div class="dp-btns">
+    <button id="stageFaceEach" class="dp-feed mine">👥 Quay mặt vào nhau</button>
+    <button id="stageSwap" class="dp-feed flock">🔄 Đổi người nói</button>
+  </div>
+  <div class="dp-btns">
+    <button id="stageResume" class="dp-feed link">▶️ Cho đi lại (tắt dàn dựng)</button>
+  </div>
+  <div id="stageHint"></div>
 </div>
 
 <div class="ui" id="dovePanel">
@@ -221,7 +254,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.25 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.28 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3067,14 +3100,14 @@ const GARDEN = [
   ['props/setenull/xo-1.glb', -14.3, -27.5, 0, 0.4, 'y'],
   ['props/gcz3/xeng.glb', -15.3, -28.3, 0.9, 1.2, 'y', -0.3],
   ['props/free/hoe.glb', -14.6, -26.6, 1.0, 1.2, 'x', 0, 0, 0.02],
-  ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.5, 'x', 0, 0, -0.28],
+  ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.85, 'x', 0, 0, -0.36],
 ];
 /* Layout tap-proxy sizes per prop (world axes, metres) — also the
    selection ring size. Keyed by file base name. */
 const GARDEN_PS = {
   'chuong-ga': { w: 2.6, d: 2.2, h: 1.8 }, 'cay-vong': { w: 3.6, d: 2.6, h: 2.6 },
   'xo-1': { w: 0.8, d: 0.8, h: 0.8 }, 'xeng': { w: 1.0, d: 1.0, h: 1.4 },
-  'hoe': { w: 1.1, d: 1.1, h: 1.3 }, 'ghe-go': { w: 0.5, d: 0.4, h: 0.4 }
+  'hoe': { w: 1.1, d: 1.1, h: 1.3 }, 'ghe-go': { w: 0.85, d: 0.68, h: 0.68 }
 };
 /* v2.90.7 (Anita): every garden prop gets its own name in the Layout
    panel - "some tiny things I could not identify, so I deleted them".
@@ -3224,6 +3257,85 @@ const CAST = [
 ];
 const castMixers = [];
 const castChars = {};
+
+/* #53: procedural talk + listen clips (runtime-generated). No Mixamo login is
+   available to this agent and no Tripo credits may be spent, so the gestures
+   are authored as bone-rotation layers the way Cuu authored the meditate
+   clip — but built at RUNTIME from each bone's REST quaternion, so one
+   function serves all five rigs (all use the same mixamorig: names).
+   Partial clips (upper body only): the legs/hips keep the last idle pose
+   while talking, exactly like the 13-channel meditate clip already does.
+   Every oscillation completes an integer number of cycles over the clip
+   duration, so the loop is seamless (first keyframe == last keyframe). */
+function castMakeTalkClips(mixer, modelRoot, clipMap) {
+  // Find the joints via the skinned mesh's skeleton (robust: a plain
+  // traverse for isBone can miss joints that the loader parents outside
+  // the model root). Fall back to a traverse if there is no skeleton.
+  const bones = {};
+  let skin = null;
+  modelRoot.traverse(o => { if (o.isSkinnedMesh && !skin) skin = o; });
+  const joints = (skin && skin.skeleton) ? skin.skeleton.bones : [];
+  for (const b of joints) { const base = b.name.replace(/^mixamorig:?/, ''); if (!bones[base]) bones[base] = b; }
+  if (!Object.keys(bones).length) {
+    modelRoot.traverse(o => { if (o.isBone) { const b = o.name.replace(/^mixamorig:?/, ''); if (!bones[b]) bones[b] = o; } });
+  }
+  if (!Object.keys(bones).length) return;
+  const _e = new THREE.Euler(), _q = new THREE.Quaternion();
+  // Arm base pose: the bone's raw bind quaternion is a T-pose, so composing
+  // the gesture onto it snaps the arms out sideways in natural playback.
+  // Base the arm tracks on the IDLE clip's arm pose (arms down) instead:
+  // take the idle track's first keyframe quaternion for that bone.
+  const ARM_BONES = ['RightArm', 'RightForeArm', 'LeftArm', 'LeftForeArm'];
+  function armBaseQuat(bone) {
+    const idle = clipMap['idle'] && clipMap['idle'].clip;
+    if (!idle || !idle.tracks) return null;
+    const tr = idle.tracks.find(t => t.name === bone.name + '.quaternion');
+    if (!tr || !tr.values || tr.values.length < 4) return null;
+    return new THREE.Quaternion(tr.values[0], tr.values[1], tr.values[2], tr.values[3]);
+  }
+  function qtrack(boneName, dur, fn) {
+    const bone = bones[boneName];
+    if (!bone) return null;
+    const base = ARM_BONES.includes(boneName) ? (armBaseQuat(bone) || bone.quaternion.clone()) : bone.quaternion.clone();
+    const n = 24, times = [], vals = [];
+    for (let i = 0; i <= n; i++) {
+      const t = (i / n) * dur, d = fn(t, dur);
+      _e.set(d[0], d[1], d[2]); _q.setFromEuler(_e);
+      const out = base.clone().multiply(_q);
+      times.push(t); vals.push(out.x, out.y, out.z, out.w);
+    }
+    return new THREE.QuaternionKeyframeTrack(bone.name + '.quaternion', times, vals);
+  }
+  const TAU = Math.PI * 2;
+  // TALK: 4 s loop. Right hand does the speaking gesture (raised, opening/
+  // closing in rhythm); left hand smaller; head nods + turns; spine sways.
+  const talkTracks = [];
+  const add = (bone, dur, fn) => { const tr = qtrack(bone, dur, fn); if (tr) talkTracks.push(tr); };
+  add('Head', 4, (t) => [0.10 * Math.sin(TAU * 2 * t / 4), 0.06 * Math.sin(TAU * 1 * t / 4 + 0.7), 0.03 * Math.sin(TAU * 3 * t / 4 + 1.3)]);
+  add('Neck', 4, (t) => [0.05 * Math.sin(TAU * 2 * t / 4 + 0.4), 0.03 * Math.sin(TAU * 1 * t / 4 + 0.7), 0.015 * Math.sin(TAU * 3 * t / 4 + 1.3)]);
+  add('Spine', 4, (t) => [0.04 * Math.sin(TAU * 1 * t / 4), 0, 0.02 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('Spine1', 4, (t) => [0.03 * Math.sin(TAU * 1 * t / 4 + 0.5), 0, 0.015 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('Spine2', 4, (t) => [0.02 * Math.sin(TAU * 1 * t / 4 + 1.0), 0, 0.01 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('Hips', 4, (t) => [0.01 * Math.sin(TAU * 2 * t / 4), 0, 0.02 * Math.sin(TAU * 1 * t / 4 + 0.3)]);
+  add('RightArm', 4, (t) => [0.03 * Math.sin(TAU * 1 * t / 4 + 0.5), 0, -0.12 + 0.06 * Math.sin(TAU * 2 * t / 4)]);
+  add('RightForeArm', 4, (t) => [0, 0, -0.18 + 0.10 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('LeftArm', 4, (t) => [0.02 * Math.sin(TAU * 1 * t / 4 + 0.2), 0, -0.06 + 0.04 * Math.sin(TAU * 2 * t / 4 + 1.7)]);
+  add('LeftForeArm', 4, (t) => [0, 0, -0.10 + 0.06 * Math.sin(TAU * 2 * t / 4 + 2.2)]);
+  if (talkTracks.length) {
+    const clip = new THREE.AnimationClip('talk', 4, talkTracks);
+    clipMap['talk'] = { clip, action: mixer.clipAction(clip) };
+  }
+  // LISTEN: 6 s loop. Standing idle + an occasional gentle nod.
+  const listenTracks = [];
+  const addL = (bone, dur, fn) => { const tr = qtrack(bone, dur, fn); if (tr) listenTracks.push(tr); };
+  addL('Head', 6, (t) => [0.08 * Math.sin(TAU * 2 * t / 6), 0.03 * Math.sin(TAU * 1 * t / 6 + 1.1), 0.01 * Math.sin(TAU * 3 * t / 6)]);
+  addL('Neck', 6, (t) => [0.04 * Math.sin(TAU * 2 * t / 6 + 0.3), 0.015 * Math.sin(TAU * 1 * t / 6 + 1.1), 0]);
+  if (listenTracks.length) {
+    const clip = new THREE.AnimationClip('listen', 6, listenTracks);
+    clipMap['listen'] = { clip, action: mixer.clipAction(clip) };
+  }
+}
+
 function castPlace(c) {
   const [file, x, y, z, fx, fz, scale] = c;
   new GLTFLoader().load('models/cast/' + file + '?v=102', (gltf) => {
@@ -3291,6 +3403,7 @@ function castPlace(c) {
        Noel's -0.06 x scale lowering was for a loader WITHOUT that recenter;
        adding it here sank the whole cast 0.06 x scale (8-11 cm) into the
        floor — caught by the headless feet check (probe32), now removed. */
+    castMakeTalkClips(mixer, m, clipMap); // #53: procedural talk + listen
     if (clipMap.idle) clipMap.idle.action.play();
     castMixers.push(mixer);
     castChars[file] = { wrap, inner, mixer, clips: gltf.animations.map(a => a.name), clipMap, walkSpeed, walkTimeScale: (clipMap.walk ? clipMap.walk.action.timeScale : 1), gltf, home: { x, y, z }, faceRy: Math.atan2(fx - x, fz - z) };
@@ -3375,7 +3488,7 @@ const CAST_WALK = {
   'co-gai-v3-rigged.glb': { route: [[-7.4,-14.5],[-7.4,-19.5],[-6.6,-19.5],[-6.6,-14.5],[-4.5,-13.8],[-2.0,-13.0],[-2.5,-11.2],[-3.5,-9.5],[-5.0,-5.0],[-5.5,0.0],[-5.0,5.0],[-4.0,8.0],[-2.0,9.0],[-2.5,5.0],[-3.0,0.0],[-3.5,-5.0],[-2.5,-9.0],[-2.0,-11.2],[-2.0,-13.0],[-4.5,-13.8]], startWp: 0, sitWp: 0, face: [null, -30] },
   'anh-nam-rigged.glb': { route: [[7.4,-14.5],[7.4,-19.5],[6.6,-19.5],[6.6,-14.5],[4.5,-13.8],[2.0,-13.0],[2.5,-11.2],[3.5,-9.5],[5.0,-5.0],[5.5,0.0],[5.0,5.0],[4.0,8.0],[2.0,9.0],[2.5,5.0],[3.0,0.0],[3.5,-5.0],[2.5,-9.0],[2.0,-11.2],[2.0,-13.0],[4.5,-13.8]], startWp: 0, sitWp: 0, face: [null, -30] },
   'su-phu-v1-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5]], startWp: 0, sitWp: -1, face: [0, -13.0] },
-  'baby-monk-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5],[-11.2,-8.8]], startWp: 4, sitWp: 9, face: [0, -13.0] },
+  'baby-monk-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5],[-11.2,-8.8]], startWp: 4, sitWp: 9, face: [0, -13.0], sitEvery: true, sitLift: 0.09 },
   'su-phu-chibi-rigged.glb': { route: [[-5.5,-20.9],[5.5,-20.9]], startWp: 0, sitWp: -1, face: [0, -15.0] },
 };
 const castWalkers = {}; // file -> { state, wp, stateT, pauseT, loops, nextAfterIdle, clipName, fadingOut }
@@ -3407,7 +3520,7 @@ function castWalkInit(file) {
   ch.wrap.rotation.y = Math.atan2(cfg.route[(cfg.startWp + 1) % cfg.route.length][0] - start[0], cfg.route[(cfg.startWp + 1) % cfg.route.length][1] - start[1]);
   ch.wrap.position.y = groundY(start[0], start[1]); // #32b: start on the ground (hall 1.12 / yard 0)
   castWalkers[file] = {
-    route: cfg.route, sitWp: cfg.sitWp, face: cfg.face,
+    route: cfg.route, sitWp: cfg.sitWp, face: cfg.face, sitEvery: !!cfg.sitEvery, sitLift: cfg.sitLift || 0,
     state: 'idle', wp: cfg.startWp, stateT: 0,
     pauseT: 1 + Math.random() * 2, loops: 0, nextAfterIdle: 'walk',
     clipName: 'idle', fadingOut: null,
@@ -3422,6 +3535,7 @@ function castWalkTick(dt) {
     ch.mixer.update(dtW);
     if (w.fadingOut) { w.fadingOut.t += dtW; if (w.fadingOut.t >= 0.35) { w.fadingOut.action.stop(); w.fadingOut = null; } }
     w.stateT += dtW;
+    if (w.staged) continue; // #53: parked for filming — mixer keeps running, walker stays put
     if (w.state === 'walk') {
       const wp = w.route[w.wp];
       const dx = wp[0] - ch.wrap.position.x, dz = wp[1] - ch.wrap.position.z;
@@ -3432,7 +3546,7 @@ function castWalkTick(dt) {
         const fx = (w.face[0] === null) ? wp[0] : w.face[0];
         ch.wrap.rotation.y = Math.atan2(fx - wp[0], w.face[1] - wp[1]);
         if (w.wp === 0) w.loops++;
-        const sitHere = (w.wp === w.sitWp) && (w.loops % 3 === 2);
+        const sitHere = (w.wp === w.sitWp) && (w.sitEvery || (w.loops % 3 === 2));
         const bowHere = !sitHere && (Math.random() < 0.5);
         w.nextAfterIdle = sitHere ? 'sit' : (bowHere ? 'bow' : 'walk');
         w.state = 'idle'; w.stateT = 0;
@@ -3446,8 +3560,20 @@ function castWalkTick(dt) {
       /* #32b: y follows the ground (hall -> steps -> yard) so the feet
          stay on the floor across the steps; lerped so the descent is
          smooth instead of a 0.33 m jump at each tread edge. */
-      const gy = groundY(ch.wrap.position.x, ch.wrap.position.z);
-      ch.wrap.position.y += (gy - ch.wrap.position.y) * Math.min(1, dtW * 6);
+      /* #52: sample the ground a step ahead, so the body is already at the
+         higher tread's height before the front foot lands on it; otherwise the
+         foot sinks into the tread while the body is still on the lower one.
+         The bands themselves already match the real treads (raycast-verified:
+         1.12 / 1.0 / 0.67 / 0.34 at z -12.95 / -12.25 / -11.2 / -10.3). */
+      /* #52 rework (Cuu): on descent the trailing foot clips the step nose
+         (ankle 0.864 m vs 1.0 m tread) because the body drops to the lower
+         tread while the trailing foot is still on the higher one. Sample the
+         ground 0.4 m BEHIND too (where the trailing foot is) and stay at the
+         highest tread either foot is on until both have cleared it. */
+      const gy = Math.max(groundY(ch.wrap.position.x, ch.wrap.position.z),
+        groundY(ch.wrap.position.x + (dx / dist) * 0.4, ch.wrap.position.z + (dz / dist) * 0.4),
+        groundY(ch.wrap.position.x - (dx / dist) * 0.4, ch.wrap.position.z - (dz / dist) * 0.4));
+      ch.wrap.position.y += (gy - ch.wrap.position.y) * Math.min(1, dtW * 10);
       ch.wrap.rotation.y = Math.atan2(dx, dz); // face movement direction
       if (w.clipName !== 'walk') castPlayClip(file, 'walk', true);
     } else if (w.state === 'idle') {
@@ -3457,6 +3583,12 @@ function castWalkTick(dt) {
           castPlayClip(file, 'bow', false);
         } else if (w.nextAfterIdle === 'sit') {
           w.state = 'sit'; w.stateT = 0;
+          /* #51 rework (Cuu): sitting hips are 0.227 m, 0.08 m BELOW the
+             0.31 m seat top — the sit clip only lowers the hips ~0.12 m
+             from standing, so the seat must match the SITTING hip height.
+             Lift the baby +sitLift while seated so the hips clear the seat;
+             the walk branch lerps Y back to the ground when he stands up. */
+          if (w.sitLift) ch.wrap.position.y += w.sitLift;
           /* v2.90.17 (#32): the girl meditates instead of chair-sitting —
              her rig carries a 'meditate' clip; rigs without it (boy, baby)
              keep the chair-sit 'sit' clip. */
@@ -3482,6 +3614,123 @@ function castWalkTick(dt) {
     }
   }
 }
+/* #53: staging for filming. A staged walker is parked: castWalkTick keeps
+   updating its mixer (so talk/listen/idle keep playing) but skips the state
+   machine, so it never walks away. Talk/listen are the procedural clips
+   built by castMakeTalkClips (runtime, no Mixamo login needed). */
+const STAGE_NAMES = {
+  'co-gai-v3-rigged.glb': 'Cô gái', 'anh-nam-rigged.glb': 'Chàng trai',
+  'su-phu-chibi-rigged.glb': 'Sư phụ Chibi', 'su-phu-v1-rigged.glb': 'Sư phụ',
+  'baby-monk-rigged.glb': 'Bé',
+};
+const STAGE = { on: false, sel: null, prev: null, speaking: null };
+function stageName(file) { return STAGE_NAMES[file] || file; }
+function stageSelect(file) {
+  if (!castChars[file]) return;
+  if (STAGE.sel && STAGE.sel !== file) STAGE.prev = STAGE.sel;
+  STAGE.sel = file;
+  stageRefreshHint();
+  document.querySelectorAll('#stageChars .st-char').forEach(b => {
+    b.classList.toggle('on', b.dataset.f === file);
+    const w = castWalkers[b.dataset.f];
+    b.classList.toggle('parked', !!(w && w.staged));
+  });
+}
+function stagePark(file) {
+  const w = castWalkers[file]; if (!w) return;
+  w.staged = true; w.state = 'idle'; w.stateT = 0; w.pauseT = 999999;
+  castPlayClip(file, 'idle', true);
+  stageRefreshHint();
+  document.querySelectorAll('#stageChars .st-char').forEach(b => {
+    const ww = castWalkers[b.dataset.f];
+    b.classList.toggle('parked', !!(ww && ww.staged));
+  });
+}
+function stageResume(file) {
+  const w = castWalkers[file]; if (!w) return;
+  w.staged = false; w.pauseT = 0.6; w.nextAfterIdle = 'walk';
+  if (STAGE.speaking === file) STAGE.speaking = null;
+  stageRefreshHint();
+  document.querySelectorAll('#stageChars .st-char').forEach(b => {
+    const ww = castWalkers[b.dataset.f];
+    b.classList.toggle('parked', !!(ww && ww.staged));
+  });
+}
+function stageResumeAll() {
+  for (const f of Object.keys(castWalkers)) stageResume(f);
+  STAGE.speaking = null;
+}
+function stageFace(file, tx, tz) {
+  const ch = castChars[file]; if (!ch) return;
+  ch.wrap.rotation.y = Math.atan2(tx - ch.wrap.position.x, tz - ch.wrap.position.z);
+}
+function stageFaceCamera(file) {
+  const ch = castChars[file]; if (!ch) return;
+  const c = window.__pt3d.camera.position;
+  stageFace(file, c.x, c.z);
+}
+function stageFaceEachOther() {
+  const a = STAGE.sel, b = STAGE.prev;
+  if (!a || !b) return;
+  const ca = castChars[a], cb = castChars[b];
+  if (!ca || !cb) return;
+  stageFace(a, cb.wrap.position.x, cb.wrap.position.z);
+  stageFace(b, ca.wrap.position.x, ca.wrap.position.z);
+}
+function stageTalk(file) {
+  if (!castChars[file] || !castChars[file].clipMap['talk']) return;
+  if (STAGE.speaking === file) { // toggle off
+    castPlayClip(file, 'idle', true); STAGE.speaking = null;
+  } else {
+    if (STAGE.speaking && STAGE.speaking !== file) castPlayClip(STAGE.speaking, 'idle', true);
+    castPlayClip(file, 'talk', true); STAGE.speaking = file;
+  }
+  stageRefreshHint();
+}
+function stageListen(file) {
+  if (!castChars[file] || !castChars[file].clipMap['listen']) return;
+  if (STAGE.speaking === file) STAGE.speaking = null;
+  castPlayClip(file, 'listen', true);
+  stageRefreshHint();
+}
+function stageSwap() {
+  const a = STAGE.sel, b = STAGE.prev;
+  if (!a || !b) return;
+  const cur = STAGE.speaking;
+  const next = (cur === a) ? b : a;
+  const other = (next === a) ? b : a;
+  if (castChars[next] && castChars[next].clipMap['talk']) { castPlayClip(next, 'talk', true); STAGE.speaking = next; }
+  if (castChars[other] && castChars[other].clipMap['listen']) castPlayClip(other, 'listen', true);
+  stageRefreshHint();
+}
+function stageRefreshHint() {
+  const el = document.getElementById('stageHint'); if (!el) return;
+  const sel = STAGE.sel ? stageName(STAGE.sel) : '—';
+  const spk = STAGE.speaking ? stageName(STAGE.speaking) + ' đang nói' : 'chưa ai nói';
+  el.textContent = 'Đang chọn: ' + sel + ' · ' + spk + '. Chạm 1 người để chọn, “Đứng đây” để giữ chỗ, “Nói” để bắt đầu/dừng.';
+}
+function stageBuildChars() {
+  const box = document.getElementById('stageChars'); if (!box || box.children.length) return;
+  for (const c of CAST) {
+    const b = document.createElement('button');
+    b.className = 'st-char'; b.dataset.f = c[0]; b.textContent = stageName(c[0]);
+    b.addEventListener('click', () => stageSelect(c[0]));
+    box.appendChild(b);
+  }
+}
+function setStage(on) {
+  STAGE.on = on;
+  const p = document.getElementById('stagePanel');
+  if (p) p.style.display = on ? 'block' : 'none';
+  const b = document.getElementById('btnStage');
+  if (b) b.classList.toggle('on', on);
+  if (on) { stageBuildChars(); stageRefreshHint(); }
+  else stageResumeAll();
+}
+window.__stage = { STAGE, select: stageSelect, park: stagePark, resume: stageResume,
+  resumeAll: stageResumeAll, faceCamera: stageFaceCamera, faceEachOther: stageFaceEachOther,
+  talk: stageTalk, listen: stageListen, swap: stageSwap, set: setStage };
+
 /* Walker debug/test handle: per-member state + position, feet height, clock scale. */
 window.__cast.debug.walk = {
   walkers: castWalkers,
@@ -5063,6 +5312,16 @@ function setLayoutEdit(on) {
   }
 }
 document.getElementById('btnLayout').addEventListener('click', () => setLayoutEdit(!layoutEdit));
+/* #53: filming staging panel wiring. */
+document.getElementById('btnStage').addEventListener('click', () => setStage(!STAGE.on));
+document.getElementById('stageClose').addEventListener('click', () => setStage(false));
+document.getElementById('stagePark').addEventListener('click', () => { if (STAGE.sel) stagePark(STAGE.sel); });
+document.getElementById('stageFaceCam').addEventListener('click', () => { if (STAGE.sel) stageFaceCamera(STAGE.sel); });
+document.getElementById('stageTalk').addEventListener('click', () => { if (STAGE.sel) stageTalk(STAGE.sel); });
+document.getElementById('stageListen').addEventListener('click', () => { if (STAGE.sel) stageListen(STAGE.sel); });
+document.getElementById('stageFaceEach').addEventListener('click', stageFaceEachOther);
+document.getElementById('stageSwap').addEventListener('click', stageSwap);
+document.getElementById('stageResume').addEventListener('click', () => setStage(false));
 /* v2.90.0: verification handle (same spirit as __pt3d): lets whoever
    checks the build drive the real layout editor handlers headlessly. */
 if (window.__pt3d) window.__pt3d.layout = {
@@ -5607,7 +5866,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.25';
+const PT3D_VER = '2.90.28';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
