@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.21">
+<meta name="pt3d-ver" content="2.90.24">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -221,7 +221,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.21 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.24 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -322,7 +322,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader as _GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-/* v2.90.21: every GLTFLoader gets the Meshopt decoder, so meshopt-compressed
+/* v2.90.24: every GLTFLoader gets the Meshopt decoder, so meshopt-compressed
    models (EXT_meshopt_compression, used by the #42/#43 compression batches)
    load; plain models are unaffected. */
 class GLTFLoader extends _GLTFLoader {
@@ -754,7 +754,7 @@ carpet.receiveShadow = true; scene.add(carpet);
      high (v2.46.0: Anita said the first squash read too flat), base on the
      unchanged eave line y=5.22. The old eave slab + fascia boards are
      removed with the tiers - their dark bands poked out around the model. */
-  new GLTFLoader().load('models/roof.glb?v=101', (gltf) => {
+  new GLTFLoader().load('models/roof.glb?v=102', (gltf) => {
     const m = gltf.scene;
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     const bb = new THREE.Box3().setFromObject(m);
@@ -850,7 +850,7 @@ carpet.receiveShadow = true; scene.add(carpet);
   hallLight.position.set(0, 3.2, -19.5); scene.add(hallLight);
   const hg = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0.85, depthWrite: false }));
   hg.scale.set(3.4, 3.4, 1); hg.position.set(0, 3.35, -23.9); scene.add(hg);
-  new GLTFLoader().load('models/cand-b/buddha-statue.glb?v=101', (gltf) => {
+  new GLTFLoader().load('models/cand-b/buddha-statue.glb?v=102', (gltf) => {
     const m = gltf.scene;
     const bb = new THREE.Box3().setFromObject(m);
     m.scale.setScalar(2.1 / bb.getSize(new THREE.Vector3()).y);
@@ -949,9 +949,9 @@ tree(16.2, -6.0, 1.05); tree(-15.9, 8.0, 0.95); tree(15.5, 9.5, 0.95); tree(-7.8
    maple accent here and there, palms outside the west fence by the falls.
    The type of a selected tree cycles with the Layout panel's Type button. */
 const TREE_TYPES = [
-  { url: 'models/tree-green.glb?v=101', h: 3.9 },
-  { url: 'models/tree-maple.glb?v=101', h: 3.7 },
-  { url: 'models/tree-palm.glb?v=101', h: 4.6 }
+  { url: 'models/tree-green.glb?v=102', h: 3.9 },
+  { url: 'models/tree-maple.glb?v=102', h: 3.7 },
+  { url: 'models/tree-palm.glb?v=102', h: 4.6 }
 ];
 const treeProtos = [null, null, null];
 const treeProtoH = [1, 1, 1];
@@ -1082,7 +1082,7 @@ const fallsFlowMat = new THREE.ShaderMaterial({
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.5 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.06 + streak * 0.55; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
 });
-new GLTFLoader().load('models/waterfall2.glb?v=101', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin (v2.83.2: restored as THE falls - Anita judged the rock cascade less beautiful; the rock one is parked as a small extra below)
+new GLTFLoader().load('models/waterfall2.glb?v=102', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin (v2.83.2: restored as THE falls - Anita judged the rock cascade less beautiful; the rock one is parked as a small extra below)
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -1106,7 +1106,7 @@ new GLTFLoader().load('models/waterfall2.glb?v=101', (gltf) => { // v2.68.0: Ani
      (extracted offline as falls-water.glb) with a shader running light
      streaks down the slope; the flat pool stays calm (slope-weighted).
      Same position offset as m, so it stays glued wherever Layout moves it. */
-  new GLTFLoader().load('models/falls2-water2.glb?v=101', (wg) => { // v2.71.2: STRICT re-extraction - the v1 mask's weak colour test (B>R+10) also caught light rock, so the flow painted the whole rockery (Anita); the new mask is water only, verified on a mask render
+  new GLTFLoader().load('models/falls2-water2.glb?v=102', (wg) => { // v2.71.2: STRICT re-extraction - the v1 mask's weak colour test (B>R+10) also caught light rock, so the flow painted the whole rockery (Anita); the new mask is water only, verified on a mask render
     const wm = wg.scene;
     wm.position.copy(m.position);
     wm.traverse(o => { if (o.isMesh) { o.material = fallsFlowMat; o.castShadow = false; o.receiveShadow = false; } });
@@ -1125,7 +1125,7 @@ const wellFlowMat = new THREE.ShaderMaterial({
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float r1 = sin(vX * 260.0 + uTime * 1.8 + sin(vY * 210.0 + uTime * 1.1) * 2.4); float r2 = sin((vX + vY) * 340.0 - uTime * 2.3); float sp = smoothstep(0.75, 1.0, r1 * 0.6 + r2 * 0.4); float a = mix(0.72, 0.45, vSlope) + sp * 0.18; vec3 col = mix(vec3(0.10, 0.32, 0.40), vec3(0.75, 0.90, 0.95), sp); gl_FragColor = vec4(col, a); }'
 });
-new GLTFLoader().load('models/well.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/well.glb?v=102', (gltf) => {
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -1139,7 +1139,7 @@ new GLTFLoader().load('models/well.glb?v=101', (gltf) => {
   wrap.position.set(13.2, 0, 5.6);
   wrap.rotation.y = -Math.PI / 2;
   scene.add(wrap); regPart('well', wrap, true);
-  new GLTFLoader().load('models/well-water.glb?v=101', (wg) => {
+  new GLTFLoader().load('models/well-water.glb?v=102', (wg) => {
     const wm = wg.scene;
     wm.position.copy(m.position);
     wm.traverse(o => { if (o.isMesh) { o.material = wellFlowMat; o.castShadow = false; o.receiveShadow = false; } });
@@ -1153,7 +1153,7 @@ new GLTFLoader().load('models/well.glb?v=101', (gltf) => {
    planting it as a layout-movable cluster, like the shrine. Model is
    0.978 wide x 0.827 tall, ground-based; scaled to 7 m wide (~5.9 m tall).
    Default spot: front-west corner, door facing east toward the carpet. */
-new GLTFLoader().load('models/pavilion2.glb?v=101', (gltf) => { // v2.56.0: open two-tier pavilion (Anita's pick) replaces the closed ornate shell in the same layout slot
+new GLTFLoader().load('models/pavilion2.glb?v=102', (gltf) => { // v2.56.0: open two-tier pavilion (Anita's pick) replaces the closed ornate shell in the same layout slot
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -1178,7 +1178,7 @@ new GLTFLoader().load('models/pavilion2.glb?v=101', (gltf) => { // v2.56.0: open
    dry land as a garden feature - still walkable via the groundY deck
    profile (measured from the model; crest 0.87 m). One Layout cluster
    ('bridgescene'); the bridge body flanks the corridor as colliders. */
-new GLTFLoader().load('models/bridge.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/bridge.glb?v=102', (gltf) => {
   const m = gltf.scene;
   const bb = new THREE.Box3().setFromObject(m);
   const size = bb.getSize(new THREE.Vector3());
@@ -1676,7 +1676,7 @@ const lampPaperGroups = {};
   scene.add(g); lampPaperGroups[id] = g; regPart(id, g, true);
 });
 let lampPaperWrap = null, lampRusticWrap = null;
-new GLTFLoader().load('models/lamp-paper.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/lamp-paper.glb?v=102', (gltf) => {
   const proto = gltf.scene;
   proto.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.85; } });
   const bb = new THREE.Box3().setFromObject(proto);
@@ -1692,7 +1692,7 @@ const lampRusticGroups = {};
   const glow = new THREE.Sprite(lampGlowMat); glow.scale.set(0.85, 0.85, 1); glow.position.set(0.45, 1.62, 0); g.add(glow);
   scene.add(g); lampRusticGroups[id] = g; regPart(id, g, true);
 });
-new GLTFLoader().load('models/lamp-rustic.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/lamp-rustic.glb?v=102', (gltf) => {
   const proto = gltf.scene;
   proto.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.9; } });
   const bb = new THREE.Box3().setFromObject(proto);
@@ -1823,7 +1823,7 @@ let shrineGrp = null;
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag; regPart('shrine', stag, false);
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
   shrineLight.position.set(10.6, 1.7, pz); scene.add(shrineLight); regPart('shrine', shrineLight, false); regPart('shrine', shrineBurner, false);
-  new GLTFLoader().load('models/temple.glb?v=101', (gltf) => {
+  new GLTFLoader().load('models/temple.glb?v=102', (gltf) => {
     const m = gltf.scene;
     m.rotation.y = -Math.PI / 2;
     m.scale.setScalar(7.3);
@@ -2003,7 +2003,7 @@ hallBurner();
    disc is shrunk onto the model's ash bed (0.43 of height), and the flame /
    glow / light are re-anchored to the model's stick tops. Model scale 1.9:
    rim lands at 1.15 and stick tops at 1.90 - the old urn's own landmarks. */
-new GLTFLoader().load('models/burner.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/burner.glb?v=102', (gltf) => {
   const proto = gltf.scene;
   const bb = new THREE.Box3().setFromObject(proto);
   const size = bb.getSize(new THREE.Vector3());
@@ -2072,7 +2072,7 @@ const chosenStick = xamSticks[4];
    (she found the old set too big). It stands on the altar table in the
    jar group, so the shake animation turns the whole set; the old parts
    hide when the model lands. */
-new GLTFLoader().load('models/xam-set.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/xam-set.glb?v=102', (gltf) => {
   jar.children.slice().forEach(c => { c.visible = false; });
   const m = gltf.scene;
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -2204,7 +2204,7 @@ function makeBroom() {
 let foxProto = null;
 const foxPets = new Set();
 function fillFox(g) { if (foxProto && !g.children.length) g.add(foxProto.clone()); }
-new GLTFLoader().load('models/fox.glb?v=101', (gltf) => {
+new GLTFLoader().load('models/fox.glb?v=102', (gltf) => {
   const m = gltf.scene;
   m.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.9; } });
   const bb = new THREE.Box3().setFromObject(m);
@@ -2352,7 +2352,7 @@ function doveAttach(g) {
   if (g.userData.poses.fly) doveShow(g, g.userData.poseWant || 'stand');
 }
 for (const dovePoseName of DOVE_POSES) {
-  new GLTFLoader().load('models/dove-' + dovePoseName + '.glb?v=101', (gltf) => {
+  new GLTFLoader().load('models/dove-' + dovePoseName + '.glb?v=102', (gltf) => {
     const m = gltf.scene;
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.9; } });
     m.rotation.y = -Math.PI / 2;
@@ -2727,7 +2727,7 @@ function spawnSala(shared) {
 /* ============ Sky wish lanterns (v2.85.0) — release a paper lantern that rises
    over the yard for everyone to see; the blessing word is baked into each model:
    0 = Hạnh Phúc, 1 = Bình An, 2 = Như Ý. Models load lazily on first use. ============ */
-const SKY_URLS = ['models/sky-hanhphuc.glb?v=102', 'models/sky-binhan.glb?v=102', 'models/sky-nhuy.glb?v=102'];
+const SKY_URLS = ['models/sky-hanhphuc.glb?v=103', 'models/sky-binhan.glb?v=103', 'models/sky-nhuy.glb?v=103'];
 function loadSkyProtos(cb) {
   if (skyReady) { cb(); return; }
   skyWaiters.push(cb);
@@ -2867,7 +2867,7 @@ function swapToModel(g) {
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
 }
-new GLTFLoader().load('models/monk2.glb?v=104', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
+new GLTFLoader().load('models/monk2.glb?v=105', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
   const S = 1.15 / 1.957;
   const inner = new THREE.Group();
   inner.scale.setScalar(S);
@@ -3002,97 +3002,41 @@ player.rotation.y = Math.PI;
    the normal layout store + shared lock. No colliders are added for the
    props (same as the verified v1 build). CC-BY credit for the 3 free
    items lives in the #credit line. */
-window.__garden = { total: 29, loaded: 0, errors: [] };
+window.__garden = { total: 6, loaded: 0, errors: [] };
 const GARDEN = [
   // [url, x, z, ry, size, dim, leanX, leanZ, liftY]
-  // anchors: well + coop + flower stall + 2 trees/ring
-  ['props/setenull/gieng.glb', -14.8, -28.5, -0.5, 1.0, 'y'],
+  // v2.90.23 (Anita, #44 step 3): small garden accessories REMOVED -
+  // the tiny things (knives, cutting board, baskets, sickle, trays,
+  // hats, chickens, well, flower stall, anvil, watering can, second
+  // bucket, lantern, sack, carrots, axe, broom, extra hoes, hand
+  // trowel) were too small to see or identify. KEEP ONLY: bucket (xo),
+  // hoe + shovel (cuoc, xeng), chicken coop (chuong ga), hammock (vong).
+  // The removed files are kept in the Drive reserve folder
+  // phong-thien-props-removed-v29023/ - add back later if needed.
+  // The log stool (ghe-go) is NOT a garden accessory - it is the baby
+  // monk's seat at his sit waypoint, so it stays.
   ['props/setenull/chuong-ga.glb', -10.7, -28.7, 0.6, 1.1, 'y'],
-  ['props/gcz3/sap-hoa.glb', -15.3, -26.2, 1.2, 1.2, 'y'],
   ['props/setenull/cay-vong.glb', -12.9, -30.3, 0, 1.6, 'y'],
-  // work cluster: anvil + saw bench + grindstone
-  ['props/gcz3/de-bua.glb', -13.4, -26.9, -0.4, 0.85, 'y'],
-  ['props/gcz3/ban-cua.glb', -12.1, -26.3, 0.9, 0.75, 'y'],
-  ['props/gcz3/ban-mai.glb', -14.2, -25.7, 0.5, 0.8, 'y'],
-  // chickens pecking in front of the coop
-  ['props/setenull/ga-trang.glb', -11.8, -27.7, 2.2, 0.42, 'y'],
-  ['props/setenull/ga-trong.glb', -10.1, -27.5, -1.8, 0.42, 'y'],
-  ['props/setenull/ga-mai.glb', -11.0, -26.9, 0.4, 0.42, 'y'],
-  // pots & containers
-  ['props/gcz3/binh-tuoi.glb', -13.9, -28.0, 0.8, 0.4, 'y'],
   ['props/setenull/xo-1.glb', -14.3, -27.5, 0, 0.4, 'y'],
-  ['props/free/bucket.glb', -13.3, -27.9, 0, 0.35, 'y'],
-  ['props/setenull/den-bao.glb', -11.6, -28.3, 0, 0.35, 'y'],
-  ['props/setenull/bao-tai.glb', -15.6, -27.0, 0.4, 0.55, 'y'],
-  ['props/free/basket.glb', -15.0, -26.7, -0.5, 0.5, 'x'],
-  ['props/setenull/ca-rot.glb', -12.3, -25.8, 0, 0.35, 'y'],
-  // leaning tools
-  // v2.90.7 (Anita): hand tools LYING FLAT on the ground - the old
-  // ~17 deg lean still read as "standing upright, how would anyone use
-  // them". Flat = tip ~-1.5 rad + a small lift so the body rests on the
-  // ground instead of sinking. (xeng stays planted: that model is a
-  // shovel stuck in a dirt mound, standing is its natural pose.)
-  ['props/gcz3/riu.glb', -11.7, -28.5, 0.8, 0.65, 'y', -1.45, 0, 0.29],
-  ['props/gcz3/cuoc-chim.glb', -14.1, -28.3, -0.7, 0.7, 'y', -1.45, 0, 0.17],
   ['props/gcz3/xeng.glb', -15.3, -28.3, 0.9, 1.2, 'y', -0.3],
-  ['props/free/broom.glb', -11.9, -28.0, -0.9, 1.25, 'y', -1.5, 0, 0.06],
-  ['props/anonymous/cuoc-chu-t.glb', -13.0, -25.9, -0.3, 1.1, 'y', -1.5, 0, 0.06],
-  ['props/anonymous/liem.glb', -12.5, -26.1, 0.7, 0.45, 'y', -1.5, 0, 0.03],
   ['props/free/hoe.glb', -14.6, -26.6, 1.0, 1.2, 'x', 0, 0, 0.02],
-  ['props/anonymous/met-tre.glb', -12.7, -26.6, 0.6, 0.6, 'x', -0.55, 0, 0.05],
-  ['props/anonymous/non-la.glb', -14.9, -25.9, 0.3, 0.45, 'x', -0.35, 0, 0.03],
-  ['props/anonymous/ao-toi.glb', -13.6, -29.7, 0.3, 0.7, 'y', -0.12, 0, 0.55],
-  ['props/free/trowel.glb', -12.9, -26.4, 0.5, 0.35, 'x'],
-  // v2.90.13 (Anita via Cuu): the Tripo log stool she picked from her
-  // Likes, placed at the baby monk's sit waypoint (CAST_WALK wp3) and
-  // scaled so the seat top is 0.12 m - the seat height his sit clip
-  // needs. Registered as a garden Layout part like the rest, so Anita
-  // can drag / duplicate it in Layout.
-  // v2.90.15 (Mica): the v2.90.13 scale-by-height (dim 'y', size 0.12)
-  // made the stool only 0.15 m wide - far too small for the baby to sit
-  // on (Anita, 2026-11-17 06:55). Scale by WIDTH instead (dim 'x',
-  // size 0.5 -> 0.5 m wide, seat 0.40 m) and sink it (liftY -0.28) so
-  // the seat top stays at 0.12 m.
   ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.5, 'x', 0, 0, -0.28],
 ];
 /* Layout tap-proxy sizes per prop (world axes, metres) — also the
    selection ring size. Keyed by file base name. */
 const GARDEN_PS = {
-  'gieng': { w: 1.4, d: 1.4, h: 1.6 }, 'chuong-ga': { w: 2.6, d: 2.2, h: 1.8 },
-  'sap-hoa': { w: 2.4, d: 1.6, h: 1.8 }, 'cay-vong': { w: 3.6, d: 2.6, h: 2.6 },
-  'de-bua': { w: 1.7, d: 1.2, h: 1.2 }, 'ban-cua': { w: 1.9, d: 1.1, h: 1.2 },
-  'ban-mai': { w: 1.6, d: 1.1, h: 1.2 }, 'ga-trang': { w: 0.8, d: 0.8, h: 0.7 },
-  'ga-trong': { w: 0.8, d: 0.8, h: 0.7 }, 'ga-mai': { w: 0.8, d: 0.8, h: 0.7 },
-  'binh-tuoi': { w: 0.8, d: 0.8, h: 0.8 }, 'xo-1': { w: 0.8, d: 0.8, h: 0.8 },
-  'bucket': { w: 0.7, d: 0.7, h: 0.7 }, 'den-bao': { w: 0.7, d: 0.7, h: 0.9 },
-  'bao-tai': { w: 1.0, d: 0.8, h: 0.9 }, 'basket': { w: 0.9, d: 0.9, h: 0.8 },
-  'ca-rot': { w: 0.8, d: 0.8, h: 0.6 }, 'riu': { w: 0.9, d: 0.9, h: 1.1 },
-  'cuoc-chim': { w: 0.9, d: 0.9, h: 1.1 }, 'xeng': { w: 1.0, d: 1.0, h: 1.4 },
-  'broom': { w: 1.0, d: 1.0, h: 1.4 }, 'cuoc-chu-t': { w: 1.1, d: 1.1, h: 1.2 },
-  'liem': { w: 0.8, d: 0.8, h: 0.8 }, 'hoe': { w: 1.1, d: 1.1, h: 1.3 },
-  'met-tre': { w: 0.9, d: 0.9, h: 0.7 }, 'non-la': { w: 0.8, d: 0.8, h: 0.6 },
-  'ao-toi': { w: 0.9, d: 0.9, h: 1.2 }, 'trowel': { w: 0.7, d: 0.7, h: 0.6 },
-  'ghe-go': { w: 0.5, d: 0.4, h: 0.4 }
+  'chuong-ga': { w: 2.6, d: 2.2, h: 1.8 }, 'cay-vong': { w: 3.6, d: 2.6, h: 2.6 },
+  'xo-1': { w: 0.8, d: 0.8, h: 0.8 }, 'xeng': { w: 1.0, d: 1.0, h: 1.4 },
+  'hoe': { w: 1.1, d: 1.1, h: 1.3 }, 'ghe-go': { w: 0.5, d: 0.4, h: 0.4 }
 };
 /* v2.90.7 (Anita): every garden prop gets its own name in the Layout
    panel - "some tiny things I could not identify, so I deleted them".
    [vi, en] per GLB base name. */
 const GARDEN_NAMES = {
-  'gieng': ['⛲ Giếng nước', '⛲ Well'], 'chuong-ga': ['🐔 Chuồng gà', '🐔 Chicken coop'],
-  'sap-hoa': ['🌸 Sạp hoa', '🌸 Flower stall'], 'cay-vong': ['🌳 Cây treo võng', '🌳 Hammock tree'],
-  'de-bua': ['🔨 Đe thợ rèn', '🔨 Anvil'], 'ban-cua': ['🪚 Bàn cưa', '🪚 Saw bench'],
-  'ban-mai': ['Bàn mài', 'Grindstone'], 'ga-trang': ['🐔 Gà trắng', '🐔 White hen'],
-  'ga-trong': ['🐓 Gà trống', '🐓 Rooster'], 'ga-mai': ['🐔 Gà mái', '🐔 Hen'],
-  'binh-tuoi': ['Bình tưới', 'Watering can'], 'xo-1': ['🪣 Xô nước', '🪣 Bucket'],
-  'bucket': ['🪣 Xô nhỏ', '🪣 Small pail'], 'den-bao': ['🏮 Đèn bão', '🏮 Storm lantern'],
-  'bao-tai': ['Bao tải', 'Sack'], 'basket': ['🧺 Giỏ tre', '🧺 Basket'],
-  'ca-rot': ['🥕 Cà rốt', '🥕 Carrots'], 'riu': ['🪓 Rìu', '🪓 Axe'],
-  'cuoc-chim': ['⛏️ Cuốc chim', '⛏️ Pickaxe'], 'xeng': ['Xẻng', 'Shovel'],
-  'broom': ['🧹 Chổi', '🧹 Broom'], 'cuoc-chu-t': ['Cuốc chữ T', 'Mattock'],
-  'liem': ['Liềm', 'Sickle'], 'hoe': ['Cuốc', 'Hoe'],
-  'met-tre': ['Mẹt tre', 'Bamboo tray'], 'non-la': ['👒 Nón lá', '👒 Leaf hat'],
-  'ao-toi': ['🧥 Áo tơi', '🧥 Rain cape'], 'trowel': ['Xẻng tay', 'Hand trowel'],
-  'ghe-go': ['🪑 Ghế gỗ', '🪑 Wooden stool']
+  'chuong-ga': ['🐔 Chuồng gà', '🐔 Chicken coop'],
+  'cay-vong': ['🌳 Cây treo võng', '🌳 Hammock tree'],
+  'xo-1': ['🪣 Xô nước', '🪣 Bucket'], 'xeng': ['Xẻng', 'Shovel'],
+  'hoe': ['Cuốc', 'Hoe'], 'ghe-go': ['🪑 Ghế gỗ', '🪑 Wooden stool']
 };
 const GARDEN_BY_ID = {};
 for (const p of GARDEN) GARDEN_BY_ID['gd-' + p[0].split('/').pop().replace('.glb', '')] = p;
@@ -3151,7 +3095,7 @@ function gardenPlace(p, id, home) {
   const [url, gx, gz, ry, size, dim, leanX, leanZ, liftY] = p;
   const ax = home ? home.x : gx, az = home ? home.z : gz;
   const base = url.split('/').pop().replace('.glb', '');
-  new GLTFLoader().load(url, (gltf) => {
+  new GLTFLoader().load(url + '?v=102', (gltf) => {
     const m = gltf.scene;
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     const bb = new THREE.Box3().setFromObject(m);
@@ -5605,7 +5549,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.21';
+const PT3D_VER = '2.90.24';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
