@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.32">
+<meta name="pt3d-ver" content="2.90.33">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -108,17 +108,21 @@
   #bubbleLayer { position:fixed; inset:0; z-index:28; pointer-events:none; overflow:hidden; }
   .chatBubble { position:absolute; transform:translate(-50%,-100%); background:rgba(255,250,238,.95); color:#33241a; font-size:12.5px; padding:5px 10px; border-radius:12px; max-width:210px; overflow-wrap:anywhere; box-shadow:0 3px 10px rgba(0,0,0,.35); }
   #incenseBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
-  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; padding:3px 9px; border:1px solid rgba(255,233,189,.30); border-radius:999px; background:rgba(24,14,4,.42); backdrop-filter:blur(3px); color:#ffe9bd; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 2px rgba(0,0,0,.6); }
+  /* #57 (Anita 2026-11-19 20:36): no pill background / border on the incense
+     chip — it reads like the Meditate chips (.wChip/.seatChip): just the icon
+     + text floating with a strong shadow. The countdown stays readable via
+     the shadow, not a pill. */
+  .incChip { position:absolute; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer; padding:2px 6px; border:none; background:none; color:#ffe9bd; display:flex; flex-direction:column; align-items:center; gap:1px; text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55); }
   /* v2.89.3: incense chip refined - no cartoon flame icon, just a quiet pill;
      warm tint while burning. The label is a single token (see updateIncenseChips). */
   .incChip .chipIc { font-size:11.5px; line-height:1.25; letter-spacing:.05em; }
   .incChip .chipTx { display:none; }
-  .incChip.lit { border-color:rgba(255,180,90,.5); color:#ffd9a0; }
+  .incChip.lit { color:#ffd9a0; }
   /* #57 (corrected per Anita 2026-11-19 18:40): the flame is an INVITATION,
      not a burning marker. It shows together with the 'Dot nhang' action text
      while the incense is OUT, hides while it burns, and returns at burnout so
      others know to light it — like an action prompt (cf. the seated trio). */
-  .incChip .chipFlame { font-size:16px; line-height:1.1; }
+  .incChip .chipFlame { font-size:13px; line-height:1.1; }
   .incChip:not(.lit) .chipFlame { animation:chipFlame 1.1s ease-in-out infinite; }
   @keyframes chipFlame { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.12); opacity:.85; } }
   .chipIc { font-size:17px; line-height:1.1; }
@@ -262,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.32 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.33 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -6006,7 +6010,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.32';
+const PT3D_VER = '2.90.33';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
