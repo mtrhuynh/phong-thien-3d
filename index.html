@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.28">
+<meta name="pt3d-ver" content="2.90.29">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -254,7 +254,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.28 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.29 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3940,6 +3940,7 @@ function projectChip(el, pos, dy) {
   el.style.top = (-__wV.y * 0.5 + 0.5) * innerHeight + 'px';
 }
 const pileChips = new Map();
+const __pileW = new THREE.Vector3(); // #54: scratch vector for a pile's world position (do not hold across frames)
 let salaChipEl = null;
 function updateWorldChips() {
   const yardOk = room === 'yard' && !window.__layoutEdit;
@@ -3953,8 +3954,12 @@ function updateWorldChips() {
       worldBtnWrap.appendChild(el); pileChips.set(p.userData.pid, el);
     }
     setChip(el, '🍂 ' + L().aSweep);
-    if (player.position.distanceTo(p.position) >= 24) { el.style.display = 'none'; continue; }
-    projectChip(el, p.position, 0.62);
+    // #54: the pile is a child of its layout wrapper at LOCAL (0,0,0) —
+    // p.position is not where the pile is. Project from its CURRENT world
+    // position every frame, so the marker follows a Layout drag.
+    p.getWorldPosition(__pileW);
+    if (player.position.distanceTo(__pileW) >= 24) { el.style.display = 'none'; continue; }
+    projectChip(el, __pileW, 0.62);
   }
   for (const [pid, el] of pileChips) if (!seen.has(pid)) { el.remove(); pileChips.delete(pid); }
   if (yardOk && sala && sala.userData.sala && sala.userData.sala.state !== 'fly') {
@@ -4183,7 +4188,9 @@ function doSweep() {
   leafPiles.forEach(p => { const d = player.position.distanceTo(p.getWorldPosition(new THREE.Vector3())); if (d < bd) { bd = d; best = p; } });
   if (best) {
     if (P.mode === 'seated') standUp();
-    const p = best.position.clone(); p.y = 0;
+    // #54: best.position is the pile's LOCAL (0,0,0) inside its layout
+    // wrapper — walk to its CURRENT world position, not the origin.
+    const p = best.getWorldPosition(new THREE.Vector3()); p.y = 0;
     if (bd < 1.0) startSweep(best); else { setWalkTarget(p); P.sweepPile = best; }
   }
 }
@@ -5866,7 +5873,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.28';
+const PT3D_VER = '2.90.29';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
