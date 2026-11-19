@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.30">
+<meta name="pt3d-ver" content="2.90.32">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -114,6 +114,13 @@
   .incChip .chipIc { font-size:11.5px; line-height:1.25; letter-spacing:.05em; }
   .incChip .chipTx { display:none; }
   .incChip.lit { border-color:rgba(255,180,90,.5); color:#ffd9a0; }
+  /* #57 (corrected per Anita 2026-11-19 18:40): the flame is an INVITATION,
+     not a burning marker. It shows together with the 'Dot nhang' action text
+     while the incense is OUT, hides while it burns, and returns at burnout so
+     others know to light it — like an action prompt (cf. the seated trio). */
+  .incChip .chipFlame { font-size:16px; line-height:1.1; }
+  .incChip:not(.lit) .chipFlame { animation:chipFlame 1.1s ease-in-out infinite; }
+  @keyframes chipFlame { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.12); opacity:.85; } }
   .chipIc { font-size:17px; line-height:1.1; }
   .chipTx { font-size:12px; line-height:1.15; white-space:nowrap; }
   #worldBtns { position:fixed; inset:0; z-index:30; pointer-events:none; }
@@ -255,7 +262,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.30 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.32 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3910,7 +3917,13 @@ const incenseChips = [
 ];
 function updateIncenseChips() {
   for (const ch of incenseChips) {
-    if (!ch.el) { ch.el = document.createElement('button'); ch.el.className = 'incChip'; chipLines(ch.el); ch.el.addEventListener('click', () => incenseChipTap(ch)); incenseChipWrap.appendChild(ch.el); }
+    if (!ch.el) { ch.el = document.createElement('button'); ch.el.className = 'incChip'; chipLines(ch.el);
+      /* #57 (Anita): flame icon above the label — an invitation to light the
+         incense. It is a child of the chip, so hiding the chip (wrong room /
+         too far / behind camera) hides the flame with it. */
+      ch.flameEl = document.createElement('span'); ch.flameEl.className = 'chipFlame'; ch.flameEl.textContent = '🔥';
+      ch.el.insertBefore(ch.flameEl, ch.el.firstChild);
+      ch.el.addEventListener('click', () => incenseChipTap(ch)); incenseChipWrap.appendChild(ch.el); }
     const g = ch.grp();
     if (!g || window.__layoutEdit || (ch.hall ? room !== 'hall' : room !== 'yard') || player.position.distanceTo(g.position) >= 24) { ch.el.style.display = 'none'; continue; }
     const lit = ch.hall ? hallLit : incenseLit, left = ch.hall ? hallLeft : incenseLeft;
@@ -3918,6 +3931,13 @@ function updateIncenseChips() {
        with a non-breaking space so setChip keeps it as one token. */
     const txt = lit ? Math.floor(Math.max(0, left) / 60) + ':' + String(Math.floor(Math.max(0, left) % 60)).padStart(2, '0') : L().aInc.replace(' ', '\u00A0');
     ch.el.classList.toggle('lit', lit);
+    /* #57 (Anita, corrected): ONE condition drives flame + action text, with the
+       flame as the invitation. The flame is visible exactly when the incense is
+       OUT (together with the 'Dot nhang' text); while it burns the flame hides
+       and only the countdown shows; at burnout lit flips false and the flame
+       returns in the same frame the countdown reverts to 'Dot nhang' — so
+       others know to light it. It can never linger while burning. */
+    if (ch.flameEl) ch.flameEl.style.display = lit ? 'none' : '';
     setChip(ch.el, txt);
     __incV.copy(g.position); __incV.y += ch.dy; __incV.project(camera);
     if (__incV.z > 1 || __incV.z < -1) { ch.el.style.display = 'none'; continue; }
@@ -3926,6 +3946,20 @@ function updateIncenseChips() {
     ch.el.style.top = (-__incV.y * 0.5 + 0.5) * innerHeight + 'px';
   }
 }
+
+/* #57 test hook (same pattern as window.__pt55): lets a headless probe drive the
+   incense state (light / force burnout) to verify the flame shares the action
+   text's lifecycle (visible when out, hidden while burning, back at burnout).
+   Only reads/writes this client's own incense state. */
+window.__inc = {
+  light: lightIncense,
+  setLit: (on) => { if (on) { setIncenseLit(true); incenseLeft = 180; } else setIncenseLit(false); },
+  setLeft: (s) => { incenseLeft = s; },
+  get lit() { return incenseLit; },
+  get left() { return incenseLeft; },
+  get chips() { return incenseChips.map(ch => ({ hall: ch.hall, flameVisible: ch.flameEl ? ch.flameEl.style.display !== 'none' : null, text: ch.el ? ch.el.textContent : null, shown: ch.el ? ch.el.style.display !== 'none' : false })); },
+  update: updateIncenseChips,
+};
 
 /* v2.81.0 (Anita): world-object chips for sweeping and sala, and a
    private seated trio. A 🍂 chip floats over every standing leaf pile,
@@ -5972,7 +6006,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.30';
+const PT3D_VER = '2.90.32';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
