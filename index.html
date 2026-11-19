@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.29">
+<meta name="pt3d-ver" content="2.90.30">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -142,6 +142,7 @@
   #playerCard { cursor:pointer; }
   #nameModal { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; background:rgba(10,6,3,.55); backdrop-filter:blur(3px); }
   #nameModal.show { display:flex; }
+  #nameErr { display:none; color:#ffb3a0; font-size:13px; text-align:center; margin:8px 2px 0; line-height:1.4; }
   .nm-card { position:relative; width:min(88vw, 340px); background:linear-gradient(160deg, rgba(52,34,16,.97), rgba(26,17,9,.97)); border:1px solid rgba(255,205,120,.6); border-radius:18px; padding:22px 20px 18px; text-align:center; color:#f3e5c3; box-shadow:0 18px 50px rgba(0,0,0,.5); }
   .nm-title { font-size:17px; font-weight:700; color:#ffe1a8; margin-bottom:8px; }
   .nm-sub { font-size:12.5px; line-height:1.5; color:#d8c9ae; margin-bottom:14px; }
@@ -254,7 +255,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.29 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.30 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -263,6 +264,7 @@
     <div class="nm-title" data-i18n="nmTitle">🪷 Chào mừng đến Phòng Thiền 3D</div>
     <div class="nm-sub" data-i18n="nmSub">Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.</div>
     <input id="nameInput" type="text" maxlength="14" data-i18n-ph="nmPh" placeholder="Ví dụ: Ivy" autocomplete="off">
+    <div id="nameErr" style="display:none"></div>
     <div class="nm-row">
       <button class="nm-dice" id="nameDice" data-i18n="nmDice">🎲 Tên ngẫu nhiên</button>
       <button class="nm-go" id="nameGo" data-i18n="nmGo">Vào chùa 🙏</button>
@@ -1284,7 +1286,7 @@ const I18N = {
     musPlayT: 'Mở / tắt nhạc thiền', musNextT: 'Bài tiếp', musIdle: 'Nhạc thiền', chatPh: 'Nói gì đó…', hint: 'Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền',
     creditA: 'Tượng Phật: model 3D Tripo · v', nmTitle: '🪷 Chào mừng đến Phòng Thiền 3D',
     nmSub: 'Đặt một nickname để mọi người biết bạn là ai.<br>Tên lưu trên máy này — lần sau không cần đặt lại.<br>Muốn đổi tên: bấm vào thẻ tên của bạn ở góc trái.',
-    nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
+    nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', nmTaken: 'Tên này đã có người dùng, vui lòng chọn tên khác.', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
     pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
     aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.', dovePanelTitle: '🕊️ Bồ câu', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' hạt', doveFull: 'Đã lớn tối đa', doveFeedMine: '🌾 Cho ăn', doveFeedFlock: '🌾 Cho cả đàn', doveYardOnly: 'Ra sân mới cho bồ câu ăn được nhé', doveLink: '🔗 Mã của tôi', doveLinkOn: '🔗 Đã liên kết ✓', doveLinkPrompt: 'Mã bí mật của bạn (ít nhất 6 ký tự). Nhập CÙNG mã này trên mọi máy/app để dùng chung đúng 1 con bồ câu:', doveLinkShort: 'Mã ngắn quá — ít nhất 6 ký tự nha', doveLinked: 'Đã liên kết ✓ Từ nay mọi máy dùng chung 1 con bồ câu', doveLinkErr: 'Chưa nối được máy chủ — chim vẫn lưu trên máy này, thử lại sau nhé',
     aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
@@ -1320,7 +1322,7 @@ const I18N = {
     musPlayT: 'Toggle meditation music', musNextT: 'Next track', musIdle: 'Meditation music', chatPh: 'Say something…', hint: 'Tap the ground to walk<br>Drag to look around<br>Tap an empty cushion to sit',
     creditA: 'Buddha statue: Tripo 3D model · v', nmTitle: '🪷 Welcome to the 3D Meditation Room',
     nmSub: 'Pick a nickname so others know who you are.<br>It is saved on this device — no need to set it again.<br>To change it later: tap your name card, top-left.',
-    nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
+    nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', nmTaken: 'This name is already in use, please choose another name.', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
     pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
     aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.', dovePanelTitle: '🕊️ Dove', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' seeds', doveFull: 'Fully grown', doveFeedMine: '🌾 Feed', doveFeedFlock: '🌾 Feed the flock', doveYardOnly: 'Head out to the yard to feed the doves', doveLink: '🔗 My code', doveLinkOn: '🔗 Linked ✓', doveLinkPrompt: 'Your secret code (at least 6 characters). Enter the SAME code on every device/app to share exactly one dove:', doveLinkShort: 'Code too short — at least 6 characters', doveLinked: 'Linked ✓ All your devices now share one dove', doveLinkErr: 'Could not reach the server — your dove stays saved on this device, try again later',
     aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
@@ -4220,6 +4222,18 @@ function openNameModal() {
 function closeNameModal() {
   const v = (nameInput.value || '').trim().slice(0, 14);
   const n = cleanName(v || myName, 'Hành giả');
+  /* #55: refuse a name already in use by another online player — keep the old
+     name and the modal open so they can pick another one. Re-entering my own
+     current name is fine. */
+  if (n !== myName && nameTaken(n)) {
+    const err = document.getElementById('nameErr');
+    if (err) { err.textContent = L().nmTaken; err.style.display = 'block'; }
+    toast(L().nmTaken, 3500);
+    try { nameInput.focus(); nameInput.select(); } catch (e) {}
+    return;
+  }
+  const err0 = document.getElementById('nameErr');
+  if (err0) err0.style.display = 'none';
   try { localStorage.setItem(NAME_KEY, n); } catch (e) {}
   refreshKeeperGate();
   applyName(n);
@@ -4233,6 +4247,7 @@ document.getElementById('playerCard').addEventListener('click', openProfile);
 if (myName) applyName(myName); else setTimeout(openNameModal, 700);
 let bellCtx = null, bellT = 25 + Math.random() * 20;
 window.addEventListener('pointerdown', () => {
+  acquireWakeLock(); /* #56: some browsers need a user gesture for the wake lock */
   try {
     bellCtx = bellCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (bellCtx.state === 'suspended') bellCtx.resume();
@@ -4737,6 +4752,24 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
+/* ============ Wake Lock (#56) ============
+   Keep the phone screen awake while in the room. Acquired on entering the room
+   (and on the first tap, since some browsers need a user gesture), re-acquired
+   when the page becomes visible again after the lock was released, released only
+   when leaving the room for good. Fails silently where unsupported. */
+let wakeLockSentinel = null;
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  if (wakeLockSentinel) return;
+  try {
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    wakeLockSentinel.addEventListener('release', () => { wakeLockSentinel = null; });
+  } catch (e) { wakeLockSentinel = null; }
+}
+function releaseWakeLock() {
+  try { if (wakeLockSentinel) wakeLockSentinel.release(); } catch (e) {}
+  wakeLockSentinel = null;
+}
 /* ============ Online presence (Supabase — same project as the 2D room) ============
    Each visitor appears as a chibi avatar with their phap danh tag. Identity is a
    random guest id kept on the device (never IP-based). Solo mode if offline. */
@@ -4842,18 +4875,57 @@ function robeFor(key, c) {
 if (player.userData.robeMesh) player.userData.robeMesh.material = robeFor(myGid, myC); tintAvatar(player, ROBE_COLORS[myC % ROBE_COLORS.length]);
 /* v2.73.0: names are shown to other players - strip markup and control chars */
 function cleanName(v, fb) { const s = String(v == null ? '' : v).replace(/[<>&"'`]/g, '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 20); return s || fb; }
+/* #55: dharma names must be unique among online players. A name is "taken" when
+   another presence entry (a different client id) currently shows that name.
+   Comparison is case-insensitive on the trimmed name. Offline/solo (no channel)
+   means no one else is online, so any name is free. */
+function normName(v) { return String(v == null ? '' : v).trim().toLowerCase(); }
+function nameTaken(proposed) {
+  if (!ptChannel) return false;
+  const want = normName(proposed);
+  if (!want) return false;
+  const st = ptChannel.presenceState();
+  return Object.keys(st).some(k => {
+    if (k === myGid) return false;
+    const ms = st[k]; if (!ms || !ms.length) return false;
+    return normName(ms[ms.length - 1].name || '') === want;
+  });
+}
+/* #55: simultaneous race — two clients take the same name at the same second.
+   Presence is keyed by gid so neither becomes invisible; the loser (the larger
+   gid — deterministic, both sides agree) is prompted to rename. Shown once per
+   conflicting name; the flag clears as soon as the conflict is gone. */
+let nameConflictFor = '';
+function ptNameConflict() {
+  if (!ptChannel || !myName) { nameConflictFor = ''; return; }
+  const st = ptChannel.presenceState();
+  const mine = normName(myName);
+  let loser = false;
+  Object.keys(st).forEach(k => {
+    if (k === myGid) return;
+    const ms = st[k]; if (!ms || !ms.length) return;
+    if (normName(ms[ms.length - 1].name || '') === mine && myGid > k) loser = true;
+  });
+  if (!loser) { nameConflictFor = ''; return; }
+  if (nameConflictFor === mine) return;
+  nameConflictFor = mine;
+  toast(L().nmTaken, 4000);
+  openNameModal();
+  const err = document.getElementById('nameErr');
+  if (err) { err.textContent = L().nmTaken; err.style.display = 'block'; }
+}
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
-  /* v2.12.7: dedup by name hid REAL visitors who share a phap danh (two guests both
-     named e.g. Dieu Tam made each other invisible). Only MY OWN name-twins are zombies
-     of my other tabs - everyone else stays, names may repeat. */
-  const myNm = myName || 'Hành giả';
+  /* v2.90.30 (#55): presence is keyed by unique client id (myGid), the name is
+     display-only — NEVER hide a visitor by name. The old dedup (hiding any remote
+     whose name matched mine) made two guests sharing a phap danh invisible to each
+     other. Names are now enforced unique at set time (see nameTaken), so a
+     same-name remote can only appear via a simultaneous race — and even then it
+     stays visible; the loser is prompted to rename (see ptNameConflict). */
   const winKeys = new Set();
   Object.keys(st).forEach(k => {
     const ms = st[k]; if (!ms || !ms.length) return;
-    const pp = ms[ms.length - 1];
-    if (k !== myGid && (pp.name || L().guest) === myNm) return;
     winKeys.add(k);
   });
   [...remotes.keys()].forEach(k => { if (!winKeys.has(k)) ptRemoveRemote(k); }); // v2.84.0: full removal - this path used to leave the pet fox orphaned in the yard (Anita)
@@ -4927,6 +4999,7 @@ function ptSync() {
   ptSweep();
   ptSetPill();
   ptBooted = true;
+  ptNameConflict();
 }
 function ptRemoveRemote(key) {
   const r = remotes.get(key); if (!r) return;
@@ -5105,7 +5178,7 @@ function ptWorld(pl) {
 }
 requestAnimationFrame(ptAnim);
 setInterval(() => { ptTrack(false); ptMove(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
-let sbClient = null, ptConnOk = false, ptReconnectAt = 0;
+let sbClient = null, ptConnOk = false, ptReconnectAt = 0, hiddenAt = 0;
 function ptSetPill() {
   const pill = document.getElementById('onlinePill');
   if (!pill) return;
@@ -5137,7 +5210,19 @@ try {
   if (window.supabase) {
     sbClient = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
     ptConnect();
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (ptChannel && ptChannel.state === 'joined') { ptTrack(true); ptMove(true); } else ptScheduleReconnect(); } });
+    acquireWakeLock(); /* #56: keep the screen awake while in the room */
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { hiddenAt = Date.now(); return; }
+      /* #56: wake lock back on + forgiving reconnect. After a real suspension
+         (>5 s away) force a fresh subscribe so the player rejoins with the SAME
+         gid/name instead of lingering on a dead socket; a brief tab switch just
+         re-tracks. */
+      acquireWakeLock();
+      const away = Date.now() - (hiddenAt || Date.now());
+      if (away > 5000) ptScheduleReconnect();
+      else if (ptChannel && ptChannel.state === 'joined') { ptTrack(true); ptMove(true); }
+      else ptScheduleReconnect();
+    });
     addEventListener('online', () => ptScheduleReconnect());
   } else throw new Error('no supabase');
 } catch (e) {
@@ -5146,6 +5231,20 @@ try {
 }
 const _applyNamePt = applyName;
 applyName = function (n) { _applyNamePt(n); meritDirty = true; ptTrack(true); };
+
+/* #55/#56 test hook (same pattern as window.__cast.debug / window.__stage):
+   the main script is a module, so its bindings are not reachable from a probe —
+   this handle exposes the presence/name/wake-lock pieces a headless check needs.
+   It only reads/writes this client's own state; harmless in production. */
+window.__pt55 = {
+  nameTaken, ptNameConflict, ptSync, acquireWakeLock, openNameModal, closeNameModal,
+  get myGid() { return myGid; }, set myGid(v) { myGid = v; },
+  get myName() { return myName; }, set myName(v) { myName = v; },
+  get channel() { return ptChannel; }, set channel(c) { ptChannel = c; },
+  get remotes() { return [...remotes.entries()].map(([k, r]) => ({ k, name: r.name })); },
+  get wakeLockHeld() { return !!wakeLockSentinel; },
+  get nameConflictFor() { return nameConflictFor; }, set nameConflictFor(v) { nameConflictFor = v; },
+};
 
 /* ============ Layout edit mode UI (v2.43.0) ============ */
 initLayout();
@@ -5873,7 +5972,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.29';
+const PT3D_VER = '2.90.30';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -5886,6 +5985,7 @@ function ptSaveSession() {
 }
 setInterval(ptSaveSession, 1000);
 addEventListener('beforeunload', ptSaveSession);
+addEventListener('pagehide', releaseWakeLock); /* #56: release the wake lock when leaving for good */
 (function ptRestoreSession() {
   let sv = null;
   try { sv = JSON.parse(sessionStorage.getItem('pt3d-session') || 'null'); } catch (e) {}
