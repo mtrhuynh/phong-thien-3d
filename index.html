@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.33">
+<meta name="pt3d-ver" content="2.90.34">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.33 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.34 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -4260,10 +4260,24 @@ function openNameModal() {
 function closeNameModal() {
   const v = (nameInput.value || '').trim().slice(0, 14);
   const n = cleanName(v || myName, 'Hành giả');
-  /* #55: refuse a name already in use by another online player — keep the old
-     name and the modal open so they can pick another one. Re-entering my own
-     current name is fine. */
-  if (n !== myName && nameTaken(n)) {
+  /* #58: while name-gated, the current (taken) name is NOT acceptable — the
+     `n !== myName` carve-out below must not apply, because myName IS the
+     taken name a returning user is trying to keep by closing the dialog.
+     Any name taken by another online player is refused; only a free name
+     lifts the gate and lets the user in. */
+  if (nameGated) {
+    if (nameTaken(n)) {
+      const err = document.getElementById('nameErr');
+      if (err) { err.textContent = L().nmTaken; err.style.display = 'block'; }
+      toast(L().nmTaken, 3500);
+      try { nameInput.focus(); nameInput.select(); } catch (e) {}
+      return;
+    }
+    ungateName();
+  } else if (n !== myName && nameTaken(n)) {
+    /* #55: refuse a name already in use by another online player — keep the old
+       name and the modal open so they can pick another one. Re-entering my own
+       current name is fine. */
     const err = document.getElementById('nameErr');
     if (err) { err.textContent = L().nmTaken; err.style.display = 'block'; }
     toast(L().nmTaken, 3500);
@@ -4839,7 +4853,13 @@ function ptState() {
            at: Date.now() };
 }
 function ptTrack(force) {
-  if (!ptChannel) return;
+  if (!ptChannel || nameGated) return; /* #58: never track while name-gated */
+  /* #58: the first track waits until the presence state is known (sync seen),
+     so a newcomer with a taken name is gated before ever appearing. Fallback:
+     if the sync event never arrives, allow the first track 5 s after connect
+     (the SUBSCRIBED handler's ptSync runs the gate check against whatever
+     state exists by then). */
+  if (!ptTracked && !ptSyncSeen && performance.now() - ptConnectAt < 5000) return;
   const s = ptState();
   const key = [s.name, s.c, s.bd, s.sc, s.pt, s.bc, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
   const now = performance.now();
@@ -4847,6 +4867,7 @@ function ptTrack(force) {
   if (!force && key === ptLastSent) return;
   ptLastSent = key; ptLastAt = now;
   ptChannel.track(s).catch(() => {});
+  ptTracked = true; /* #58: I now hold a live presence entry */
 }
 const pendingMv = new Map();
 let mvLast = { x: 0, z: 0, ry: 0, sit: 0, at: 0 };
@@ -4929,13 +4950,50 @@ function nameTaken(proposed) {
     return normName(ms[ms.length - 1].name || '') === want;
   });
 }
-/* #55: simultaneous race — two clients take the same name at the same second.
-   Presence is keyed by gid so neither becomes invisible; the loser (the larger
-   gid — deterministic, both sides agree) is prompted to rename. Shown once per
-   conflicting name; the flag clears as soon as the conflict is gone. */
-let nameConflictFor = '';
-function ptNameConflict() {
-  if (!ptChannel || !myName) { nameConflictFor = ''; return; }
+/* #58: stored-name bypass of the #55 name-taken rule. A returning user whose
+   device already holds a stored name could close the name dialog with the X
+   and keep using that name even when it was already taken in the room — the
+   `n !== myName` carve-out in closeNameModal skipped the taken-check for
+   their own stored name. The fix is a blocking gate, not a prompt:
+   - nameGated: true while the user is blocked behind the non-dismissable
+     name dialog. While gated they hold NO presence entry (invisible, cannot
+     interact) and ptTrack() refuses to track them.
+   - ptTracked: true once this client holds a live presence entry.
+   - ptSyncSeen: true once the presence `sync` event has fired (the room's
+     presence state is populated). The first track waits for this, so a
+     newcomer with a taken name is gated BEFORE ever appearing in presence. */
+let nameGated = false, ptTracked = false, ptSyncSeen = false, ptConnectAt = 0;
+function ptUntrack() {
+  ptTracked = false;
+  if (!ptChannel) return;
+  try { const p = ptChannel.untrack(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+}
+function gateName() {
+  if (nameGated) return;
+  nameGated = true;
+  nameConflictFor = normName(myName);
+  ptUntrack(); /* #58: leave presence immediately — no duplicate avatar/name */
+  const xc = document.getElementById('nameClose');
+  if (xc) xc.style.display = 'none'; /* blocking gate: no X to close with */
+  toast(L().nmTaken, 4000);
+  openNameModal();
+  const err = document.getElementById('nameErr');
+  if (err) { err.textContent = L().nmTaken; err.style.display = 'block'; }
+}
+function ungateName() {
+  nameGated = false;
+  nameConflictFor = '';
+  const xc = document.getElementById('nameClose');
+  if (xc) xc.style.display = '';
+}
+function checkNameGate() {
+  if (!ptChannel || !myName || nameGated) return;
+  if (!nameTaken(myName)) return;
+  /* My name is taken by another client id. */
+  if (!ptTracked) { gateName(); return; } /* newcomer: name already in use */
+  /* Already in the room: a collision appearing mid-session is the #55 race —
+     the loser (the larger gid, deterministic, both sides agree) is gated and
+     untracked; the winner keeps the name and is never disturbed. */
   const st = ptChannel.presenceState();
   const mine = normName(myName);
   let loser = false;
@@ -4944,14 +5002,16 @@ function ptNameConflict() {
     const ms = st[k]; if (!ms || !ms.length) return;
     if (normName(ms[ms.length - 1].name || '') === mine && myGid > k) loser = true;
   });
-  if (!loser) { nameConflictFor = ''; return; }
-  if (nameConflictFor === mine) return;
-  nameConflictFor = mine;
-  toast(L().nmTaken, 4000);
-  openNameModal();
-  const err = document.getElementById('nameErr');
-  if (err) { err.textContent = L().nmTaken; err.style.display = 'block'; }
+  if (loser) gateName();
 }
+/* #55/#58: simultaneous race — two clients take the same name at the same second.
+   Presence is keyed by gid so neither becomes invisible; the loser (the larger
+   gid — deterministic, both sides agree) is gated. #58 changed the outcome:
+   the loser is UNTRACKED and put behind the non-dismissable name gate until
+   they pick a free name (the old dismissable modal let them close it and keep
+   the duplicate). See checkNameGate(). */
+let nameConflictFor = '';
+function ptNameConflict() { checkNameGate(); }
 function ptSync() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
@@ -5037,7 +5097,11 @@ function ptSync() {
   ptSweep();
   ptSetPill();
   ptBooted = true;
-  ptNameConflict();
+  checkNameGate();
+  /* #58: first track only after the presence state is known (sync seen) and
+     the name gate is clear — a newcomer with a taken name never appears in
+     presence at all. */
+  if (ptSyncSeen && !ptTracked && !nameGated) ptTrack(true);
 }
 function ptRemoveRemote(key) {
   const r = remotes.get(key); if (!r) return;
@@ -5227,11 +5291,12 @@ function ptSetPill() {
 function ptConnect() {
   if (!sbClient) return;
   try { if (ptChannel) ptChannel.unsubscribe(); } catch (e) {}
+  ptTracked = false; ptSyncSeen = false; ptConnectAt = performance.now(); /* #58: fresh channel, no entry yet */
   ptChannel = sbClient.channel('pt3d:temple', { config: { presence: { key: myGid }, broadcast: { self: true } } });
-  ptChannel.on('presence', { event: 'sync' }, () => { ptSync(); ptSetPill(); });
+  ptChannel.on('presence', { event: 'sync' }, () => { ptSyncSeen = true; ptSync(); ptSetPill(); });
   ptChannel.on('broadcast', { event: 'world' }, ({ payload }) => ptWorld(payload));
   ptChannel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') { ptConnOk = true; ptTrack(true); ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); fetchSharedLayout(); ptJoinGraceUntil = performance.now() + 20000; [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); }
+    if (status === 'SUBSCRIBED') { ptConnOk = true; ptSync(); ptMove(true); ptSend({ k: 'hi' }); ptSetPill(); fetchSharedLayout(); ptJoinGraceUntil = performance.now() + 20000; [2500, 6000, 11000].forEach(ms => setTimeout(() => { ptSync(); ptSetPill(); }, ms)); } /* #58: no ptTrack here — the first track happens in ptSync after the gate check, once the presence state is known */
     else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') { ptConnOk = false; ptSetPill(); ptScheduleReconnect(); }
   });
 }
@@ -5282,7 +5347,16 @@ window.__pt55 = {
   get remotes() { return [...remotes.entries()].map(([k, r]) => ({ k, name: r.name })); },
   get wakeLockHeld() { return !!wakeLockSentinel; },
   get nameConflictFor() { return nameConflictFor; }, set nameConflictFor(v) { nameConflictFor = v; },
+  /* #58: the name gate — blocked entry until a free name is chosen */
+  get nameGated() { return nameGated; }, set nameGated(v) { nameGated = !!v; },
+  get ptTracked() { return ptTracked; }, set ptTracked(v) { ptTracked = !!v; },
+  get ptSyncSeen() { return ptSyncSeen; }, set ptSyncSeen(v) { ptSyncSeen = !!v; },
+  checkNameGate, gateName, ungateName, ptUntrack, ptTrack, ptConnect,
+  get modalOpen() { return nameModal.classList.contains('show'); },
+  get closeHidden() { const x = document.getElementById('nameClose'); return x ? x.style.display === 'none' : null; },
+  get nameErrShown() { const e = document.getElementById('nameErr'); return e ? e.style.display !== 'none' : null; },
 };
+window.__pt58 = window.__pt55; /* #58 alias: same presence/name-gate handle */
 
 /* ============ Layout edit mode UI (v2.43.0) ============ */
 initLayout();
@@ -6010,7 +6084,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.33';
+const PT3D_VER = '2.90.34';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
