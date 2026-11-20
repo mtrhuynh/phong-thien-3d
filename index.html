@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.34">
+<meta name="pt3d-ver" content="2.90.35">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.34 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.35 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -300,6 +300,7 @@
     <div class="nm-row">
       <button class="nm-dice" id="pfRename" data-i18n="pfRename">✏️ Đổi pháp danh</button>
       <button class="nm-go" id="pfPhoto" data-i18n="pfPhoto">📷 Lưu ảnh</button>
+      <button class="nm-dice" id="pfKeeper" title="Mã giữ phòng" style="flex:0 0 auto;padding:10px 12px">🔑</button>
     </div>
   </div>
 </div>
@@ -1300,6 +1301,7 @@ const I18N = {
     nmPh: 'Ví dụ: Ivy', nmDice: '🎲 Tên ngẫu nhiên', nmGo: 'Vào chùa 🙏', nmTaken: 'Tên này đã có người dùng, vui lòng chọn tên khác.', pfTitle: '🪷 Hồ sơ tu tập', pfSect: 'Tông phái', pfRobe: 'Áo tràng',
     pfBeads: 'Tràng hạt', pfPet: 'Linh thú', pfRename: '✏️ Đổi pháp danh', pfPhoto: '📷 Lưu ảnh',
     aSit: 'Thiền', aStand: 'Đứng dậy', aBow: 'Lạy Phật', aMala: 'Tràng hạt', aInc: 'Đốt nhang', aXam: 'Xin xăm', aSweep: 'Quét lá', aSala: 'Hứng hoa', skyBtn: 'Thả đèn trời', skyTitle: 'Thả đèn nguyện lên trời', skyWishPh: 'Ghi lời nguyện… (không bắt buộc)', skyGo: '🏮 Thả đèn', skyNames: ['幸福 Hạnh Phúc', '平安 Bình An', '如意 Như Ý'], skySent: 'Đèn của bạn đang bay lên…', skyLoad: 'Đang tải đèn…', skyCool: 'Đợi một lát rồi thả tiếp nhé', doveBtn: 'Nuôi bồ câu', doveBtnOn: 'Bồ câu', doveStages: ['', 'chim non', 'chim vừa', 'chim lớn'], doveGot: 'Bạn đã nhận nuôi một chú bồ câu non. Nó sẽ bay theo bạn — ngồi thiền, quét lá, hứng hoa để có hạt nuôi nó lớn dần.', doveInfo: 'Bồ câu của bạn: {s}, đã ăn {n} hạt. Ngồi thiền và làm công quả để nó lớn thêm.', dovePanelTitle: '🕊️ Bồ câu', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' hạt', doveFull: 'Đã lớn tối đa', doveFeedMine: '🌾 Cho ăn', doveFeedFlock: '🌾 Cho cả đàn', doveYardOnly: 'Ra sân mới cho bồ câu ăn được nhé', doveLink: '🔗 Mã của tôi', doveLinkOn: '🔗 Đã liên kết ✓', doveLinkPrompt: 'Mã bí mật của bạn (ít nhất 6 ký tự). Nhập CÙNG mã này trên mọi máy/app để dùng chung đúng 1 con bồ câu:', doveLinkShort: 'Mã ngắn quá — ít nhất 6 ký tự nha', doveLinked: 'Đã liên kết ✓ Từ nay mọi máy dùng chung 1 con bồ câu', doveLinkErr: 'Chưa nối được máy chủ — chim vẫn lưu trên máy này, thử lại sau nhé',
+    keeperSetPrompt: 'Chưa có mã giữ phòng — mã này chị đặt sẽ là mã duy nhất (ít nhất 6 ký tự). Nhập mã rồi OK để đặt:', keeperEnterPrompt: 'Nhập mã giữ phòng:', keeperSetShort: 'Mã ngắn quá — ít nhất 6 ký tự nha', keeperSetOk: 'Đã đặt mã giữ phòng ✓ Máy này từ nay là máy của người giữ phòng', keeperUnlocked: 'Đã mở khóa giữ phòng ✓', keeperWrong: 'Sai mã rồi — thử lại nhé', keeperErr: 'Chưa nối được máy chủ — thử lại sau nhé', keeperSetFail: 'Mã đã có người đặt trước rồi — nhập mã đó để mở khóa nhé', keeperTakenOver: 'Phòng đã mở trên thiết bị khác — máy này chỉ xem thôi', keeperSetTitle: '🔑 Đặt mã giữ phòng', keeperEnterTitle: '🔑 Mã giữ phòng',
     aHallIn: 'Vào chánh điện', aHallOut: 'Ra sân', dnAuto: '🌙 Giờ thật', dnNight: '🌙 Đêm', dnDay: '☀️ Ngày',
     xamAgain: '🎋 Xin quẻ khác', xamClose: 'Đóng', xamCap: (n, g) => '🎋 Quẻ số ' + n + ' · ' + g,
     gain: n => '+' + n + ' phước đức 🪷', merit: 'phước đức', phuc: 'phước',
@@ -1336,6 +1338,7 @@ const I18N = {
     nmPh: 'e.g. Ivy', nmDice: '🎲 Random name', nmGo: 'Enter 🙏', nmTaken: 'This name is already in use, please choose another name.', pfTitle: '🪷 Practice profile', pfSect: 'Tradition', pfRobe: 'Robe colour',
     pfBeads: 'Mala beads', pfPet: 'Companion', pfRename: '✏️ Rename', pfPhoto: '📷 Save photo',
     aSit: 'Meditate', aStand: 'Stand up', aBow: 'Bow', aMala: 'Mala', aInc: 'Incense', aXam: 'Fortune', aSweep: 'Sweep', aSala: 'Catch bloom', skyBtn: 'Sky lantern', skyTitle: 'Release a wish lantern', skyWishPh: 'Write your wish… (optional)', skyGo: '🏮 Release', skyNames: ['幸福 Happiness', '平安 Peace', '如意 As You Wish'], skySent: 'Your lantern is rising…', skyLoad: 'Loading lanterns…', skyCool: 'Wait a moment before releasing another', doveBtn: 'Raise a dove', doveBtnOn: 'Dove', doveStages: ['', 'young', 'growing', 'full-grown'], doveGot: 'You adopted a young dove. It will fly with you — meditate, sweep leaves and catch blossoms to earn seeds and help it grow.', doveInfo: 'Your dove: {s}, {n} seeds so far. Meditate and do good deeds to help it grow.', dovePanelTitle: '🕊️ Dove', doveLine: (s, n) => s.charAt(0).toUpperCase() + s.slice(1) + ' · ' + n + ' seeds', doveFull: 'Fully grown', doveFeedMine: '🌾 Feed', doveFeedFlock: '🌾 Feed the flock', doveYardOnly: 'Head out to the yard to feed the doves', doveLink: '🔗 My code', doveLinkOn: '🔗 Linked ✓', doveLinkPrompt: 'Your secret code (at least 6 characters). Enter the SAME code on every device/app to share exactly one dove:', doveLinkShort: 'Code too short — at least 6 characters', doveLinked: 'Linked ✓ All your devices now share one dove', doveLinkErr: 'Could not reach the server — your dove stays saved on this device, try again later',
+    keeperSetPrompt: 'No keeper code set yet — the code you enter now becomes the one code (at least 6 characters). Enter it and press OK to set it:', keeperEnterPrompt: 'Enter the keeper code:', keeperSetShort: 'Code too short — at least 6 characters', keeperSetOk: 'Keeper code set ✓ This device is now the keeper\'s device', keeperUnlocked: 'Keeper unlocked ✓', keeperWrong: 'Wrong code — try again', keeperErr: 'Could not reach the server — try again later', keeperSetFail: 'A code was already set — enter that code to unlock', keeperTakenOver: 'Room opened on another device — this one is view-only', keeperSetTitle: '🔑 Set keeper code', keeperEnterTitle: '🔑 Keeper code',
     aHallIn: 'Enter hall', aHallOut: 'To the yard', dnAuto: '🌙 Auto', dnNight: '🌙 Night', dnDay: '☀️ Day',
     xamAgain: '🎋 Draw again', xamClose: 'Close', xamCap: (n, g) => '🎋 Fortune ' + n + ' · ' + g,
     gain: n => '+' + n + ' merit 🪷', merit: 'merit', phuc: 'merit',
@@ -4847,6 +4850,7 @@ function ptState() {
      them ~1/s while walking got the realtime socket closed by the server (~20 s) - which is
      why visitors kept vanishing for each other. Movement now travels by broadcast (ptMove). */
   return { name: myName || 'Hành giả', c: myC, bd: look.bd, sc: look.sect, pt: look.pet | 0, dv: doveStageNow(), bc: bacOf(sen),
+           kp: keeperUnlocked ? keeperCodeHash : '', ks: keeperUnlocked ? keeperSince : 0, /* #59: stable keeper identity (code hash) + keeper session start, for the takeover */
            st: [daily.pts, daily.ma, daily.bw, daily.ic, daily.swPids.length, daily.fl, xamOpen() ? 1 : 0],
            inc: [incenseLit ? Math.ceil(incenseLeft / 30) : 0, hallLit ? Math.ceil(hallLeft / 30) : 0],
            lf: [...leafGoneAt].map(([id, t]) => [id, Math.round((performance.now() - t) / 1000)]),
@@ -4854,6 +4858,7 @@ function ptState() {
 }
 function ptTrack(force) {
   if (!ptChannel || nameGated) return; /* #58: never track while name-gated */
+  if (keeperTakenOver) return; /* #59: taken over by a newer keeper client — stay a spectator, do not re-track */
   /* #58: the first track waits until the presence state is known (sync seen),
      so a newcomer with a taken name is gated before ever appearing. Fallback:
      if the sync event never arrives, allow the first track 5 s after connect
@@ -4861,7 +4866,7 @@ function ptTrack(force) {
      state exists by then). */
   if (!ptTracked && !ptSyncSeen && performance.now() - ptConnectAt < 5000) return;
   const s = ptState();
-  const key = [s.name, s.c, s.bd, s.sc, s.pt, s.bc, s.st.join(','), s.inc.join(','), s.lf.length].join('|');
+  const key = [s.name, s.c, s.bd, s.sc, s.pt, s.bc, s.st.join(','), s.inc.join(','), s.lf.length, s.kp, s.ks].join('|'); /* #59: keeper identity in the key, so an unlock re-tracks at once */
   const now = performance.now();
   if (now - ptLastAt < (force ? 1500 : 5000)) return;
   if (!force && key === ptLastSent) return;
@@ -4987,6 +4992,7 @@ function ungateName() {
   if (xc) xc.style.display = '';
 }
 function checkNameGate() {
+  if (keeperUnlocked) return; /* #59: no name gate is ever shown to a code holder — the takeover, not the gate, resolves keeper duplicates */
   if (!ptChannel || !myName || nameGated) return;
   if (!nameTaken(myName)) return;
   /* My name is taken by another client id. */
@@ -5102,6 +5108,7 @@ function ptSync() {
      the name gate is clear — a newcomer with a taken name never appears in
      presence at all. */
   if (ptSyncSeen && !ptTracked && !nameGated) ptTrack(true);
+  keeperTakeoverCheck(); /* #59: a newer keeper client with the same code takes over from this one */
 }
 function ptRemoveRemote(key) {
   const r = remotes.get(key); if (!r) return;
@@ -5347,6 +5354,13 @@ window.__pt55 = {
   get remotes() { return [...remotes.entries()].map(([k, r]) => ({ k, name: r.name })); },
   get wakeLockHeld() { return !!wakeLockSentinel; },
   get nameConflictFor() { return nameConflictFor; }, set nameConflictFor(v) { nameConflictFor = v; },
+  /* #59: keeper unlock by secret code */
+  get keeperUnlocked() { return keeperUnlocked; }, set keeperUnlocked(v) { keeperUnlocked = !!v; },
+  get keeperCodeHash() { return keeperCodeHash; }, set keeperCodeHash(v) { keeperCodeHash = v; },
+  get keeperSince() { return keeperSince; }, set keeperSince(v) { keeperSince = v; },
+  get keeperTakenOver() { return keeperTakenOver; }, set keeperTakenOver(v) { keeperTakenOver = !!v; },
+  keeperHashCode, keeperStatus, keeperVerify, keeperSet, keeperSetUnlocked, onKeeperUnlock, keeperTakeoverCheck, askKeeperCode,
+  isKeeperDevice, refreshKeeperGate,
   /* #58: the name gate — blocked entry until a free name is chosen */
   get nameGated() { return nameGated; }, set nameGated(v) { nameGated = !!v; },
   get ptTracked() { return ptTracked; }, set ptTracked(v) { ptTracked = !!v; },
@@ -5357,6 +5371,7 @@ window.__pt55 = {
   get nameErrShown() { const e = document.getElementById('nameErr'); return e ? e.style.display !== 'none' : null; },
 };
 window.__pt58 = window.__pt55; /* #58 alias: same presence/name-gate handle */
+window.__pt59 = window.__pt55; /* #59 alias: same presence/keeper handle */
 
 /* ============ Layout edit mode UI (v2.43.0) ============ */
 initLayout();
@@ -5470,16 +5485,128 @@ function layoutSelect(id) {
   if (id) syncLayoutProxy(id);
   else if (layoutRing) layoutRing.visible = false;
 }
-/* v2.72.1: the layout editor belongs to the temple keeper only (Anita) -
-   normal players never see it. A device counts as the keeper's when its
-   saved name is hers; once recognised, that device remembers. */
+/* #59: keeper unlock by secret code — replaces name-based keeper recognition.
+   The keeper code is a secret Anita sets herself in the app (or tells Mica
+   privately); only its SHA-256 hash is ever stored — server-side in the
+   pt3d_keeper table (see supabase-keeper.sql) and locally in pt3d-keeper-code.
+   The code itself is never printed in tickets, notes or logs.
+   - keeperCodeHash: SHA-256('pt3d-keeper:' + code.trim().toLowerCase()),
+     mirrored on doveHashCode. Stable across sessions/devices with the same
+     code, so it is the keeper's STABLE identity in presence (see ptState kp).
+   - keeperUnlocked: true on this device once the code path unlocked it.
+   - keeperSince: when this keeper session started (ms) — the takeover order:
+     a second client with the same keeper hash and a NEWER ks takes over.
+   - keeperTakenOver: true once another keeper client took over from this one;
+     this device stops tracking and stays open as a spectator. */
 const KEEPER_NAME = 'Thích thì Phá';
+const KEEPER_CODE_KEY = 'pt3d-keeper-code';
+let keeperCodeHash = '', keeperUnlocked = false, keeperSince = 0, keeperTakenOver = false;
+try { keeperCodeHash = localStorage.getItem(KEEPER_CODE_KEY) || ''; } catch (e) {}
+try {
+  if (localStorage.getItem('pt3d-keeper') === '1' && keeperCodeHash) {
+    keeperUnlocked = true; keeperSince = Date.now(); /* restored unlock: new session, so it takes over as the newest keeper client */
+  }
+} catch (e) {}
+async function keeperHashCode(code) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('pt3d-keeper:' + code.trim().toLowerCase()));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+/* #59: a device counts as the keeper's ONLY when it unlocked with the code.
+   The old name-based path is REMOVED: a saved name equal to KEEPER_NAME no
+   longer grants keeper on any device — the display name is display-only. */
 function isKeeperDevice() {
-  try {
-    if (localStorage.getItem('pt3d-keeper') === '1') return true;
-    if ((localStorage.getItem(NAME_KEY) || '').trim() === KEEPER_NAME) { localStorage.setItem('pt3d-keeper', '1'); return true; }
-  } catch (e) {}
-  return false;
+  try { return localStorage.getItem('pt3d-keeper') === '1' && !!keeperCodeHash; }
+  catch (e) { return false; }
+}
+function keeperSetUnlocked(hash) {
+  keeperCodeHash = hash; keeperUnlocked = true; keeperSince = Date.now(); keeperTakenOver = false;
+  try { localStorage.setItem('pt3d-keeper', '1'); localStorage.setItem(KEEPER_CODE_KEY, hash); } catch (e) {}
+  refreshKeeperGate();
+  ptTrack(true); /* re-track at once so the keeper identity (kp/ks) is announced */
+}
+async function keeperStatus() {
+  if (!sbClient) return null;
+  try { const { data, error } = await sbClient.rpc('pt3d_keeper_status'); if (error) return null; return !!data; }
+  catch (e) { return null; }
+}
+async function keeperVerify(hash) {
+  if (!sbClient) return null;
+  try { const { data, error } = await sbClient.rpc('pt3d_keeper_verify', { p_code: hash }); if (error) return null; return data; }
+  catch (e) { return null; }
+}
+async function keeperSet(hash) {
+  if (!sbClient) return null;
+  try { const { data, error } = await sbClient.rpc('pt3d_keeper_set', { p_code: hash }); if (error) return null; return !!data; }
+  catch (e) { return null; }
+}
+function askKeeperCode(isSet) {
+  return new Promise(res => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,6,3,.66);z-index:200;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = '<div style="background:#2b1d10;border:1px solid rgba(255,205,120,.55);border-radius:14px;padding:18px 20px;width:min(320px,86vw);color:#ffe9bd;font-family:inherit">'
+      + '<div style="font-weight:700;margin-bottom:10px">' + (isSet ? L().keeperSetTitle : L().keeperEnterTitle) + '</div>'
+      + '<div style="font-size:13px;opacity:.85;margin-bottom:10px">' + (isSet ? L().keeperSetPrompt : L().keeperEnterPrompt) + '</div>'
+      + '<input id="keeperInp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,205,120,.4);background:#1d1208;color:#ffe9bd;font-size:16px;letter-spacing:2px">'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
+      + '<button id="keeperCancel" class="laybtn">✕</button><button id="keeperOk" class="laybtn">OK</button></div></div>';
+    document.body.appendChild(ov);
+    const inp = ov.querySelector('#keeperInp');
+    setTimeout(() => inp.focus(), 30);
+    const done = v => { ov.remove(); res(v); };
+    ov.querySelector('#keeperOk').addEventListener('click', () => done(inp.value || null));
+    ov.querySelector('#keeperCancel').addEventListener('click', () => done(null));
+    ov.addEventListener('click', e => { if (e.target === ov) done(null); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value || null); if (e.key === 'Escape') done(null); });
+  });
+}
+async function onKeeperUnlock() {
+  if (keeperUnlocked) { toast(L().keeperUnlocked); return; }
+  if (!sbClient) { toast(L().keeperErr); return; }
+  const hasCode = await keeperStatus();
+  if (hasCode === null) { toast(L().keeperErr); return; }
+  const code = await askKeeperCode(!hasCode);
+  if (code === null) return;
+  if (code.trim().length < 6) { toast(L().keeperSetShort); return; }
+  const hash = await keeperHashCode(code);
+  if (!hasCode) {
+    /* first setup: this code becomes the one keeper code (only when none is stored yet) */
+    const ok = await keeperSet(hash);
+    if (ok === null) { toast(L().keeperErr); return; }
+    if (!ok) { toast(L().keeperSetFail); return; }
+    keeperSetUnlocked(hash);
+    toast(L().keeperSetOk);
+    return;
+  }
+  const ok = await keeperVerify(hash);
+  if (ok === null) { toast(L().keeperErr); return; }
+  if (ok === false) { toast(L().keeperWrong); return; }
+  keeperSetUnlocked(hash);
+  toast(L().keeperUnlocked);
+}
+/* #59 scope addition (Anita 23:09): app + web are ONE path. A keeper client
+   joins presence under its stable keeper identity (kp = code hash), not its
+   random per-session gid. If a second client joins with the same kp and a
+   NEWER ks (keeper session start), it takes over: this (older) client stops
+   tracking and stays open as a spectator. No name gate is ever shown to a
+   code holder — the takeover, not the gate, resolves keeper duplicates. */
+function keeperTakeoverCheck() {
+  if (!keeperUnlocked || keeperTakenOver || !ptChannel) return;
+  const st = ptChannel.presenceState();
+  let newer = false;
+  Object.keys(st).forEach(k => {
+    if (k === myGid) return;
+    const ms = st[k]; if (!ms || !ms.length) return;
+    const p = ms[ms.length - 1];
+    if (!p.kp || p.kp !== keeperCodeHash) return;
+    /* NOTE: ks is a millisecond timestamp (~1.8e12) — do NOT truncate it with
+       | 0 (that wraps it to 32 bits and the newer/older comparison breaks). */
+    const theirKs = Number(p.ks) || 0;
+    if (theirKs > keeperSince || (theirKs === keeperSince && myGid < k)) newer = true;
+  });
+  if (!newer) return;
+  keeperTakenOver = true;
+  ptUntrack(); /* stop tracking: the newer keeper client is now the one avatar */
+  toast(L().keeperTakenOver, 5000);
 }
 function refreshKeeperGate() {
   const b = document.getElementById('btnLayout');
@@ -5654,7 +5781,9 @@ function askPin() {
   });
 }
 document.getElementById('laySave').addEventListener('click', async () => {
-  const pin = await askPin();
+  /* #59: a keeper device uses the keeper code as the layout PIN (one secret
+     serves both) — no separate PIN prompt. Anyone else still enters the PIN. */
+  const pin = (keeperUnlocked && keeperCodeHash) ? keeperCodeHash : await askPin();
   if (!pin) return;
   if (!sbClient) { toast(L().laySaveErr); return; }
   try {
@@ -6084,7 +6213,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.34';
+const PT3D_VER = '2.90.35';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
@@ -6199,6 +6328,7 @@ function openProfile() {
 document.getElementById('pfClose').addEventListener('click', () => profileModal.classList.remove('show'));
 profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.remove('show'); });
 document.getElementById('pfRename').addEventListener('click', () => { profileModal.classList.remove('show'); openNameModal(); });
+document.getElementById('pfKeeper').addEventListener('click', () => { profileModal.classList.remove('show'); onKeeperUnlock(); }); /* #59: discreet keeper unlock, in the settings area */
 document.getElementById('pfPhoto').addEventListener('click', () => {
   profileModal.classList.remove('show');
   requestAnimationFrame(() => {
