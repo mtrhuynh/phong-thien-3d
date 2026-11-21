@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.35">
+<meta name="pt3d-ver" content="2.90.36">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.35 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.36 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -3323,29 +3323,59 @@ function castMakeTalkClips(mixer, modelRoot, clipMap) {
     return new THREE.QuaternionKeyframeTrack(bone.name + '.quaternion', times, vals);
   }
   const TAU = Math.PI * 2;
-  // TALK: 4 s loop. Right hand does the speaking gesture (raised, opening/
-  // closing in rhythm); left hand smaller; head nods + turns; spine sways.
+  // TALK: 4 s loop. #60 rework (Anita: the #53 arms just hung stiffly).
+  // A clearly readable speaking gesture: forearms raised to about chest
+  // height, elbows bent, hands opening/closing and alternating in rhythm
+  // with the head nods; amplitudes large enough to read at filming distance.
+  // Axis evidence — the FIRST build used local X for the upper-arm raise and
+  // the headless screenshot showed the arms OUT TO THE SIDES (abduction),
+  // not forward: local X is the frontal axis (rotate around it = sideways),
+  // local Z is the sagittal axis (rotate around it = forward/back). The
+  // elbow bend is also local Z (walk clip: RightForeArm z ~26 deg,
+  // LeftForeArm z ~28 deg). Sign check by headless render: with RightArm
+  // z=-0.55 the hands went BEHIND the body (fwd -0.24), so forward is
+  // POSITIVE Z for the right upper arm and NEGATIVE Z for the left. A second
+  // render showed the hands coming forward but staying LOW (only +0.05 m
+  // above idle): the forearm bend sign was also flipped — with the upper arm
+  // forward, the forearm lifts only with the OPPOSITE Z sign to the
+  // walk-clip bend (right forearm +Z, left forearm -Z).
+  // So the upper-arm forward raise is Z too, with a small X for a natural
+  // outward angle.
+  // Every oscillation completes an integer number of cycles over the clip
+  // duration, so the loop stays seamless (first keyframe == last keyframe).
   const talkTracks = [];
   const add = (bone, dur, fn) => { const tr = qtrack(bone, dur, fn); if (tr) talkTracks.push(tr); };
-  add('Head', 4, (t) => [0.10 * Math.sin(TAU * 2 * t / 4), 0.06 * Math.sin(TAU * 1 * t / 4 + 0.7), 0.03 * Math.sin(TAU * 3 * t / 4 + 1.3)]);
-  add('Neck', 4, (t) => [0.05 * Math.sin(TAU * 2 * t / 4 + 0.4), 0.03 * Math.sin(TAU * 1 * t / 4 + 0.7), 0.015 * Math.sin(TAU * 3 * t / 4 + 1.3)]);
-  add('Spine', 4, (t) => [0.04 * Math.sin(TAU * 1 * t / 4), 0, 0.02 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
-  add('Spine1', 4, (t) => [0.03 * Math.sin(TAU * 1 * t / 4 + 0.5), 0, 0.015 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
-  add('Spine2', 4, (t) => [0.02 * Math.sin(TAU * 1 * t / 4 + 1.0), 0, 0.01 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('Head', 4, (t) => [0.12 * Math.sin(TAU * 2 * t / 4), 0.07 * Math.sin(TAU * 1 * t / 4 + 0.7), 0.03 * Math.sin(TAU * 3 * t / 4 + 1.3)]);
+  add('Neck', 4, (t) => [0.06 * Math.sin(TAU * 2 * t / 4 + 0.4), 0.03 * Math.sin(TAU * 1 * t / 4 + 0.7), 0.015 * Math.sin(TAU * 3 * t / 4 + 1.3)]);
+  add('Spine', 4, (t) => [0.05 * Math.sin(TAU * 1 * t / 4), 0, 0.02 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('Spine1', 4, (t) => [0.04 * Math.sin(TAU * 1 * t / 4 + 0.5), 0, 0.015 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  add('Spine2', 4, (t) => [0.03 * Math.sin(TAU * 1 * t / 4 + 1.0), 0, 0.01 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
   add('Hips', 4, (t) => [0.01 * Math.sin(TAU * 2 * t / 4), 0, 0.02 * Math.sin(TAU * 1 * t / 4 + 0.3)]);
-  add('RightArm', 4, (t) => [0.03 * Math.sin(TAU * 1 * t / 4 + 0.5), 0, -0.12 + 0.06 * Math.sin(TAU * 2 * t / 4)]);
-  add('RightForeArm', 4, (t) => [0, 0, -0.18 + 0.10 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
-  add('LeftArm', 4, (t) => [0.02 * Math.sin(TAU * 1 * t / 4 + 0.2), 0, -0.06 + 0.04 * Math.sin(TAU * 2 * t / 4 + 1.7)]);
-  add('LeftForeArm', 4, (t) => [0, 0, -0.10 + 0.06 * Math.sin(TAU * 2 * t / 4 + 2.2)]);
+  // Right hand leads: upper arm forward ~31 deg (local Z), elbow bent ~49 deg
+  // so the forearm sits at chest height, opening/closing ~20 deg in rhythm.
+  add('RightArm', 4, (t) => [0.15 + 0.08 * Math.sin(TAU * 2 * t / 4), 0, 0.55 + 0.20 * Math.sin(TAU * 2 * t / 4)]);
+  add('RightForeArm', 4, (t) => [0, 0, 0.85 + 0.35 * Math.sin(TAU * 2 * t / 4 + 0.9)]);
+  // Left hand smaller, alternating phase (half a cycle behind the right).
+  add('LeftArm', 4, (t) => [0.15 + 0.08 * Math.sin(TAU * 2 * t / 4 + Math.PI), 0, -0.35 + 0.15 * Math.sin(TAU * 2 * t / 4 + Math.PI)]);
+  add('LeftForeArm', 4, (t) => [0, 0, -0.60 + 0.28 * Math.sin(TAU * 2 * t / 4 + Math.PI + 0.9)]);
   if (talkTracks.length) {
     const clip = new THREE.AnimationClip('talk', 4, talkTracks);
     clipMap['talk'] = { clip, action: mixer.clipAction(clip) };
   }
-  // LISTEN: 6 s loop. Standing idle + an occasional gentle nod.
+  // LISTEN: 6 s loop. #60 fix (Anita: the listener stood in a T-pose).
+  // The #53 clip had Head + Neck tracks ONLY, so once castPlayClip faded
+  // idle out the arm bones fell back to the model's BIND pose (T-pose).
+  // Listen now carries arm/forearm tracks too: qtrack composes onto the
+  // idle clip's arm pose (arms down), so zero deltas HOLD the arms down
+  // for the whole clip, plus a tiny sway so the pose is clearly driven.
   const listenTracks = [];
   const addL = (bone, dur, fn) => { const tr = qtrack(bone, dur, fn); if (tr) listenTracks.push(tr); };
   addL('Head', 6, (t) => [0.08 * Math.sin(TAU * 2 * t / 6), 0.03 * Math.sin(TAU * 1 * t / 6 + 1.1), 0.01 * Math.sin(TAU * 3 * t / 6)]);
   addL('Neck', 6, (t) => [0.04 * Math.sin(TAU * 2 * t / 6 + 0.3), 0.015 * Math.sin(TAU * 1 * t / 6 + 1.1), 0]);
+  addL('RightArm', 6, (t) => [0.02 * Math.sin(TAU * 1 * t / 6), 0, 0.01 * Math.sin(TAU * 1 * t / 6 + 0.5)]);
+  addL('RightForeArm', 6, (t) => [0, 0, 0.01 * Math.sin(TAU * 1 * t / 6 + 1.0)]);
+  addL('LeftArm', 6, (t) => [0.02 * Math.sin(TAU * 1 * t / 6 + 0.4), 0, 0.01 * Math.sin(TAU * 1 * t / 6 + 0.9)]);
+  addL('LeftForeArm', 6, (t) => [0, 0, 0.01 * Math.sin(TAU * 1 * t / 6 + 1.4)]);
   if (listenTracks.length) {
     const clip = new THREE.AnimationClip('listen', 6, listenTracks);
     clipMap['listen'] = { clip, action: mixer.clipAction(clip) };
@@ -3539,7 +3569,7 @@ function castWalkInit(file) {
     route: cfg.route, sitWp: cfg.sitWp, face: cfg.face, sitEvery: !!cfg.sitEvery, sitLift: cfg.sitLift || 0,
     state: 'idle', wp: cfg.startWp, stateT: 0,
     pauseT: 1 + Math.random() * 2, loops: 0, nextAfterIdle: 'walk',
-    clipName: 'idle', fadingOut: null,
+    clipName: 'idle', fadingOut: null, walkTo: null, // #60: {tx, tz, partner} while walking to a partner
   };
   castWalkMixerSet.add(ch.mixer);
 }
@@ -3586,6 +3616,31 @@ function castWalkTick(dt) {
          tread while the trailing foot is still on the higher one. Sample the
          ground 0.4 m BEHIND too (where the trailing foot is) and stay at the
          highest tread either foot is on until both have cleared it. */
+      const gy = Math.max(groundY(ch.wrap.position.x, ch.wrap.position.z),
+        groundY(ch.wrap.position.x + (dx / dist) * 0.4, ch.wrap.position.z + (dz / dist) * 0.4),
+        groundY(ch.wrap.position.x - (dx / dist) * 0.4, ch.wrap.position.z - (dz / dist) * 0.4));
+      ch.wrap.position.y += (gy - ch.wrap.position.y) * Math.min(1, dtW * 10);
+      ch.wrap.rotation.y = Math.atan2(dx, dz); // face movement direction
+      if (w.clipName !== 'walk') castPlayClip(file, 'walk', true);
+    } else if (w.state === 'walkTo') {
+      /* #60: walking to a staged partner (Talk/Swap). Same movement as the
+         'walk' branch — normal walk clip, groundY following (steps, bridge,
+         pavilion) — toward the fixed target point, then stop, park, face
+         the partner and start the conversation. */
+      const t = w.walkTo;
+      if (!t) { w.state = 'idle'; w.stateT = 0; continue; }
+      const dx = t.tx - ch.wrap.position.x, dz = t.tz - ch.wrap.position.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < 0.15 || w.stateT > 40) {
+        /* Arrived (or safety timeout: park where we are and talk anyway). */
+        if (dist < 0.15) { ch.wrap.position.x = t.tx; ch.wrap.position.z = t.tz; ch.wrap.position.y = groundY(t.tx, t.tz); }
+        const partner = t.partner; w.walkTo = null;
+        stageStartTalk(file, partner);
+        continue;
+      }
+      const step = Math.min(dist, ch.walkSpeed * dtW);
+      ch.wrap.position.x += (dx / dist) * step;
+      ch.wrap.position.z += (dz / dist) * step;
       const gy = Math.max(groundY(ch.wrap.position.x, ch.wrap.position.z),
         groundY(ch.wrap.position.x + (dx / dist) * 0.4, ch.wrap.position.z + (dz / dist) * 0.4),
         groundY(ch.wrap.position.x - (dx / dist) * 0.4, ch.wrap.position.z - (dz / dist) * 0.4));
@@ -3654,7 +3709,7 @@ function stageSelect(file) {
 }
 function stagePark(file) {
   const w = castWalkers[file]; if (!w) return;
-  w.staged = true; w.state = 'idle'; w.stateT = 0; w.pauseT = 999999;
+  w.staged = true; w.state = 'idle'; w.stateT = 0; w.pauseT = 999999; w.walkTo = null; // #60: parking cancels a walk-to-partner
   castPlayClip(file, 'idle', true);
   stageRefreshHint();
   document.querySelectorAll('#stageChars .st-char').forEach(b => {
@@ -3665,6 +3720,8 @@ function stagePark(file) {
 function stageResume(file) {
   const w = castWalkers[file]; if (!w) return;
   w.staged = false; w.pauseT = 0.6; w.nextAfterIdle = 'walk';
+  if (w.state === 'walkTo') { w.state = 'idle'; w.stateT = 0; } // #60: resuming cancels a walk-to-partner
+  w.walkTo = null;
   if (STAGE.speaking === file) STAGE.speaking = null;
   stageRefreshHint();
   document.querySelectorAll('#stageChars .st-char').forEach(b => {
@@ -3676,6 +3733,45 @@ function stageResumeAll() {
   for (const f of Object.keys(castWalkers)) stageResume(f);
   STAGE.speaking = null;
 }
+/* #60: hold a character in place (parked) WITHOUT resetting a talk/listen
+   clip — used when Face-each-other / Face-camera must stick. A walking clip
+   is swapped to idle (a held character walking in place would look wrong);
+   talk / listen / idle keep playing. */
+function stageHold(file) {
+  const w = castWalkers[file]; if (!w) return;
+  w.staged = true; w.state = 'idle'; w.stateT = 0; w.pauseT = 999999; w.walkTo = null;
+  if (w.clipName !== 'talk' && w.clipName !== 'listen' && w.clipName !== 'idle') castPlayClip(file, 'idle', true);
+  stageRefreshHint();
+  document.querySelectorAll('#stageChars .st-char').forEach(b => {
+    const ww = castWalkers[b.dataset.f];
+    b.classList.toggle('parked', !!(ww && ww.staged));
+  });
+}
+/* #60: the conversation partner for a speaker — the other STAGED character
+   (prefer the panel pair, STAGE.prev), or null when nobody is parked. */
+function stagePartnerFor(file) {
+  const cands = [];
+  if (STAGE.prev && STAGE.prev !== file) cands.push(STAGE.prev);
+  for (const f of Object.keys(castWalkers)) { if (f !== file && !cands.includes(f)) cands.push(f); }
+  for (const f of cands) { const w = castWalkers[f]; if (w && w.staged) return f; }
+  return null;
+}
+/* #60: start a conversation — speaker parks, faces the partner and talks;
+   the partner faces the speaker and listens. Called from Talk/Swap and from
+   the walkTo arrival in castWalkTick. */
+function stageStartTalk(speaker, partner) {
+  const sc = castChars[speaker]; if (!sc) return;
+  stagePark(speaker);
+  if (partner && castChars[partner]) {
+    const pc = castChars[partner];
+    stageFace(speaker, pc.wrap.position.x, pc.wrap.position.z);
+    stageFace(partner, sc.wrap.position.x, sc.wrap.position.z);
+    if (pc.clipMap['listen']) castPlayClip(partner, 'listen', true);
+  }
+  if (STAGE.speaking && STAGE.speaking !== speaker) castPlayClip(STAGE.speaking, 'idle', true);
+  castPlayClip(speaker, 'talk', true); STAGE.speaking = speaker;
+  stageRefreshHint();
+}
 function stageFace(file, tx, tz) {
   const ch = castChars[file]; if (!ch) return;
   ch.wrap.rotation.y = Math.atan2(tx - ch.wrap.position.x, tz - ch.wrap.position.z);
@@ -3684,6 +3780,7 @@ function stageFaceCamera(file) {
   const ch = castChars[file]; if (!ch) return;
   const c = window.__pt3d.camera.position;
   stageFace(file, c.x, c.z);
+  stageHold(file); // #60: facing must stick — hold the character facing this way until released
 }
 function stageFaceEachOther() {
   const a = STAGE.sel, b = STAGE.prev;
@@ -3692,16 +3789,42 @@ function stageFaceEachOther() {
   if (!ca || !cb) return;
   stageFace(a, cb.wrap.position.x, cb.wrap.position.z);
   stageFace(b, ca.wrap.position.x, ca.wrap.position.z);
+  stageHold(a); stageHold(b); // #60: facing must stick — hold both facing each other until released
 }
-function stageTalk(file) {
+function stageTalk(file, partnerOpt) {
   if (!castChars[file] || !castChars[file].clipMap['talk']) return;
   if (STAGE.speaking === file) { // toggle off
     castPlayClip(file, 'idle', true); STAGE.speaking = null;
-  } else {
-    if (STAGE.speaking && STAGE.speaking !== file) castPlayClip(STAGE.speaking, 'idle', true);
-    castPlayClip(file, 'talk', true); STAGE.speaking = file;
+    stageRefreshHint();
+    return;
   }
-  stageRefreshHint();
+  /* #60: the partner is the other STAGED character (an explicit partner from
+     Swap counts only if it is actually parked). If the partner is parked
+     elsewhere, the speaker WALKS to ~1.2 m in front of them (normal walk
+     clip, existing walker/groundY system) and the conversation starts on
+     arrival. If nobody is parked, the speaker just parks in place and talks
+     — parked, so the walker state machine cannot fight the talk clip. */
+  let partner = null;
+  if (partnerOpt && castWalkers[partnerOpt] && castWalkers[partnerOpt].staged) partner = partnerOpt;
+  if (!partner) partner = stagePartnerFor(file);
+  if (partner) {
+    const pc = castChars[partner], sc = castChars[file];
+    const dist = Math.hypot(pc.wrap.position.x - sc.wrap.position.x, pc.wrap.position.z - sc.wrap.position.z);
+    if (dist > 1.5) {
+      const w = castWalkers[file];
+      if (w) {
+        const dx = sc.wrap.position.x - pc.wrap.position.x, dz = sc.wrap.position.z - pc.wrap.position.z;
+        const d = Math.hypot(dx, dz) || 1;
+        w.staged = false; // walking now — the walker state machine runs again
+        w.state = 'walkTo'; w.stateT = 0;
+        w.walkTo = { tx: pc.wrap.position.x + (dx / d) * 1.2, tz: pc.wrap.position.z + (dz / d) * 1.2, partner };
+        castPlayClip(file, 'walk', true);
+        stageRefreshHint();
+        return;
+      }
+    }
+  }
+  stageStartTalk(file, partner);
 }
 function stageListen(file) {
   if (!castChars[file] || !castChars[file].clipMap['listen']) return;
@@ -3715,9 +3838,10 @@ function stageSwap() {
   const cur = STAGE.speaking;
   const next = (cur === a) ? b : a;
   const other = (next === a) ? b : a;
-  if (castChars[next] && castChars[next].clipMap['talk']) { castPlayClip(next, 'talk', true); STAGE.speaking = next; }
-  if (castChars[other] && castChars[other].clipMap['listen']) castPlayClip(other, 'listen', true);
-  stageRefreshHint();
+  /* #60: Swap is a Talk by the new speaker — if the old speaker (now the
+     listener) is parked elsewhere, the new speaker walks over to them. */
+  if (STAGE.speaking && STAGE.speaking !== next) { castPlayClip(STAGE.speaking, 'idle', true); STAGE.speaking = null; }
+  stageTalk(next, other);
 }
 function stageRefreshHint() {
   const el = document.getElementById('stageHint'); if (!el) return;
@@ -3743,9 +3867,15 @@ function setStage(on) {
   if (on) { stageBuildChars(); stageRefreshHint(); }
   else stageResumeAll();
 }
-window.__stage = { STAGE, select: stageSelect, park: stagePark, resume: stageResume,
+window.__stage = { STAGE, select: stageSelect, park: stagePark, hold: stageHold, resume: stageResume,
   resumeAll: stageResumeAll, faceCamera: stageFaceCamera, faceEachOther: stageFaceEachOther,
-  talk: stageTalk, listen: stageListen, swap: stageSwap, set: setStage };
+  talk: stageTalk, listen: stageListen, swap: stageSwap, set: setStage,
+  partnerFor: stagePartnerFor, startTalk: stageStartTalk,
+  walkers: () => { const o = {}; for (const f of Object.keys(castWalkers)) { const ch = castChars[f], w = castWalkers[f]; if (ch && w) o[f] = { state: w.state, staged: !!w.staged, clip: w.clipName, x: +ch.wrap.position.x.toFixed(2), z: +ch.wrap.position.z.toFixed(2), ry: +ch.wrap.rotation.y.toFixed(2), walkTo: w.walkTo }; } return o; },
+  /* hand height vs chest height, for the talk-gesture check (world Y, m) */
+  hands: (file) => { const ch = castChars[file]; if (!ch) return null; let skin = null; ch.wrap.traverse(o => { if (o.isSkinnedMesh) skin = o; }); if (!skin || !skin.skeleton) return null; const b = {}; for (const j of skin.skeleton.bones) { const n = j.name.replace(/^mixamorig:?/, ''); if (!b[n]) b[n] = j; } ch.wrap.updateMatrixWorld(true); const p = (bone) => { const v = new THREE.Vector3(); b[bone].getWorldPosition(v); return +v.y.toFixed(3); }; const fwd = (bone) => { const v = new THREE.Vector3(); b[bone].getWorldPosition(v); const c = new THREE.Vector3(); ch.wrap.getWorldPosition(c); const d = new THREE.Vector3(v.x - c.x, 0, v.z - c.z); const f = new THREE.Vector3(0, 0, 1).applyQuaternion(ch.wrap.quaternion); return +d.dot(f).toFixed(3); }; return { chestY: p('Spine2'), headY: p('Head'), rHandY: p('RightHand'), lHandY: p('LeftHand'), rHandFwd: fwd('RightHand'), lHandFwd: fwd('LeftHand') }; },
+  /* arm spread: distance between the two hands vs shoulder width — a T-pose reads ~1.5 m+ */
+  armSpread: (file) => { const ch = castChars[file]; if (!ch) return null; let skin = null; ch.wrap.traverse(o => { if (o.isSkinnedMesh) skin = o; }); if (!skin || !skin.skeleton) return null; const b = {}; for (const j of skin.skeleton.bones) { const n = j.name.replace(/^mixamorig:?/, ''); if (!b[n]) b[n] = j; } ch.wrap.updateMatrixWorld(true); const v = (bone) => { const p = new THREE.Vector3(); b[bone].getWorldPosition(p); return p; }; const rh = v('RightHand'), lh = v('LeftHand'); return +rh.distanceTo(lh).toFixed(3); } };
 
 /* Walker debug/test handle: per-member state + position, feet height, clock scale. */
 window.__cast.debug.walk = {
@@ -6213,7 +6343,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.35';
+const PT3D_VER = '2.90.36';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
