@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.39">
+<meta name="pt3d-ver" content="2.90.40">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.39 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.40 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2945,7 +2945,7 @@ function catchSala() {
    solid monk entirely. The cast baby was already rigged, so v2.90.37
    changed nothing visible; THIS is the actual swap. ============ */
 const AVATAR_SCALE = 1.15; /* rigged baby is 1.0 m tall, feet at Y=0 -> 1.15 m like the old avatar */
-const AVATAR_WALK_TS = 9.3; /* walk timeScale (Cuu #66 FAIL: 2.5 slid the planted foot — player 3.4 m/s vs natural 0.364 m/s = 9.3x, match ground speed) */
+const AVATAR_WALK_TS = 2.75; /* v2.90.40 (#67): the 9.3x walk made the legs churn like electrocuted on a real device. Slow the player instead (SPEED 1.0); 1.0 / 0.364 natural = 2.75, so the planted foot still does not slide and the legs cycle naturally. */
 let avatarClips = null; /* {walk (Hips Z pinned), idle, naturalSpeed} set when the avatar GLB loads */
 /* Clone a rigged model so each avatar gets its OWN skeleton. Plain
    .clone(true) does NOT work in three r160: SkinnedMesh has no copy(),
@@ -4037,7 +4037,7 @@ const P = {
   incenseAfterWalk: false,
   sweepPile: null,
 };
-const SPEED = 3.4;
+const SPEED = 1.0; /* v2.90.40 (#67): calm temple walk (was 3.4 m/s — the 9.3x clip that matched it churned the legs). */
 let room = 'hall';
 /* v2.11: ONE space. groundY = the height under a point (yard 0, steps, platform, hall floor) */
 function groundY(x, z) {
@@ -6533,7 +6533,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.39';
+const PT3D_VER = '2.90.40';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
