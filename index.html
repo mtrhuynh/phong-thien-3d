@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.37">
+<meta name="pt3d-ver" content="2.90.39">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -145,7 +145,7 @@
     border-top:1px solid rgba(240,199,106,0.3); border-bottom:1px solid rgba(240,199,106,0.3); padding:12px 4px; }
   .xam-giai { font-size:14.5px; line-height:1.65; margin:12px 0 16px; color:#f5e6c4; }
   .xam-btns { display:flex; gap:10px; justify-content:center; }
-  #credit { position:fixed; left:10px; bottom:8px; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; display:none; }
+  #credit { position:fixed; left:12px; top:92px; bottom:auto; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; display:block; } /* v2.90.39: version visible to everyone, top-left under the player card */
   #toast { top:238px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(30,22,12,.88);
     border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
     opacity:0; transition:all .35s ease; pointer-events:none; max-width:88vw; text-align:center; }
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.37 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.39 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2940,9 +2940,72 @@ function catchSala() {
   doveFeed(2);
 }
 
-/* ============ Chibi monk model — Hunyuan white mesh, hand-painted vertex colours.
-   When it loads, it replaces the primitive body of every avatar (player, NPCs, remotes);
-   all animation plumbing (bodyG scale/position, upperG bow pivot) is preserved. ============ */
+/* ============ v2.90.39: rigged avatar (Anita 2026-11-22) — replace ALL
+   solid-monk avatars (monk2.glb) with the rigged baby monk, remove the
+   solid monk entirely. The cast baby was already rigged, so v2.90.37
+   changed nothing visible; THIS is the actual swap. ============ */
+const AVATAR_SCALE = 1.15; /* rigged baby is 1.0 m tall, feet at Y=0 -> 1.15 m like the old avatar */
+const AVATAR_WALK_TS = 9.3; /* walk timeScale (Cuu #66 FAIL: 2.5 slid the planted foot — player 3.4 m/s vs natural 0.364 m/s = 9.3x, match ground speed) */
+let avatarClips = null; /* {walk (Hips Z pinned), idle, naturalSpeed} set when the avatar GLB loads */
+/* Clone a rigged model so each avatar gets its OWN skeleton. Plain
+   .clone(true) does NOT work in three r160: SkinnedMesh has no copy(),
+   so the clone has no skeleton, and Skeleton.clone() shares the ORIGINAL
+   bones (the mixer would animate the cloned bones while skinning reads
+   the originals -> no deformation). Remap the skeleton to the cloned
+   bones (the SkeletonUtils pattern) and rebind. No new vendor file. */
+function cloneRigged(src) {
+  const clone = src.clone(true);
+  const srcToClone = new Map();
+  const cloneToSrc = new Map();
+  (function walk(a, b) {
+    srcToClone.set(a, b); cloneToSrc.set(b, a);
+    for (let i = 0; i < a.children.length; i++) walk(a.children[i], b.children[i]);
+  })(src, clone);
+  clone.traverse(o => {
+    if (!o.isSkinnedMesh) return;
+    const srcMesh = cloneToSrc.get(o);
+    if (!srcMesh || !srcMesh.skeleton) return;
+    const newBones = srcMesh.skeleton.bones.map(b => srcToClone.get(b) || b);
+    o.skeleton = new THREE.Skeleton(newBones, srcMesh.skeleton.boneInverses);
+    o.bind(o.skeleton, srcMesh.bindMatrix);
+  });
+  return clone;
+}
+/* Per-avatar walk/idle: crossfade 0.3 s on g.userData.avatarMoving, then
+   update the mixer. Called for the player + NPCs in animate(), for
+   remotes in ptAnim(). No mixer yet (model still loading) -> no-op. */
+function avatarAnimTick(g, dt) {
+  const mixer = g.userData.avatarMixer;
+  if (!mixer) return;
+  const walkA = g.userData.avatarWalk, idleA = g.userData.avatarIdle;
+  const bowA = g.userData.avatarBow, sitA = g.userData.avatarSit;
+  if (!walkA || !idleA) { mixer.update(dt); return; }
+  const moving = !!g.userData.avatarMoving;
+  /* v2.90.39 (Cuu #66 FAIL): bow + sit are skeletal clips now, not just
+     the procedural pitch/squash. Priority: bow > sit > walk > idle. The
+     caller sets avatarWantBow / avatarWantSit on userData. */
+  const wantBow = !!g.userData.avatarWantBow && !!bowA;
+  const wantSit = !wantBow && !!g.userData.avatarWantSit && !!sitA;
+  const want = wantBow ? 'bow' : (wantSit ? 'sit' : (moving ? 'walk' : 'idle'));
+  if ((g.userData.avatarClip || 'idle') !== want) {
+    const acts = { walk: walkA, idle: idleA, bow: bowA, sit: sitA };
+    const prev = g.userData.avatarClip || 'idle';
+    const fromA = acts[prev];
+    const toA = acts[want];
+    if (fromA && fromA !== toA) fromA.fadeOut(0.3);
+    if (toA) toA.reset().fadeIn(0.3).play();
+    g.userData.avatarClip = want;
+  }
+  mixer.update(dt);
+}
+
+/* ============ Avatar model — v2.90.39: the RIGGED baby monk
+   (models/cast/baby-monk-rigged.glb, shared with the cast baby, already
+   live from v2.90.37). Replaces models/monk2.glb (Hunyuan solid mesh,
+   no skeleton — the "su duc" Anita asked to remove). When it loads it
+   replaces the primitive body of every avatar (player, NPCs, remotes);
+   all animation plumbing (bodyG scale/position, upperG bow pivot) is
+   preserved, and each avatar gets a skeletal walk/idle mixer. ============ */
 let monkProto = null;
 const modelPending = [];
 function swapToModel(g) {
@@ -2952,9 +3015,15 @@ function swapToModel(g) {
   bodyG.scale.copy(old.scale);
   bodyG.position.copy(old.position);
   const pivot = new THREE.Group(); pivot.position.y = 0.45; bodyG.add(pivot);
-  const inst = monkProto.clone(true);
+  const inst = cloneRigged(monkProto); // v2.90.39: plain .clone() drops the skeleton (three r160)
   g.userData.modelInst = inst;
-  applyRobeTint(inst, g.userData.robeTint != null ? g.userData.robeTint : 0x74a9d8);
+  if (g.userData.robeTint !== undefined) applyRobeTint(inst, g.userData.robeTint);
+  /* v2.90.39: robe tint for the textured baby — recolour the robe in
+     texture space (skin + eyes untouched; see applyRobeTint). Uses the
+     robe colour stored on the avatar by buildAvatar/tintAvatar, so it
+     works even though the model loads async after the init-time tint
+     calls. The baby's robe is brown, not light-blue (the earlier comment
+     was wrong). */
   inst.position.y = -0.45;
   pivot.add(inst);
   g.remove(old); g.add(bodyG);
@@ -2962,13 +3031,60 @@ function swapToModel(g) {
   g.userData.upperG = pivot;
   g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
+  /* v2.90.39: skeletal walk/idle for this avatar (idle first; walk when moving) */
+  if (avatarClips && avatarClips.walk && avatarClips.idle) {
+    const mixer = new THREE.AnimationMixer(inst);
+    const walkA = mixer.clipAction(avatarClips.walk);
+    walkA.timeScale = AVATAR_WALK_TS;
+    const idleA = mixer.clipAction(avatarClips.idle);
+    idleA.play();
+    g.userData.avatarMixer = mixer;
+    g.userData.avatarWalk = walkA;
+    g.userData.avatarIdle = idleA;
+    /* v2.90.39 (Cuu #66 FAIL): wire the bow + sit clips — the avatar must
+       play them, not just the procedural pitch/squash. Bow is LoopOnce,
+       fitted to the 1.3 s bow (clip 6.0 s -> timeScale 6.0/1.3); sit is
+       LoopOnce + clampWhenFinished so it holds the seated pose. */
+    if (avatarClips.bow) {
+      const bowA = mixer.clipAction(avatarClips.bow);
+      bowA.setLoop(THREE.LoopOnce, 1);
+      bowA.clampWhenFinished = true;
+      bowA.timeScale = avatarClips.bow.duration / 1.3;
+      g.userData.avatarBow = bowA;
+    }
+    if (avatarClips.sit) {
+      const sitA = mixer.clipAction(avatarClips.sit);
+      sitA.setLoop(THREE.LoopOnce, 1);
+      sitA.clampWhenFinished = true;
+      g.userData.avatarSit = sitA;
+    }
+    g.userData.avatarClip = 'idle';
+    g.userData.avatarMoving = false;
+  }
 }
-new GLTFLoader().load('models/monk2.glb?v=105', (gltf) => { // v2.70.0: lighter monk (7.3 MB -> ~4 MB) so the real model lands fast, even on phones
-  const S = 1.15 / 1.957;
+new GLTFLoader().load('models/cast/baby-monk-rigged.glb?v=1', (gltf) => { // v2.90.39: rigged baby as the avatar model (shared with the cast baby)
+  /* walk clip: pin Hips Z to the first frame (root-motion zeroing, the
+     cast-loader pattern) so the avatar walks in place while the group is
+     moved at the player's speed. Natural speed at avatar scale. */
+  const walkSrc = gltf.animations.find(a => a.name === 'walk');
+  const idleSrc = gltf.animations.find(a => a.name === 'idle');
+  const bowSrc = gltf.animations.find(a => a.name === 'bow');
+  const sitSrc = gltf.animations.find(a => a.name === 'sit');
+  let naturalSpeed = 0.364;
+  let walkClip = walkSrc;
+  if (walkSrc) {
+    const tr0 = walkSrc.tracks.find(t => /Hips\.position$/.test(t.name));
+    const drift = (tr0 && tr0.values.length >= 6) ? Math.abs(tr0.values[tr0.values.length - 1] - tr0.values[2]) : 0;
+    walkClip = walkSrc.clone();
+    const tr = walkClip.tracks.find(t => /Hips\.position$/.test(t.name));
+    if (tr) { const z0 = tr.values[2]; for (let i = 0; i < tr.values.length / 3; i++) tr.values[i * 3 + 2] = z0; }
+    if (drift > 0) naturalSpeed = (drift / walkSrc.duration) * AVATAR_SCALE;
+  }
+  avatarClips = { walk: walkClip, idle: idleSrc, bow: bowSrc, sit: sitSrc, naturalSpeed };
   const inner = new THREE.Group();
-  inner.scale.setScalar(S);
-  inner.position.y = 0.998 * S;
-  gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) { if (o.geometry && o.geometry.getAttribute('color')) o.material.vertexColors = true; o.material.roughness = 0.85; } } });
+  inner.scale.setScalar(AVATAR_SCALE); // baby is 1.0 m tall, feet at Y=0 -> 1.15 m, no vertical offset
+  inner.position.y = 0;
+  gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; if (o.material) o.material.roughness = 0.85; } });
   inner.add(gltf.scene);
   const wrap = new THREE.Group(); wrap.add(inner);
   monkProto = wrap;
@@ -4660,23 +4776,34 @@ function animate() {
       if (moved) P.stuckT = 0;
       else { P.stuckT = (P.stuckT || 0) + dt; if (P.stuckT > 0.8) { rescuePlayer(true); P.target = null; P.sitCushion = null; P.incenseAfterWalk = false; P.sweepPile = null; P.mode = 'idle'; P.stuckT = 0; } }
       P.walkCycle += dt * 9;
-      player.userData.bodyG.position.y = Math.abs(Math.sin(P.walkCycle)) * 0.05;
-      player.userData.bodyG.rotation.z = Math.sin(P.walkCycle) * 0.045;
+      /* v2.90.39: skeletal walk clip already bobs the hips — skip the procedural bob/sway while it is active */
+      if (!player.userData.avatarMixer || !player.userData.avatarMoving) {
+        player.userData.bodyG.position.y = Math.abs(Math.sin(P.walkCycle)) * 0.05;
+        player.userData.bodyG.rotation.z = Math.sin(P.walkCycle) * 0.045;
+      } else {
+        player.userData.bodyG.position.y = 0;
+        player.userData.bodyG.rotation.z = 0;
+      }
     }
   } else {
     player.userData.bodyG.position.y = 0;
     player.userData.bodyG.rotation.z = 0;
     /* breathing */
     const br = 1 + Math.sin(t * 1.7) * 0.012;
-    const base = P.mode === 'seated' ? 0.78 : 1;
+    const base = (P.mode === 'seated' && !player.userData.avatarSit) ? 0.78 : 1; /* v2.90.39: sit clip does the sit — no procedural squash on top */
     player.userData.bodyG.scale.y = base * br;
   }
+  /* v2.90.39: rigged avatar walk/idle for the player */
+  player.userData.avatarMoving = (P.mode === 'walk' && !!P.target);
+  player.userData.avatarWantBow = (P.bowT >= 0);
+  player.userData.avatarWantSit = (P.mode === 'seated');
+  avatarAnimTick(player, dt);
   /* bow */
   if (P.bowT >= 0) {
     P.bowT += dt;
     const k = P.bowT / 1.3;
     if (k >= 1) { P.bowT = -1; player.userData.upperG.rotation.x = 0; }
-    else player.userData.upperG.rotation.x = Math.sin(k * Math.PI) * 0.55;
+    else if (!player.userData.avatarBow) player.userData.upperG.rotation.x = Math.sin(k * Math.PI) * 0.55; /* v2.90.39: bow clip does the bow — no procedural pitch on top */
   }
   if (malaPulse > 0) {
     malaPulse -= dt;
@@ -4691,7 +4818,9 @@ function animate() {
     if (h && h.userData.bs) h.scale.set(h.userData.bs, h.userData.bs, 1);
   }
   /* NPC breathing */
-  npcs.forEach(n => { n.userData.bodyG.scale.y = 0.78 * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); });
+  npcs.forEach(n => { n.userData.bodyG.scale.y = (n.userData.avatarSit ? 1 : 0.78) * (1 + Math.sin(t * 1.4 + n.userData.phase) * 0.014); }); /* v2.90.39: sit clip does the sit — no squash on top */
+  /* v2.90.39 (Cuu #66 FAIL): NPC avatars are seated — play the sit clip. */
+  npcs.forEach(n => { n.userData.avatarWantSit = true; avatarAnimTick(n, dt); });
   /* halo pulse */
   if (player.userData.halo) player.userData.halo.rotation.z = t * 0.4;
   if (incenseLeft > 0) { incenseLeft -= dt; if (incenseLeft <= 0) { setIncenseLit(false); toast(L().tIncenseOut); } }
@@ -5027,10 +5156,65 @@ let myC = look.c != null ? look.c : MY_C;
 function saveLook() { try { localStorage.setItem('pt3d-look', JSON.stringify(look)); } catch (e) {} }
 
 /* per-person robe colour on the monk MODEL: rewrites robe-blue vertex colours on cloned geometry (no custom shaders) */
+/* v2.90.39: one recoloured robe texture per robe colour (hex). Recolouring
+   a 2048x2048 texture costs ~200 ms, so avatars sharing a colour share the
+   texture. The source is always the baby's ORIGINAL basecolor image. */
+const robeTexCache = new Map();
+function recolourRobeTexture(srcImg, hex) {
+  if (robeTexCache.has(hex)) return robeTexCache.get(hex);
+  const cv = document.createElement('canvas');
+  cv.width = srcImg.width; cv.height = srcImg.height;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(srcImg, 0, 0);
+  const id = ctx.getImageData(0, 0, cv.width, cv.height);
+  const d = id.data;
+  const tr = (hex >> 16) & 255, tg = (hex >> 8) & 255, tb = hex & 255;
+  const tLum = 0.299 * tr + 0.587 * tg + 0.114 * tb;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    /* Robe gate (validated on the basecolor texture: 100% of robe texels
+       selected, 0% of skin, 0% of near-black eyes). Robe = dark warm brown
+       ~(110,64,40); skin = light tan ~(216,168,132); eyes near-black. */
+    if (r > g && g > b && r < 170 && lum > 30 && (r - b) > 25) {
+      const k = tLum > 1 ? (lum / tLum) : 1; // keep the texel's own luminance so folds survive
+      d[i] = Math.min(255, Math.round(tr * k));
+      d[i + 1] = Math.min(255, Math.round(tg * k));
+      d[i + 2] = Math.min(255, Math.round(tb * k));
+    }
+  }
+  ctx.putImageData(id, 0, 0);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  robeTexCache.set(hex, tex);
+  return tex;
+}
 function applyRobeTint(inst, hex) {
   const tint = new THREE.Color(hex);
   inst.traverse(o => {
     if (!o.isMesh || !o.geometry) return;
+    /* Textured rigged model (v2.90.39): recolour the robe in texture space.
+       Clone the MATERIAL per avatar instance (cloneRigged shares materials
+       across instances); GEOMETRY stays shared. The recoloured texture is
+       cached per robe colour, so re-tinting re-derives from the ORIGINAL
+       image and never compounds. */
+    if (o.material && o.material.map && o.material.map.image && o.material.map.image.width) {
+      if (!o.userData.robeMatCloned) {
+        o.userData.robeSrcImg = o.material.map.image;
+        o.material = o.material.clone();
+        o.userData.robeMatCloned = true;
+      }
+      const srcImg = o.userData.robeSrcImg;
+      if (srcImg && srcImg.width) {
+        const tex = recolourRobeTexture(srcImg, hex);
+        tex.wrapS = o.material.map.wrapS; tex.wrapT = o.material.map.wrapT;
+        tex.flipY = o.material.map.flipY;
+        o.material.map = tex;
+        o.material.needsUpdate = true;
+      }
+      return;
+    }
+    if (!o.geometry.getAttribute('color')) return; // v2.90.39: textured rigged model has no vertex colours — nothing to tint, do not clone its shared geometry
     if (!o.geometry.userData.origColor) {
       o.geometry = o.geometry.clone();
       const c0 = o.geometry.getAttribute('color');
@@ -5278,15 +5462,21 @@ function ptAnim(now) {
     const body = g.userData.bodyG;
     if (body) {
       const moving = d > 0.05 && !r.sit;
-      body.scale.y = (r.sit ? 0.78 : 1) * (1 + Math.sin(t * 1.5 + r.ph) * 0.012);
-      body.scale.x = body.scale.z = r.sit ? 1.15 : 1;
-      body.position.y = moving ? Math.abs(Math.sin(t * 9 + r.ph)) * 0.05 : 0;
+      body.scale.y = ((r.sit && !g.userData.avatarSit) ? 0.78 : 1) * (1 + Math.sin(t * 1.5 + r.ph) * 0.012); /* v2.90.39: sit clip does the sit */
+      body.scale.x = body.scale.z = (r.sit && !g.userData.avatarSit) ? 1.15 : 1;
+      /* v2.90.39: skeletal walk provides the bob — skip procedural bob while active */
+      const skelWalk = moving && !!g.userData.avatarMixer;
+      body.position.y = (moving && !skelWalk) ? Math.abs(Math.sin(t * 9 + r.ph)) * 0.05 : 0;
+      g.userData.avatarMoving = moving;
+      g.userData.avatarWantBow = (r.bowT !== undefined && r.bowT >= 0);
+      g.userData.avatarWantSit = !!r.sit;
+      avatarAnimTick(g, dt);
     }
     if (r.bowT !== undefined && r.bowT >= 0) {
       r.bowT += dt;
       const bk = r.bowT / 1.3;
       if (bk >= 1) { r.bowT = -1; g.userData.upperG.rotation.x = 0; }
-      else g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55;
+      else if (!g.userData.avatarBow) g.userData.upperG.rotation.x = Math.sin(bk * Math.PI) * 0.55; /* v2.90.39: bow clip does the bow */
     }
     if (r.pet) petFollow(r.pet, g.position.x, g.position.z, g.rotation.y, dt, now);
     if (r.dove) doveEscort(r.dove, g.position.x, g.position.y, g.position.z, g.rotation.y, r.sit, dt, now);
@@ -5741,8 +5931,8 @@ function keeperTakeoverCheck() {
 function refreshKeeperGate() {
   const b = document.getElementById('btnLayout');
   if (b) b.style.display = isKeeperDevice() ? '' : 'none';
-  const cr = document.getElementById('credit'); // v2.78.0: the version line is for the keeper's eyes only
-  if (cr) cr.style.display = isKeeperDevice() ? '' : 'none';
+  /* v2.90.39: #credit is now shown to everyone (CSS display:block) — the
+     version line is no longer keeper-only. btnLayout stays keeper-only. */
 }
 /* v2.90.0 (Anita): while she arranges the yard the monk kept wandering
    off and wedging into corners, so in Layout he stands still.
@@ -6343,7 +6533,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.37';
+const PT3D_VER = '2.90.39';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
