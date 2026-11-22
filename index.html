@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.40">
+<meta name="pt3d-ver" content="2.90.43">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.40 · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY); ghế gỗ — elferboy (Tripo)</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.43</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1174,7 +1174,7 @@ const fallsFlowMat = new THREE.ShaderMaterial({
   uniforms: { uTime: fallsFlowU },
   transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
   vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 6.5 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 2.1) * 1.1); float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.06 + streak * 0.55; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 13.0 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 4.2) * 1.1); /* #68: flow x2 */ float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.06 + streak * 0.55; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
 });
 new GLTFLoader().load('models/waterfall2.glb?v=102', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin (v2.83.2: restored as THE falls - Anita judged the rock cascade less beautiful; the rock one is parked as a small extra below)
   const m = gltf.scene;
@@ -1314,7 +1314,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objLeafPile: '🍂 Đống lá', objFence: '🚧 Hàng rào', creditGarden: ' · Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)', layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objLeafPile: '🍂 Đống lá', objFence: '🚧 Hàng rào', creditGarden: '' /* v2.90.43 (#68): the garden attribution left the play view — it now lives in the layout panel (see below) */, layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1351,7 +1351,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objLeafPile: '🍂 Leaf pile', objFence: '🚧 Fence', creditGarden: ' · Garden props: broom, basket — Poly by Google; trowel — involuntary tsetse (CC-BY)', layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objLeafPile: '🍂 Leaf pile', objFence: '🚧 Fence', creditGarden: '' /* v2.90.43 (#68): garden attribution moved to the layout panel */, layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -1886,8 +1886,8 @@ const matTopTex = canvasTexture(256, 256, (g) => {
 const matTopMat = new THREE.MeshStandardMaterial({ map: matTopTex, roughness: 0.85 });
 function cushion(x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z);
-  const base = cyl(0.68, 0.68, 0.05, MAT.matSide, 0, 0.025, 0, g, 26);
-  const top = new THREE.Mesh(new THREE.CircleGeometry(0.68, 26), matTopMat);
+  const base = cyl(0.34, 0.34, 0.05, MAT.matSide, 0, 0.025, 0, g, 26); /* #69: halve diameter 1.36 -> 0.68 m, thickness stays 0.05 */
+  const top = new THREE.Mesh(new THREE.CircleGeometry(0.34, 26), matTopMat); /* #69 */
   top.rotation.x = -Math.PI / 2; top.position.y = 0.052; top.receiveShadow = true; g.add(top);
   base.userData.isCushion = true; top.userData.isCushion = true;
   g.userData.isCushionGroup = true;
@@ -1911,7 +1911,7 @@ let shrineGrp = null;
   /* v2.63.1: the bamboo grove behind the shrine is REMOVED (Anita: the
      pole-and-diamond stalks read as scrawny trees - she will plant palms
      there herself). */
-  [-1.1, 0.5, 2.1].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('shrine', c, false); });
+  [1.4, 3.0, 4.6].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('shrine', c, false); }); /* #69: the 3 shrine cushions move 2.5 m further from the hall into the open yard (was -1.1/0.5/2.1) */
 /* v2.57.1: ONE meditation cushion in the CENTRE of the pavilion terrace
    (Anita: the side cushions clipped into the pillars - the centre is
    always clear). It rides along as a 'pavilion' layout part. */
@@ -3214,7 +3214,7 @@ player.rotation.y = Math.PI;
    the normal layout store + shared lock. No colliders are added for the
    props (same as the verified v1 build). CC-BY credit for the 3 free
    items lives in the #credit line. */
-window.__garden = { total: 6, loaded: 0, errors: [] };
+window.__garden = { total: 11, loaded: 0, errors: [] }; /* v2.90.43 (#68): 6 props + 5 chickens */
 const GARDEN = [
   // [url, x, z, ry, size, dim, leanX, leanZ, liftY]
   // v2.90.23 (Anita, #44 step 3): small garden accessories REMOVED -
@@ -3230,15 +3230,29 @@ const GARDEN = [
   ['props/setenull/chuong-ga.glb', -10.7, -28.7, 0.6, 1.1, 'y'],
   ['props/setenull/cay-vong.glb', -12.9, -30.3, 0, 1.6, 'y'],
   ['props/setenull/xo-1.glb', -14.3, -27.5, 0, 0.4, 'y'],
-  ['props/gcz3/xeng.glb', -15.3, -28.3, 0.9, 1.2, 'y', -0.3],
+  ['props/gcz3/xeng.glb', -15.3, -28.3, 0.9, 1.2, 'y'],
   ['props/free/hoe.glb', -14.6, -26.6, 1.0, 1.2, 'x', 0, 0, 0.02],
   ['props/free/ghe-go.glb', -11.2, -8.8, 0.5, 0.85, 'x', 0, 0, -0.36],
+  /* v2.90.43 (#68): the 5 chickens are BACK — #44 step 3 removed them
+     in v2.90.23 and the coop stood empty. 1 rooster + 2 hens + 2 white,
+     clustered around the coop; updateChickens() keeps them within
+     ~1.6 m of it (peck + wander), they never roam the whole yard.
+     NOTE: the garden loader iterates GARDEN_BY_ID, keyed by GLB file
+     name — so the 2nd hen / 2nd white need DISTINCT filenames
+     (ga-mai-2.glb, ga-trang-2.glb: byte-identical copies) or the
+     duplicates collapse and only 3 chickens spawn. */
+  ['props/setenull/ga-trong.glb', -9.6, -28.0, 0, 0.35, 'y'],
+  ['props/setenull/ga-mai.glb', -11.9, -28.0, 1.5, 0.35, 'y'],
+  ['props/setenull/ga-mai-2.glb', -10.7, -27.2, 3.0, 0.35, 'y'],
+  ['props/setenull/ga-trang.glb', -9.9, -29.6, 0.8, 0.35, 'y'],
+  ['props/setenull/ga-trang-2.glb', -11.6, -29.5, 2.2, 0.35, 'y'],
 ];
 /* Layout tap-proxy sizes per prop (world axes, metres) — also the
    selection ring size. Keyed by file base name. */
 const GARDEN_PS = {
   'chuong-ga': { w: 2.6, d: 2.2, h: 1.8 }, 'cay-vong': { w: 3.6, d: 2.6, h: 2.6 },
   'xo-1': { w: 0.8, d: 0.8, h: 0.8 }, 'xeng': { w: 1.0, d: 1.0, h: 1.4 },
+  'ga-trong': { w: 0.5, d: 0.5, h: 0.5 }, 'ga-mai': { w: 0.5, d: 0.5, h: 0.5 }, 'ga-trang': { w: 0.5, d: 0.5, h: 0.5 }, 'ga-mai-2': { w: 0.5, d: 0.5, h: 0.5 }, 'ga-trang-2': { w: 0.5, d: 0.5, h: 0.5 },
   'hoe': { w: 1.1, d: 1.1, h: 1.3 }, 'ghe-go': { w: 0.85, d: 0.68, h: 0.68 }
 };
 /* v2.90.7 (Anita): every garden prop gets its own name in the Layout
@@ -3248,11 +3262,13 @@ const GARDEN_NAMES = {
   'chuong-ga': ['🐔 Chuồng gà', '🐔 Chicken coop'],
   'cay-vong': ['🌳 Cây treo võng', '🌳 Hammock tree'],
   'xo-1': ['🪣 Xô nước', '🪣 Bucket'], 'xeng': ['Xẻng', 'Shovel'],
-  'hoe': ['Cuốc', 'Hoe'], 'ghe-go': ['🪑 Ghế gỗ', '🪑 Wooden stool']
+  'hoe': ['Cuốc', 'Hoe'], 'ghe-go': ['🪑 Ghế gỗ', '🪑 Wooden stool'],
+  'ga-trong': ['🐓 Gà trống', '🐓 Rooster'], 'ga-mai': ['🐔 Gà mái', '🐔 Hen'], 'ga-trang': ['🐔 Gà trắng', '🐔 White chicken'], 'ga-mai-2': ['🐔 Gà mái', '🐔 Hen'], 'ga-trang-2': ['🐔 Gà trắng', '🐔 White chicken']
 };
 const GARDEN_BY_ID = {};
 for (const p of GARDEN) GARDEN_BY_ID['gd-' + p[0].split('/').pop().replace('.glb', '')] = p;
 const CHICKENS = [];
+let stoolGroup = null; /* v2.90.43 (#68): the yard log stool (ghe-go) group, once loaded */
 /* v2.90.7 (Anita): the chickens LIVE - they wander around their home
    spot, peck at the ground, look about. Purely procedural (the models
    are static): the inner group walks/pecks inside the layout wrapper,
@@ -3331,10 +3347,11 @@ function gardenPlace(p, id, home) {
     // so the verified scale is unchanged.
     m.traverse(o => { if (o.isMesh && (o.name === 'Node-Mesh_2' || (o.material && !Array.isArray(o.material) && o.material.color && o.material.color.getHex() === 0x005dff))) o.visible = false; });
     wrap.name = 'garden-' + id;
+    if (base === 'ghe-go') { stoolGroup = wrap; wrap.userData.isStool = true; } /* v2.90.43 (#68): the yard log stool is sittable for the PLAYER */
     if (home) wrap.userData.dupCreated = true;
     scene.add(wrap);
     regPart(id, wrap, true, { x: ax, z: az, ry: ry || 0, rot: true, yard: true, ps: GARDEN_PS[base] || { w: 1.2, d: 1.2, h: 1.2 } });
-    if (base === 'ga-trang' || base === 'ga-trong' || base === 'ga-mai') CHICKENS.push({ id, inner, wrap, st: 'idle', t: Math.random() * 2, tx: 0, tz: 0, ph: Math.random() * 9 });
+    if (base.startsWith('ga-')) CHICKENS.push({ id, inner, wrap, st: 'idle', t: Math.random() * 2, tx: 0, tz: 0, ph: Math.random() * 9 }); /* #68: all 5 chickens wander, incl. ga-mai-2 / ga-trang-2 */
     window.__garden.loaded++;
   }, undefined, () => { window.__garden.errors.push(url); });
 }
@@ -3650,7 +3667,7 @@ const CAST_WALK = {
   'co-gai-v3-rigged.glb': { route: [[-7.4,-14.5],[-7.4,-19.5],[-6.6,-19.5],[-6.6,-14.5],[-4.5,-13.8],[-2.0,-13.0],[-2.5,-11.2],[-3.5,-9.5],[-5.0,-5.0],[-5.5,0.0],[-5.0,5.0],[-4.0,8.0],[-2.0,9.0],[-2.5,5.0],[-3.0,0.0],[-3.5,-5.0],[-2.5,-9.0],[-2.0,-11.2],[-2.0,-13.0],[-4.5,-13.8]], startWp: 0, sitWp: 0, face: [null, -30] },
   'anh-nam-rigged.glb': { route: [[7.4,-14.5],[7.4,-19.5],[6.6,-19.5],[6.6,-14.5],[4.5,-13.8],[2.0,-13.0],[2.5,-11.2],[3.5,-9.5],[5.0,-5.0],[5.5,0.0],[5.0,5.0],[4.0,8.0],[2.0,9.0],[2.5,5.0],[3.0,0.0],[3.5,-5.0],[2.5,-9.0],[2.0,-11.2],[2.0,-13.0],[4.5,-13.8]], startWp: 0, sitWp: 0, face: [null, -30] },
   'su-phu-v1-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5]], startWp: 0, sitWp: -1, face: [0, -13.0] },
-  'baby-monk-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5],[-11.2,-8.8]], startWp: 4, sitWp: 9, face: [0, -13.0], sitEvery: true, sitLift: 0.09 },
+  'baby-monk-rigged.glb': { route: [[-13.5,-7.0],[-14.0,-3.0],[-13.5,1.0],[-13.5,5.0],[-10.5,7.0],[-9.0,4.0],[-9.0,-1.0],[-10.0,-5.0],[-11.5,-7.5],[-11.2,-8.0]], startWp: 4, sitWp: 9, face: [0, -13.0], sitEvery: true, sitLift: 0.09, sitAt: [-11.2, -8.8] }, /* #69: wp 9 is now the APPROACH point just south of the log stool; sitAt is the seat itself */
   'su-phu-chibi-rigged.glb': { route: [[-5.5,-20.9],[5.5,-20.9]], startWp: 0, sitWp: -1, face: [0, -15.0] },
 };
 const castWalkers = {}; // file -> { state, wp, stateT, pauseT, loops, nextAfterIdle, clipName, fadingOut }
@@ -3682,7 +3699,7 @@ function castWalkInit(file) {
   ch.wrap.rotation.y = Math.atan2(cfg.route[(cfg.startWp + 1) % cfg.route.length][0] - start[0], cfg.route[(cfg.startWp + 1) % cfg.route.length][1] - start[1]);
   ch.wrap.position.y = groundY(start[0], start[1]); // #32b: start on the ground (hall 1.12 / yard 0)
   castWalkers[file] = {
-    route: cfg.route, sitWp: cfg.sitWp, face: cfg.face, sitEvery: !!cfg.sitEvery, sitLift: cfg.sitLift || 0,
+    route: cfg.route, sitWp: cfg.sitWp, face: cfg.face, sitEvery: !!cfg.sitEvery, sitLift: cfg.sitLift || 0, sitAt: cfg.sitAt || null, /* #69 */
     state: 'idle', wp: cfg.startWp, stateT: 0,
     pauseT: 1 + Math.random() * 2, loops: 0, nextAfterIdle: 'walk',
     clipName: 'idle', fadingOut: null, walkTo: null, // #60: {tx, tz, partner} while walking to a partner
@@ -3770,6 +3787,10 @@ function castWalkTick(dt) {
           castPlayClip(file, 'bow', false);
         } else if (w.nextAfterIdle === 'sit') {
           w.state = 'sit'; w.stateT = 0;
+          /* #69: sit ON the stool — walk only to the approach point (wp 9,
+             just south of the log), then step onto the seat for the sit pose,
+             so the baby never walks THROUGH the log. */
+          if (w.sitAt) { ch.wrap.position.x = w.sitAt[0]; ch.wrap.position.z = w.sitAt[1]; ch.wrap.position.y = groundY(w.sitAt[0], w.sitAt[1]); }
           /* #51 rework (Cuu): sitting hips are 0.227 m, 0.08 m BELOW the
              0.31 m seat top — the sit clip only lowers the hips ~0.12 m
              from standing, so the seat must match the SITTING hip height.
@@ -3794,6 +3815,9 @@ function castWalkTick(dt) {
       }
     } else if (w.state === 'sit') {
       if (w.stateT >= 7.5) { // one sit cycle (7.17 s) + a breath
+        /* #69: step OFF the stool back to the approach point before walking
+           on, so he never walks through the log on departure either. */
+        if (w.sitAt) { const ap = w.route[w.sitWp]; ch.wrap.position.x = ap[0]; ch.wrap.position.z = ap[1]; ch.wrap.position.y = groundY(ap[0], ap[1]); }
         w.wp = (w.wp + 1) % w.route.length;
         w.state = 'walk'; w.stateT = 0;
         castPlayClip(file, 'walk', true);
@@ -4092,10 +4116,15 @@ const COLLIDERS = [
   { x0: 7.45, x1: 9.15, z0: -0.35, z1: 1.35 },    // shrine burner (v2.31.0)
   { x0: -17.5, x1: -9.7, z0: -5.5, z1: 2.5 },
   { x0: -11.55, x1: -10.05, z0: 3.45, z1: 4.55 },     // waterfall rock (v2.29.0: west-mid yard)
+  { x0: -11.75, x1: -10.65, z0: -9.32, z1: -8.28, stool: true }, // #69: yard log stool (ghe-go) — the player cannot walk through it
 ];
 function collide() {
   const p = player.position, R = 0.17; // v2.90.1: slimmer body radius (was 0.26) - gaps between objects and walls stay passable
   for (const c of COLLIDERS) {
+    /* #69: the stool blocks walking THROUGH it — but not the walk-to-sit:
+       when the player is heading to sit on the stool, let him reach it
+       (the sit itself places him on top). */
+    if (c.stool && P.sitCushion && P.sitCushion.userData && P.sitCushion.userData.isStool) continue;
     if (p.x > c.x0 - R && p.x < c.x1 + R && p.z > c.z0 - R && p.z < c.z1 + R) {
       const dl = p.x - (c.x0 - R), dr = (c.x1 + R) - p.x, dn = p.z - (c.z0 - R), df = (c.z1 + R) - p.z;
       const m = Math.min(dl, dr, dn, df);
@@ -4278,7 +4307,15 @@ function sitDown(cushion) {
   P.mode = 'seated';
   P.seatedOn = cushion || null;
   if (cushion) {
-    player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
+    if (cushion.userData && cushion.userData.isStool) {
+      /* v2.90.43 (#68): the log stool — sit ON TOP of it. The stool wrap
+         sits at y -0.36 (its seat top is 0.319 m), so the cushion's
+         position.y is useless here; place the avatar origin at y 0.12
+         so the sit clip's hips land on the seat, like the cast baby. */
+      player.position.set(cushion.position.x, 0.12, cushion.position.z);
+    } else {
+      player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
+    }
     cushion.userData.occupiedByPlayer = true;
   }
   let faceY = (cushion && cushion.userData.faceY !== undefined) ? cushion.userData.faceY : Math.PI;
@@ -4353,6 +4390,37 @@ function updateCushionBtns() {
   }
 }
 
+/* ============ v2.90.43 (#68): a floating 🧘 button on the yard log stool ============
+   Same pattern as the cushion buttons — it shows when the player is in the yard,
+   not seated, and near the stool; tapping it walks there and sits on top. */
+const stoolBtn = document.createElement('button');
+stoolBtn.style.cssText = 'position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:none;background:none;color:#ffe9b0;padding:2px 6px;font-size:16px;font-family:inherit;cursor:pointer;display:none;flex-direction:column;align-items:center;gap:1px;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 7px rgba(0,0,0,.55);';
+chipLines(stoolBtn);
+stoolBtn.addEventListener('click', () => {
+  if (!stoolGroup) return;
+  if (P.mode === 'seated') { if (P.seatedOn === stoolGroup) standUp(); return; }
+  const p = stoolGroup.position.clone(); p.y = 0;
+  if (player.position.distanceTo(p) < 0.6) sitDown(stoolGroup); else setWalkTarget(p, stoolGroup);
+});
+cushionBtnWrap.appendChild(stoolBtn);
+const __sbv = new THREE.Vector3(), __sbv2 = new THREE.Vector3();
+function updateStoolBtn() {
+  if (!stoolGroup || !stoolGroup.parent) { stoolBtn.style.display = 'none'; return; }
+  let show = false;
+  if (!window.__layoutEdit && P.mode !== 'seated' && room === 'yard' && player.position.distanceTo(stoolGroup.position) < 24) {
+    setChip(stoolBtn, '🧘 ' + L().aSit);
+    show = true;
+  }
+  if (!show) { stoolBtn.style.display = 'none'; return; }
+  __sbv.copy(stoolGroup.position); __sbv.y = 0.95;
+  __sbv2.copy(__sbv).applyMatrix4(camera.matrixWorldInverse);
+  if (__sbv2.z > -0.6) { stoolBtn.style.display = 'none'; return; }
+  __sbv.project(camera);
+  stoolBtn.style.display = 'flex';
+  stoolBtn.style.left = ((__sbv.x * 0.5 + 0.5) * innerWidth) + 'px';
+  stoolBtn.style.top = ((-__sbv.y * 0.5 + 0.5) * innerHeight) + 'px';
+}
+
 /* ============ Pointer: tap to walk / sit ============ */
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -4379,10 +4447,10 @@ renderer.domElement.addEventListener('pointerup', (e) => {
       }
     }
   }
-  const hits = raycaster.intersectObjects([ground, platMesh, inFloorMesh, ...cushionSpots, ...hallCushions], true);
+  const hits = raycaster.intersectObjects([ground, platMesh, inFloorMesh, ...cushionSpots, ...hallCushions, ...(stoolGroup ? [stoolGroup] : [])], true); /* v2.90.43 (#68): the log stool is tappable */
   if (!hits.length) return;
   let obj = hits[0].object, cushionGroup = null;
-  while (obj) { if (obj.userData && obj.userData.isCushionGroup) { cushionGroup = obj; break; } obj = obj.parent; }
+  while (obj) { if (obj.userData && obj.userData.isCushionGroup) { cushionGroup = obj; break; } if (obj.userData && obj.userData.isStool) { cushionGroup = obj; break; } obj = obj.parent; } /* v2.90.43 (#68): tapping the stool walks to it and sits, like a cushion */
   if (P.mode === 'seated') standUp();
   if (cushionGroup) {
     if (cushionGroup.userData.occupied) { toast(L().tOccupied); return; }
@@ -4709,7 +4777,7 @@ function animate() {
   dnTick(dt);
   if (typeof castTick === 'function') castTick(dt);
   if (typeof castWalkTick === 'function') castWalkTick(dt); // #32: waypoint walkers // series cast idle/bow mixers (#27)
-  fallsTex.offset.y = (fallsTex.offset.y - dt * 0.45) % 1;
+  fallsTex.offset.y = (fallsTex.offset.y - dt * 0.9) % 1; /* #68: waterfall flow x2 (Anita) */
   const t = clock.elapsedTime;
   fallsFlowU.value = t;
   if (fallsMistMat) fallsMistMat.opacity = 0.10 + 0.045 * Math.sin(t * 1.4);
@@ -4881,7 +4949,7 @@ function animate() {
     const bs = f.g.userData.bs;
     f.g.scale.set(bs * (1 + Math.sin(t * 17 + f.seed * 9) * 0.07), bs * (1 + Math.sin(t * 15 + f.seed * 7) * 0.13), bs);
   });
-  updateCushionBtns(); updateChatBubbles(); updateIncenseChips(); updateWorldChips(); updateSeatBtns();
+  updateCushionBtns(); updateStoolBtn(); /* v2.90.43 (#68) */ updateChatBubbles(); updateIncenseChips(); updateWorldChips(); updateSeatBtns();
 
   /* fortune jar shake */
   if (xamAnimT >= 0) {
@@ -5352,13 +5420,17 @@ function ptSync() {
     const metas = st[key]; if (!metas || !metas.length) return;
     const p = metas[metas.length - 1];
     let r = remotes.get(key);
+    /* #70: ghost — do not create an avatar for a dead session, and remove
+       one that went silent (its client is gone; Supabase just has not
+       dropped the entry yet). A live client always passes ptIsGhost. */
+    if (ptIsGhost(p, r)) { if (r) ptRemoveRemote(key); winKeys.delete(key); return; }
     if (!r) {
       const pm = pendingMv.get(key); if (pm) pendingMv.delete(key);
       const sx = pm ? pm.x : (typeof p.x === 'number' ? p.x : 0), sz = pm ? pm.z : (typeof p.z === 'number' ? p.z : 9.5);
       const sry = pm ? (pm.ry || 0) : (p.ry || 0), ssit = pm ? !!pm.sit : !!p.sit;
       const g = buildAvatar({ name: cleanName(p.name, L().guest), sub: [L().sects[p.sc] || '', bacSub(p.bc || 1)].filter(Boolean).join(' · '), bald: false, robeMat: robeFor(key, p.c), beadSet: (p.bd === 1 || p.bd === 2) ? p.bd : 0 });
       g.position.set(sx, 0, sz);
-      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: cleanName(p.name, L().guest), ph: Math.random() * 6, lastSeen: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: (p.bd === 1 || p.bd === 2) ? p.bd : 0, sc: (p.sc >= 0 && p.sc <= 3) ? p.sc | 0 : 0, };
+      r = { g, tx: sx, tz: sz, try_: sry, sit: ssit, name: cleanName(p.name, L().guest), ph: Math.random() * 6, lastSeen: performance.now(), lastMv: performance.now(), st: p.st || null, at: p.at || 0, atLocal: performance.now(), bowT: -1, lfApplied: false, bd: (p.bd === 1 || p.bd === 2) ? p.bd : 0, sc: (p.sc >= 0 && p.sc <= 3) ? p.sc | 0 : 0, };
       remotes.set(key, r);
       if (ptBooted) toast(L().tJoined(r.name), 2000);
     }
@@ -5432,14 +5504,37 @@ function ptRemoveRemote(key) {
   if (r.dove) { scene.remove(r.dove); doveGroups.delete(r.dove); r.dove = null; }
   remotes.delete(key); pendingMv.delete(key);
 }
+/* #70: ghost detection — a presence entry is a DEAD session (tab closed /
+   socket lost / app killed) when it is silent on BOTH liveness channels:
+   no movement broadcast for 15 s AND a presence `at` older than 60 s.
+   A live client broadcasts its position at least every 5 s (the ptMove
+   keepalive) and re-tracks every 10 s (the heartbeat below), so it always
+   passes at least one check. A ghost passes neither, because its client is
+   gone. The old code trusted presenceState() blindly (ptSweep kept any key
+   present in it), so a stale entry Supabase had not yet dropped rendered
+   as a duplicate avatar forever — that is the #70 duplicate. */
+const PT_GHOST_MV_MS = 15000, PT_GHOST_AT_MS = 60000;
+function ptIsGhost(p, r) {
+  const nowP = performance.now();
+  const lastMv = r ? (r.lastMv || 0) : 0;
+  if (r && nowP - lastMv <= PT_GHOST_MV_MS) return false; /* recent broadcast: alive */
+  const pAt = p ? (Number(p.at) || 0) : 0;
+  if (pAt && Date.now() - pAt <= PT_GHOST_AT_MS) return false; /* recent track: alive */
+  if (!r && !pAt) return false; /* brand-new entry with no `at` yet: give it a chance */
+  return true;
+}
 function ptSweep() {
   if (!ptChannel) return;
   const st = ptChannel.presenceState();
   const now = performance.now();
   [...remotes.keys()].forEach(key => {
     const r = remotes.get(key);
-    if (st[key]) { r.lastSeen = now; return; }
-    if (now - r.lastSeen > 12000) ptRemoveRemote(key);
+    if (!st[key]) { if (now - r.lastSeen > 12000) ptRemoveRemote(key); return; }
+    /* #70: a key still in presenceState can still be a ghost (Supabase has
+       not dropped it yet) — drop it when it is silent on both channels. */
+    const metas = st[key]; const p = metas && metas.length ? metas[metas.length - 1] : null;
+    if (ptIsGhost(p, r)) ptRemoveRemote(key);
+    else r.lastSeen = now;
   });
 }
 let ptPrev = performance.now();
@@ -5594,7 +5689,7 @@ function ptWorld(pl) {
     const r = remotes.get(pl.from); if (r) r.bowT = 0;
   } else if (pl.k === 'mv') {
     const r = remotes.get(pl.from);
-    if (r) { r.tx = pl.x; r.tz = pl.z; r.try_ = pl.ry || 0; r.sit = !!pl.sit; r.lastSeen = performance.now();
+    if (r) { r.tx = pl.x; r.tz = pl.z; r.try_ = pl.ry || 0; r.sit = !!pl.sit; r.lastSeen = performance.now(); r.lastMv = performance.now(); /* #70: broadcast liveness */
       /* v2.75.0: a cushion someone else sits on is occupied on my screen too -
          no button over it at all (the stand button belongs to the sitter alone) */
       if (r.sit && !r.sitCushion) { let best = null, bd = 0.7; for (const cc of [...cushionSpots, ...hallCushions]) { const d = Math.hypot(cc.position.x - pl.x, cc.position.z - pl.z); if (d < bd) { bd = d; best = cc; } } if (best) { best.userData.remoteOcc = pl.from; r.sitCushion = best; } }
@@ -5607,6 +5702,12 @@ function ptWorld(pl) {
 }
 requestAnimationFrame(ptAnim);
 setInterval(() => { ptTrack(false); ptMove(false); ptSweep(); if (meritDirty && performance.now() - meritLastDraw > 1200) drawMerit(); }, 200);
+/* #70: presence heartbeat — re-track every 10 s so the presence `at` stays
+   fresh. Without it an idle client's `at` goes stale too (ptTrack(false)
+   no-ops when nothing changed), and `at` alone could not tell a live idle
+   client from a ghost. ptTrack guards itself (gated / taken-over clients
+   never track), so this is safe to run unconditionally. */
+setInterval(() => { if (ptChannel && ptChannel.state === 'joined' && !nameGated && !keeperTakenOver) ptTrack(true); }, 10000);
 let sbClient = null, ptConnOk = false, ptReconnectAt = 0, hiddenAt = 0;
 function ptSetPill() {
   const pill = document.getElementById('onlinePill');
@@ -5686,6 +5787,8 @@ window.__pt55 = {
   get ptTracked() { return ptTracked; }, set ptTracked(v) { ptTracked = !!v; },
   get ptSyncSeen() { return ptSyncSeen; }, set ptSyncSeen(v) { ptSyncSeen = !!v; },
   checkNameGate, gateName, ungateName, ptUntrack, ptTrack, ptConnect,
+  /* #70: ghost-sweep test handles */
+  ptWorld, ptSweep, ptIsGhost,
   get modalOpen() { return nameModal.classList.contains('show'); },
   get closeHidden() { const x = document.getElementById('nameClose'); return x ? x.style.display === 'none' : null; },
   get nameErrShown() { const e = document.getElementById('nameErr'); return e ? e.style.display !== 'none' : null; },
@@ -5733,7 +5836,8 @@ layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-siz
   + '<button class="laybtn" id="layUndo"></button>'
   + '<button class="laybtn" id="layReset"></button>'
   + '<button class="laybtn" id="laySave"></button>'
-  + '<button class="laybtn" id="layLock"></button></div>';
+  + '<button class="laybtn" id="layLock"></button></div>'
+  + '<div id="layoutCredits" style="font-size:10.5px;opacity:.7;margin-top:8px;line-height:1.5">Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>'; /* v2.90.43 (#68): attribution moved here from the play view */
 document.body.appendChild(layoutPanel);
 const layStyle = document.createElement('style');
 layStyle.textContent = '.laybtn{padding:7px 11px;border-radius:999px;border:1px solid rgba(255,205,120,.5);background:rgba(52,34,16,.9);color:#ffe9bd;font-size:12.5px;cursor:pointer}.laybtn:active{background:rgba(146,96,28,.9)}'
@@ -6533,7 +6637,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.40';
+const PT3D_VER = '2.90.43';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
