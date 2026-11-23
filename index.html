@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.43">
+<meta name="pt3d-ver" content="2.90.46">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -145,7 +145,7 @@
     border-top:1px solid rgba(240,199,106,0.3); border-bottom:1px solid rgba(240,199,106,0.3); padding:12px 4px; }
   .xam-giai { font-size:14.5px; line-height:1.65; margin:12px 0 16px; color:#f5e6c4; }
   .xam-btns { display:flex; gap:10px; justify-content:center; }
-  #credit { position:fixed; left:12px; top:92px; bottom:auto; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; display:block; } /* v2.90.39: version visible to everyone, top-left under the player card */
+  #credit { position:fixed; left:12px; top:92px; bottom:auto; z-index:5; font-size:10px; color:rgba(255,240,214,0.55); pointer-events:none; display:none; } /* v2.90.44: the version line left the play view — it now lives in the keeper-only layout panel, her eyes only */
   #toast { top:238px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(30,22,12,.88);
     border:1px solid rgba(255,205,120,.5); color:#ffe9b0; border-radius:12px; padding:9px 16px; font-size:13.5px;
     opacity:0; transition:all .35s ease; pointer-events:none; max-width:88vw; text-align:center; }
@@ -266,7 +266,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.43</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.46</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -1173,8 +1173,8 @@ let fallsMistMat = null;
 const fallsFlowMat = new THREE.ShaderMaterial({
   uniforms: { uTime: fallsFlowU },
   transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-  vertexShader: 'varying float vY; varying float vX; varying float vSlope; void main() { vY = position.y; vX = position.x; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 13.0 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 4.2) * 1.1); /* #68: flow x2 */ float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float a = 0.06 + streak * 0.55; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), streak); gl_FragColor = vec4(col, a); }'
+  vertexShader: 'varying float vY; varying float vX; varying float vZ; varying float vSlope; void main() { vY = position.y; vX = position.x; vZ = position.z; vSlope = 1.0 - abs(normal.y); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform float uTime; varying float vY; varying float vX; varying float vZ; varying float vSlope; void main() { float colF = 0.55 + 0.45 * sin(vX * 210.0 + sin(vX * 47.0) * 3.0); float w = sin(vY * 150.0 + uTime * 39.0 + sin(vX * 80.0) * 2.2 + sin(vY * 41.0 + uTime * 12.6) * 1.1); /* v2.90.45: flow x3 more on top of #68 x2 (13.0 -> 39.0) — the x2 alone still read as still water */ float streak = smoothstep(0.45, 0.95, w) * smoothstep(0.15, 0.5, vSlope) * colF; float rd = length(vec2(vX - 0.231, vZ - 0.064)); float ripple = smoothstep(0.6, 1.0, sin(rd * 25.0 - uTime * 4.0)) * (1.0 - smoothstep(0.3, 1.2, rd)) * (1.0 - smoothstep(0.15, 0.5, vSlope)); /* v2.90.46: gentle ripples on the flat pond where the falls land — rings radiating from the measured impact point (0.231, 0.064), flat only, fading to the pond edge */ float a = 0.06 + streak * 0.55 + ripple * 0.20; vec3 col = mix(vec3(0.62, 0.83, 0.92), vec3(1.0), clamp(streak + ripple * 0.5, 0.0, 1.0)); gl_FragColor = vec4(col, a); }'
 });
 new GLTFLoader().load('models/waterfall2.glb?v=102', (gltf) => { // v2.68.0: Anita's 'waterfall garden' - 2-tier cascade + lotus pond basin (v2.83.2: restored as THE falls - Anita judged the rock cascade less beautiful; the rock one is parked as a small extra below)
   const m = gltf.scene;
@@ -1314,7 +1314,7 @@ const I18N = {
     jarName: 'Hũ xin xăm', jarTap: 'bấm vào hũ để lắc quẻ', jarNeed: g => 'cần ' + g + ' phước đức hôm nay để mở',
     clockName: 'Đồng hồ nước', clockSub: 'lậu hồ · tính canh giờ', paviName: 'Điện Thờ', paviSub: 'lễ Phật trong sân',
     sects: ['Tịnh Độ', 'Thiền Tông', 'Mật Tông', 'Tùy duyên'], beadNames: ['Gỗ nâu', 'Gỗ sáng', 'Hổ phách'],
-    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objLeafPile: '🍂 Đống lá', objFence: '🚧 Hàng rào', creditGarden: '' /* v2.90.43 (#68): the garden attribution left the play view — it now lives in the layout panel (see below) */, layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
+    petNone: 'Không có', petDragon: '🐉 Tiểu Long', petFox: '🦊 Linh Hồ', layoutHint: 'Chạm vật để chọn, kéo để dời · vuốt nền quay camera · chạm đúp nền: nhảy camera tới chỗ đó', layoutLock: '🔒 Khóa', layoutCode: '📋 Mã', layoutReset: '↩️ Mặc định', laySave: '🔒 Lưu cho mọi máy', layPinPrompt: 'Nhập mã PIN khóa bố cục:', laySaveOk: 'Đã khóa bố cục cho mọi máy ✓', laySaveErr: 'Không lưu được — sai PIN hoặc chưa cài đặt phía máy chủ', layoutAdopted: 'Đã áp dụng bố cục mới được khóa ✓', layoutCodePrompt: 'Mã layout (chép gửi Cừu để gắn cố định cho mọi máy, hoặc dán mã mới vào rồi OK để nhập):', layoutResetQ: 'Đặt lại TOÀN BỘ bố cục về mặc định? (Hoàn tác được)', objFalls: '🌊 Thác nước', objClock: '💧 Đồng hồ nước', objShrine: '🏯 Điện thờ (cả cụm)', objBurner: '🔥 Lư hương giữa sân', objPavilion: '🏮 Đình (Tripo)', objBridge: '🌉 Cầu đá', objLampPost: '🏮 Cột đèn gỗ', objLampPaper: '🪔 Đèn lồng giấy', objWell: '🪣 Giếng nước', objRock: '🪨 Thác đá', objTree: '🌳 Cây xanh', objGarden: '🪴 Đạo cụ vườn', objLeafPile: '🍂 Đống lá', objFence: '🚧 Hàng rào', objCushion: '🧘 Thảm ngồi', creditGarden: '' /* v2.90.43 (#68): the garden attribution left the play view — it now lives in the layout panel (see below) */, layType: '🌳 Đổi loại', treeTypeNames: ['🌳 Cây xanh', '🍁 Phong đỏ', '🌴 Cây cọ'], sizeUp: '＋ To', sizeDn: '－ Nhỏ', layDup: '⧉ Nhân đôi', layDel: '🗑️ Xóa', layUndo: '↩️ Hoàn tác', layMonkPin: '🧍 Ghim chú tiểu', layMonkFree: '🚶 Thả chú tiểu', layoutUndoDone: 'Đã hoàn tác ✓', layoutUndoNone: 'Chưa có gì để hoàn tác', layoutDelQ: 'Xóa cây này? (bấm Mặc định sẽ khôi phục lại)', layoutDelQObj: 'Xóa vật này? (bấm Mặc định sẽ khôi phục lại)', robeTitle: i => 'Áo ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Bậc ' + bac + ' · 🪷 ' + sen + ' hạt sen<br>Hôm nay: ' + pts + ' phước đức' + (open ? ' · 🎋 đã mở xin xăm' : ' · đủ ' + gate + ' mở xin xăm'),
     pillRetry: 'Đang nối lại…', pillAlone: n => 'Online · mình bạn trong chùa', pillMany: n => 'Online · ' + n + ' người trong chùa',
     pillOffline: 'Một mình trong chùa (chưa nối được online)',
@@ -1351,7 +1351,7 @@ const I18N = {
     jarName: 'Fortune jar', jarTap: 'tap the jar to shake a stick', jarNeed: g => 'earn ' + g + ' merit today to unlock',
     clockName: 'Water clock', clockSub: 'clepsydra · telling the watches', paviName: 'Shrine', paviSub: 'a quiet shrine in the yard',
     sects: ['Pure Land', 'Zen', 'Vajrayana', 'Free path'], beadNames: ['Dark wood', 'Light wood', 'Amber'],
-    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objLeafPile: '🍂 Leaf pile', objFence: '🚧 Fence', creditGarden: '' /* v2.90.43 (#68): garden attribution moved to the layout panel */, layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
+    petNone: 'None', petDragon: '🐉 Little Dragon', petFox: '🦊 Spirit Fox', layoutHint: 'Tap an object to select, drag to move · drag background to orbit · double-tap background: jump camera there', layoutLock: '🔒 Lock', layoutCode: '📋 Code', layoutReset: '↩️ Default', laySave: '🔒 Save for everyone', layPinPrompt: 'Enter the layout lock PIN:', laySaveOk: 'Layout locked for everyone ✓', laySaveErr: 'Could not save — wrong PIN or server not set up', layoutAdopted: 'Applied the newly locked layout ✓', layoutCodePrompt: 'Layout code (copy and send to Cuu to bake in for all devices, or paste a new code and press OK to import):', layoutResetQ: 'Reset the WHOLE layout to defaults? (Undo can bring it back)', objFalls: '🌊 Waterfall', objClock: '💧 Water clock', objShrine: '🏯 Shrine (whole cluster)', objBurner: '🔥 Yard incense burner', objPavilion: '🏮 Pavilion (Tripo)', objBridge: '🌉 Stone bridge', objLampPost: '🏮 Wooden lamp post', objLampPaper: '🪔 Paper lantern', objWell: '🪣 The well', objRock: '🪨 Rock falls', objTree: '🌳 Tree', objGarden: '🪴 Garden prop', objLeafPile: '🍂 Leaf pile', objFence: '🚧 Fence', objCushion: '🧘 Sitting mat', creditGarden: '' /* v2.90.43 (#68): garden attribution moved to the layout panel */, layType: '🌳 Type', treeTypeNames: ['🌳 Green tree', '🍁 Red maple', '🌴 Palm'], sizeUp: '＋ Bigger', sizeDn: '－ Smaller', layDup: '⧉ Duplicate', layDel: '🗑️ Delete', layUndo: '↩️ Undo', layMonkPin: '🧍 Pin the monk', layMonkFree: '🚶 Release monk', layoutUndoDone: 'Undone ✓', layoutUndoNone: 'Nothing to undo', layoutDelQ: 'Delete this tree? (Reset restores it)', layoutDelQObj: 'Delete this object? (Reset restores it)', robeTitle: i => 'Robe ' + (i + 1),
     pfLine: (sect, bac, sen, pts, open, gate) => sect + ' · Rank ' + bac + ' · 🪷 ' + sen + ' lotus seeds<br>Today: ' + pts + ' merit' + (open ? ' · 🎋 fortune unlocked' : ' · ' + gate + ' unlocks fortune'),
     pillRetry: 'Reconnecting…', pillAlone: n => 'Online · just you in the temple', pillMany: n => 'Online · ' + n + ' people in the temple',
     pillOffline: 'Alone in the temple (online unavailable)',
@@ -1537,6 +1537,7 @@ function applyLang() {
   document.title = LANG === 'vi' ? 'Phòng Thiền 3D' : '3D Meditation Room';
   dnLabel(); setActionLabels(); ptSetPill(); drawMerit();
   const cr = document.getElementById('credit'); if (cr) cr.textContent = d.creditA + PT3D_VER + (d.creditGarden || '');
+  const lv = document.getElementById('layoutVer'); if (lv) lv.textContent = d.creditA + PT3D_VER; /* v2.90.44: version in the layout panel, keeper-only */
   const tg = player.userData.tag; if (tg && myName) { tg.material.map = nameTag(myName, bacSub(bacOf(sen))).material.map; tg.material.needsUpdate = true; }
   updateJarTag(); refreshTags();
   if (document.getElementById('profileModal').classList.contains('show')) openProfile();
@@ -1799,6 +1800,7 @@ new GLTFLoader().load('models/lamp-rustic.glb?v=102', (gltf) => {
   rebuildDupLamps();
 });
 function rebuildDupLamps() {
+  try {
   for (const id in layoutStore) {
     const e = layoutStore[id];
     if (!e || !e.dup || !e.fam) continue;
@@ -1817,6 +1819,7 @@ function rebuildDupLamps() {
     }
     scene.add(g); regPart(id, g, true);
   }
+  } catch (err) { console.warn('[layout] rebuildDupLamps failed', err); }
 }
 
 const petalTex = canvasTexture(64, 64, (g) => {
@@ -1884,7 +1887,8 @@ const matTopTex = canvasTexture(256, 256, (g) => {
   g.fillStyle = 'rgba(217,164,65,0.45)'; g.beginPath(); g.arc(128, 128, 30, 0, Math.PI * 2); g.fill();
 });
 const matTopMat = new THREE.MeshStandardMaterial({ map: matTopTex, roughness: 0.85 });
-function cushion(x, z) {
+let cushSeq = 0; /* v2.90.44: each cushion gets its own layout anchor id */
+function cushion(x, z, cidOverride) { /* v2.90.46: cidOverride lets a duplicate reuse its store id (cush100+) instead of minting a new cushSeq id */
   const g = new THREE.Group(); g.position.set(x, 0, z);
   const base = cyl(0.34, 0.34, 0.05, MAT.matSide, 0, 0.025, 0, g, 26); /* #69: halve diameter 1.36 -> 0.68 m, thickness stays 0.05 */
   const top = new THREE.Mesh(new THREE.CircleGeometry(0.34, 26), matTopMat); /* #69 */
@@ -1892,7 +1896,14 @@ function cushion(x, z) {
   base.userData.isCushion = true; top.userData.isCushion = true;
   g.userData.isCushionGroup = true;
   g.traverse(o => { o.userData.cushionGroup = g; });
-  scene.add(g); cushions.push(g); return g;
+  scene.add(g); cushions.push(g);
+  /* v2.90.44: every mat is its own layout anchor — Anita moves it, copies
+     it or deletes it herself in the layout panel. The anchor keeps the
+     cushion's coded spot as its default; a stored layout entry moves it. */
+  const cid = cidOverride || 'cush' + (cushSeq++);
+  g.userData.layoutId = cid;
+  regPart(cid, g, true, { x, z, ry: 0, rot: true, ps: { w: 0.9, d: 0.9, h: 0.3 } });
+  return g;
 }
 const cushionSpots = [];
 /* v2.31.0: yard cushions in 2 rows along the red carpet. v2.79.1 (Anita):
@@ -1911,11 +1922,11 @@ let shrineGrp = null;
   /* v2.63.1: the bamboo grove behind the shrine is REMOVED (Anita: the
      pole-and-diamond stalks read as scrawny trees - she will plant palms
      there herself). */
-  [1.4, 3.0, 4.6].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('shrine', c, false); }); /* #69: the 3 shrine cushions move 2.5 m further from the hall into the open yard (was -1.1/0.5/2.1) */
+  [1.4, 3.0, 4.6].forEach(cz => { const c = cushion(6.8, cz); c.userData.faceY = Math.PI / 2; cushionSpots.push(c); }); /* #69: the 3 shrine cushions move 2.5 m further from the hall into the open yard (was -1.1/0.5/2.1). v2.90.44: each is now its own layout anchor (see cushion()) — it no longer rides with the shrine cluster */
 /* v2.57.1: ONE meditation cushion in the CENTRE of the pavilion terrace
    (Anita: the side cushions clipped into the pillars - the centre is
    always clear). It rides along as a 'pavilion' layout part. */
-{ const c = cushion(-11.0, 9.0); c.position.y = PAVI_FLOOR_H; c.userData.faceY = Math.PI / 2; cushionSpots.push(c); regPart('pavilion', c, false); }
+{ const c = cushion(-11.0, 9.0); c.position.y = PAVI_FLOOR_H; c.userData.faceY = Math.PI / 2; cushionSpots.push(c); } /* v2.90.44: the pavilion cushion is its own layout anchor now (see cushion()) — it no longer rides with the pavilion cluster */
   const stag = nameTag(L().paviName, L().paviSub); stag.position.set(px, 5.9, pz); scene.add(stag); window.__paviTag = stag; regPart('shrine', stag, false);
   const shrineLight = new THREE.PointLight(0xffc37a, 10, 9, 1.8);
   shrineLight.position.set(10.6, 1.7, pz); scene.add(shrineLight); regPart('shrine', shrineLight, false); regPart('shrine', shrineBurner, false);
@@ -3029,7 +3040,14 @@ function swapToModel(g) {
   g.remove(old); g.add(bodyG);
   g.userData.bodyG = bodyG;
   g.userData.upperG = pivot;
-  g.userData.robeMesh = null; g.userData.beadMats = null; g.userData.beads = null;
+  g.userData.robeMesh = null; g.userData.beadMats = null;
+  /* v2.90.44: restore the prayer beads on the rigged baby — the strand is
+     rebuilt (makeBeads) and hung on the new pivot at chest height, the same
+     relative layout as the old monk's strand. It follows walk/bow/sit
+     because it is a child of the pivot. */
+  const beads = makeBeads(g.userData.beadSet !== undefined ? g.userData.beadSet : 0);
+  pivot.add(beads);
+  g.userData.beads = beads;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
   /* v2.90.39: skeletal walk/idle for this avatar (idle first; walk when moving) */
   if (avatarClips && avatarClips.walk && avatarClips.idle) {
@@ -3095,6 +3113,29 @@ setTimeout(monkFallback, 25000); // v2.70.0: only if the model truly cannot load
 
 /* ============ Avatar builder ============ */
 const BEAD_SETS = [[0x8a5a28, 0x6f451f], [0xc89b62, 0xa87c48], [0xd9a441, 0xb97f26]];
+/* v2.90.44: the prayer-bead strand, built procedurally (same 18-bead loop
+   + guru + tassel as the old monk). Returns the group; the caller adds it to
+   the avatar's upper pivot so it hangs on the chest and follows walk/bow/sit. */
+function makeBeads(beadSet) {
+  const beads = new THREE.Group();
+  const bs = BEAD_SETS[beadSet % BEAD_SETS.length];
+  const beadMat = new THREE.MeshStandardMaterial({ color: bs[0], roughness: 0.5 });
+  const beadMat2 = new THREE.MeshStandardMaterial({ color: bs[1], roughness: 0.5 });
+  const beadGeo = new THREE.SphereGeometry(0.026, 9, 9);
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
+    b.position.set(Math.sin(a) * 0.10, 0.14 - Math.cos(a) * 0.088, 0.03 + Math.cos(a) * 0.10); /* v2.90.45: strand pulled in to lie ON the chest — front beads at z 0.13 (chest front ~0.127), not 0.19 flaring outward */
+    beads.add(b);
+  }
+  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.034, 10, 10), MAT.robeGold);
+  guru.position.set(0, 0.038, 0.135); beads.add(guru); /* v2.90.45: guru pulled in with the strand */
+  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 8),
+    new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 }));
+  tassel.position.set(0, -0.012, 0.135); tassel.rotation.x = Math.PI; beads.add(tassel); /* v2.90.45: tassel pulled in with the strand */
+  beads.castShadow = true;
+  return beads;
+}
 function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false, beadSet = 0 }) {
   const g = new THREE.Group();
   const bodyG = new THREE.Group(); g.add(bodyG);
@@ -3153,6 +3194,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
     g.userData.halo = halo;
   }
   g.userData.bodyG = bodyG;
+  g.userData.beadSet = beadSet;
   g.userData.beads = beads;
   g.userData.upperG = upperG;
   scene.add(g);
@@ -3347,7 +3389,7 @@ function gardenPlace(p, id, home) {
     // so the verified scale is unchanged.
     m.traverse(o => { if (o.isMesh && (o.name === 'Node-Mesh_2' || (o.material && !Array.isArray(o.material) && o.material.color && o.material.color.getHex() === 0x005dff))) o.visible = false; });
     wrap.name = 'garden-' + id;
-    if (base === 'ghe-go') { stoolGroup = wrap; wrap.userData.isStool = true; } /* v2.90.43 (#68): the yard log stool is sittable for the PLAYER */
+    if (base === 'ghe-go') { stoolGroup = wrap; wrap.userData.isStool = true; wrap.userData.faceY = 0; } /* v2.90.44: the log stool faces SOUTH (outward) so the chair-sit legs hang off its front edge, feet on the ground — not through the log */
     if (home) wrap.userData.dupCreated = true;
     scene.add(wrap);
     regPart(id, wrap, true, { x: ax, z: az, ry: ry || 0, rot: true, yard: true, ps: GARDEN_PS[base] || { w: 1.2, d: 1.2, h: 1.2 } });
@@ -3360,6 +3402,7 @@ for (const id in GARDEN_BY_ID) gardenPlace(GARDEN_BY_ID[id], id);
    (after a reload, a Reset/Code import or an Undo). Mirrors
    rebuildDupTrees/rebuildDupLamps. */
 function rebuildDupGarden() {
+  try {
   for (const id in layoutStore) {
     const e = layoutStore[id];
     if (!e || !e.dup || !e.src) continue;
@@ -3378,8 +3421,40 @@ function rebuildDupGarden() {
       regPart(id, g, true);
     }
   }
+  } catch (err) { console.warn('[layout] rebuildDupGarden failed', err); }
 }
 rebuildDupGarden();
+/* v2.90.44: rebuild duplicated sitting mats from the layout store (a dup
+   entry carries src = the source cushion's anchor id). The copy keeps the
+   source's height (yard 0 / hall 1.12 / pavilion terrace) and joins the
+   same sittable list. */
+function rebuildDupCushions() {
+  for (const id in layoutStore) {
+    try {
+      const e = layoutStore[id];
+      if (!e || !e.dup || !e.src || e.src.indexOf('cush') !== 0) continue;
+      if (layoutParts.some(p => p.id === id)) continue;
+      const srcPart = layoutParts.find(p => p.id === e.src);
+      if (!srcPart || !srcPart.obj.parent) continue;
+      const srcObj = srcPart.obj;
+      if (!LAYOUT_ANCHORS[id]) LAYOUT_ANCHORS[id] = { x: e.x, z: e.z, ry: e.ry || 0, rot: true, ps: { w: 0.9, d: 0.9, h: 0.3 } };
+      layoutCur[id] = layoutEntry(id);
+      /* v2.90.46 (Cuu's v2.90.44 FAIL): build a FRESH cushion — never
+         clone(true): the circular userData.cushionGroup makes copy()
+         throw, and a bad store entry used to brick the whole boot. */
+      const c = cushion(e.x, e.z, id);
+      c.position.y = srcObj.position.y; c.rotation.y = e.ry || 0;
+      c.userData.dupCreated = true;
+      if (srcObj.userData.faceY !== undefined) c.userData.faceY = srcObj.userData.faceY;
+      if (hallCushions.indexOf(srcObj) >= 0) hallCushions.push(c); else cushionSpots.push(c);
+      applyLayoutId(id);
+    } catch (err) {
+      /* v2.90.46: a bad dup entry is skipped, never kills the boot */
+      console.warn('[layout] skip bad cushion dup', id, err);
+    }
+  }
+}
+rebuildDupCushions();
 
 /* ============ Series cast — ticket #27 (v2.90.8+cast-v1): 5 rigged characters ============
    The six characters Cuu rigged on 14 Nov go on air (Anita, 15 Nov). This is the
@@ -4306,18 +4381,6 @@ function updateSeatBtns() {
 function sitDown(cushion) {
   P.mode = 'seated';
   P.seatedOn = cushion || null;
-  if (cushion) {
-    if (cushion.userData && cushion.userData.isStool) {
-      /* v2.90.43 (#68): the log stool — sit ON TOP of it. The stool wrap
-         sits at y -0.36 (its seat top is 0.319 m), so the cushion's
-         position.y is useless here; place the avatar origin at y 0.12
-         so the sit clip's hips land on the seat, like the cast baby. */
-      player.position.set(cushion.position.x, 0.12, cushion.position.z);
-    } else {
-      player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
-    }
-    cushion.userData.occupiedByPlayer = true;
-  }
   let faceY = (cushion && cushion.userData.faceY !== undefined) ? cushion.userData.faceY : Math.PI;
   if (cushion) {
     /* v2.65.0: a cushion carried by a rotated layout cluster (the pavilion)
@@ -4325,6 +4388,22 @@ function sitDown(cushion) {
        otherwise the sitter faces a pillar after a layout rotate. */
     const part = layoutParts.find(p => p.obj === cushion);
     if (part && LAYOUT_ANCHORS[part.id] && layoutCur[part.id]) faceY += layoutCur[part.id].ry - LAYOUT_ANCHORS[part.id].ry;
+  }
+  if (cushion) {
+    if (cushion.userData && cushion.userData.isStool) {
+      /* v2.90.44: the log stool — sit on its FRONT edge, facing out, so the
+         chair-sit legs hang off the front edge with feet on the ground
+         instead of through the log. The sit clip's feet sit at origin +
+         0.044 m while the seat top is 0.319 m, so a centre sit sinks the
+         legs into the log (v2.90.43: feet 0.164 m). Offset 0.35 m along the
+         facing direction (south) puts the feet past the log's south edge.
+         The stool wrap sits at y -0.36 (seat top 0.319 m); the avatar
+         origin goes at y 0.12 so the hips land on the seat. */
+      player.position.set(cushion.position.x + Math.sin(faceY) * 0.35, 0.12, cushion.position.z + Math.cos(faceY) * 0.35);
+    } else {
+      player.position.copy(cushion.position).add(new THREE.Vector3(0, 0.02, 0));
+    }
+    cushion.userData.occupiedByPlayer = true;
   }
   player.rotation.y = faceY;
   player.userData.bodyG.scale.set(1.15, 0.78, 1.15);
@@ -5817,6 +5896,7 @@ function layoutDisplayName(id) {
     return L().objGarden;
   }
   if (id.indexOf('leaf') === 0) return L().objLeafPile;
+  if (id.indexOf('cush') === 0) return L().objCushion; /* v2.90.44 */
   return L()[LAYOUT_NAMES[id] || (id.indexOf('fence') === 0 ? 'objFence' : 'objTree')];
 }
 const layoutPanel = document.createElement('div');
@@ -5837,7 +5917,8 @@ layoutPanel.innerHTML = '<div id="layoutSelName" style="font-weight:700;font-siz
   + '<button class="laybtn" id="layReset"></button>'
   + '<button class="laybtn" id="laySave"></button>'
   + '<button class="laybtn" id="layLock"></button></div>'
-  + '<div id="layoutCredits" style="font-size:10.5px;opacity:.7;margin-top:8px;line-height:1.5">Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>'; /* v2.90.43 (#68): attribution moved here from the play view */
+  + '<div id="layoutCredits" style="font-size:10.5px;opacity:.7;margin-top:8px;line-height:1.5">Đạo cụ vườn: chổi, giỏ — Poly by Google; xẻng tay — involuntary tsetse (CC-BY)</div>'
+  + '<div id="layoutVer" style="font-size:10.5px;opacity:.55;margin-top:4px"></div>'; /* v2.90.44: the version line lives here now, keeper-only */
 document.body.appendChild(layoutPanel);
 const layStyle = document.createElement('style');
 layStyle.textContent = '.laybtn{padding:7px 11px;border-radius:999px;border:1px solid rgba(255,205,120,.5);background:rgba(52,34,16,.9);color:#ffe9bd;font-size:12.5px;cursor:pointer}.laybtn:active{background:rgba(146,96,28,.9)}'
@@ -5902,8 +5983,9 @@ function layoutSelect(id) {
   const isTree = !!(id && LAYOUT_ANCHORS[id].scalable);
   const isLamp = !!(id && /^(lp|lamppost)\d+$/.test(id));
   const isYardFam = !!(id && /^(gd-|fence|leaf)/.test(id)); // v2.90.0: garden props + fence runs get Duplicate/Delete too; v2.90.7: leaf-pile spots join them
+  const isCush = !!(id && /^cush/.test(id)); /* v2.90.46: sitting mats get Duplicate/Delete too (Cuu's v2.90.44 FAIL item — the buttons were hidden for cushions) */
   for (const b of ['laySizeDn', 'laySizeUp']) document.getElementById(b).style.display = isTree ? '' : 'none';
-  for (const b of ['layDup', 'layDel']) document.getElementById(b).style.display = (isTree || isLamp || isYardFam) ? '' : 'none';
+  for (const b of ['layDup', 'layDel']) document.getElementById(b).style.display = (isTree || isLamp || isYardFam || isCush) ? '' : 'none';
   nameEl.textContent = id ? layoutDisplayName(id) : '🔧 Layout';
   hintEl.textContent = L().layoutHint;
   if (id) syncLayoutProxy(id);
@@ -6148,7 +6230,7 @@ document.getElementById('layReset').addEventListener('click', () => {
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
-  rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden();
+  rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden(); rebuildDupCushions();
   refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
 });
 /* v2.72.0: shared layout lock (Supabase table pt3d_shared_layout + PIN-guarded RPC).
@@ -6161,7 +6243,7 @@ function layoutBaseline() { try { return localStorage.getItem(LAYOUT_SHARED_KEY)
 function applyLayoutStore() {
   for (const id in LAYOUT_ANCHORS) { layoutCur[id] = layoutEntry(id); applyLayoutId(id); syncLayoutProxy(id); }
   layoutParts.forEach(p => { if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.builtType !== treeTypeOf(p.id)) swapTreeModel(p.id); });
-  rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden();
+  rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden(); rebuildDupCushions();
   refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
 }
 async function fetchSharedLayout() {
@@ -6248,7 +6330,7 @@ function layoutUndo() {
   for (const p of [...layoutParts]) {
     if (p.id.indexOf('tree') === 0 && p.builtType !== undefined && p.obj.parent && !(layoutStore[p.id] && layoutStore[p.id].del) && treeTypeOf(p.id) !== p.builtType) swapTreeModel(p.id);
   }
-  rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden();
+  rebuildDupTrees(); rebuildDupLamps(); rebuildDupGarden(); rebuildDupCushions();
   refreshTreeVisibility(); refreshLampVisibility(); refreshGardenVisibility(); refreshLeafVisibility();
   if (layoutEdit) { buildLayoutProxies(); layoutSelect(layoutSel && LAYOUT_ANCHORS[layoutSel] ? layoutSel : null); for (const id in LAYOUT_ANCHORS) syncLayoutProxy(id); }
   toast(L().layoutUndoDone);
@@ -6401,6 +6483,7 @@ function refreshLampVisibility() {
   }
 }
 function rebuildDupTrees() {
+  try {
   for (const id in layoutStore) {
     const e = layoutStore[id];
     if (!e || !e.dup) continue;
@@ -6421,6 +6504,7 @@ function rebuildDupTrees() {
     const np = layoutParts[layoutParts.length - 1];
     np.sAuth = sAuth; np.builtType = type;
   }
+  } catch (err) { console.warn('[layout] rebuildDupTrees failed', err); }
 }
 function layoutResize(f) {
   if (!layoutSel || !LAYOUT_ANCHORS[layoutSel].scalable) return;
@@ -6452,6 +6536,37 @@ document.getElementById('layDup').addEventListener('click', () => {
     layoutCur[nid] = layoutEntry(nid);
     applyLayoutId(nid);
     spawnLeafPile(nid);
+    addLayoutProxy(nid);
+    layoutSelect(nid);
+    return;
+  }
+  if (/^cush/.test(layoutSel)) {
+    /* v2.90.46 (Cuu's v2.90.44 FAIL): duplicate a sitting mat by building
+       a FRESH cushion — NEVER clone(true) the group: its children carry
+       userData.cushionGroup pointing back at the group, a circular
+       reference that makes THREE's copy() throw "Converting circular
+       structure to JSON". The old code saved the store entry BEFORE the
+       clone, so the bad entry persisted and bricked the next boot.
+       cushion() already scene-adds, registers the anchor and sets
+       cushionGroup; we only fix the height (hall 1.12 / pavilion),
+       inherit faceY, and join the source's sittable list. */
+    const parts = layoutParts.filter(p => p.id === layoutSel && p.obj.parent);
+    if (!parts.length) return;
+    layoutSnapshot();
+    const srcObj = parts[parts.length - 1].obj;
+    const cur = layoutCur[layoutSel];
+    let seq = 100; let nid = 'cush' + seq++; while (layoutStore[nid] || LAYOUT_ANCHORS[nid]) nid = 'cush' + seq++;
+    const nx = Math.max(-28, Math.min(28, cur.x + 1.4)), nz = Math.max(-32, Math.min(24, cur.z + 1.4));
+    LAYOUT_ANCHORS[nid] = { x: nx, z: nz, ry: cur.ry, rot: true, ps: { w: 0.9, d: 0.9, h: 0.3 } };
+    layoutStore[nid] = { x: nx, z: nz, ry: cur.ry, sc: 1, dup: 1, src: layoutSel };
+    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+    const c = cushion(nx, nz, nid);
+    c.position.y = srcObj.position.y; c.rotation.y = cur.ry;
+    c.userData.dupCreated = true;
+    if (srcObj.userData.faceY !== undefined) c.userData.faceY = srcObj.userData.faceY;
+    if (hallCushions.indexOf(srcObj) >= 0) hallCushions.push(c); else cushionSpots.push(c);
+    layoutCur[nid] = layoutEntry(nid);
+    applyLayoutId(nid);
     addLayoutProxy(nid);
     layoutSelect(nid);
     return;
@@ -6555,7 +6670,8 @@ document.getElementById('layDel').addEventListener('click', () => {
   if (!layoutSel) return;
   const isLampSel = /^(lp|lamppost)\d+$/.test(layoutSel);
   const isYardSel = /^(gd-|fence|leaf)/.test(layoutSel); // v2.90.0: garden props + fence runs are deletable too; v2.90.7: leaf spots too
-  if (!LAYOUT_ANCHORS[layoutSel].scalable && !isLampSel && !isYardSel) return;
+  const isCushSel = /^cush/.test(layoutSel); /* v2.90.44: sitting mats are deletable too */
+  if (!LAYOUT_ANCHORS[layoutSel].scalable && !isLampSel && !isYardSel && !isCushSel) return;
   if (!confirm(isLampSel || isYardSel ? L().layoutDelQObj : L().layoutDelQ)) return;
   layoutSnapshot();
   const id = layoutSel;
@@ -6570,10 +6686,20 @@ document.getElementById('layDel').addEventListener('click', () => {
   for (const p of layoutParts.filter(p => p.id === id)) {
     const ti = treeProcs.indexOf(p.obj);
     if (ti >= 0) treeProcs.splice(ti, 1);
+    /* v2.90.44: a deleted mat leaves the sittable lists too */
+    const ci = cushions.indexOf(p.obj); if (ci >= 0) cushions.splice(ci, 1);
+    const si = cushionSpots.indexOf(p.obj); if (si >= 0) cushionSpots.splice(si, 1);
+    const hi = hallCushions.indexOf(p.obj); if (hi >= 0) hallCushions.splice(hi, 1);
     scene.remove(p.obj);
     p.obj.visible = false;
   }
-  if (layoutStore[id] && layoutStore[id].dup) delete layoutStore[id];
+  if (layoutStore[id] && layoutStore[id].dup) {
+    delete layoutStore[id];
+    /* v2.90.46 (Cuu's v2.90.44 FAIL, minor): a deleted dup leaves
+       layoutParts too, so the count no longer includes it. An ORIGINAL
+       keeps its entry (marked del:1 below) so Undo can re-add it. */
+    for (let i = layoutParts.length - 1; i >= 0; i--) if (layoutParts[i].id === id) layoutParts.splice(i, 1);
+  }
   else layoutStore[id] = Object.assign({}, layoutStore[id], { del: 1 });
   for (const spec of (LAYOUT_COLS[id] || [])) if (spec.entry) { spec.entry.x0 = spec.entry.x1 = spec.entry.z0 = spec.entry.z1 = 999; } // v2.76.0: a deleted lamp leaves no invisible wall
   try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layoutStore)); } catch (e) {}
@@ -6637,7 +6763,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.43';
+const PT3D_VER = '2.90.46';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
