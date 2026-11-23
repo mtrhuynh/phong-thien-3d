@@ -3121,18 +3121,18 @@ function makeBeads(beadSet) {
   const bs = BEAD_SETS[beadSet % BEAD_SETS.length];
   const beadMat = new THREE.MeshStandardMaterial({ color: bs[0], roughness: 0.5 });
   const beadMat2 = new THREE.MeshStandardMaterial({ color: bs[1], roughness: 0.5 });
-  const beadGeo = new THREE.SphereGeometry(0.026, 9, 9);
+  const beadGeo = new THREE.SphereGeometry(0.013, 9, 9); /* v2.90.46 (Anita): string halved — bead 0.026 -> 0.013 */
   for (let i = 0; i < 18; i++) {
     const a = (i / 18) * Math.PI * 2;
     const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
-    b.position.set(Math.sin(a) * 0.10, 0.14 - Math.cos(a) * 0.088, 0.03 + Math.cos(a) * 0.10); /* v2.90.45: strand pulled in to lie ON the chest — front beads at z 0.13 (chest front ~0.127), not 0.19 flaring outward */
+    b.position.set(Math.sin(a) * 0.05, 0.184 - Math.cos(a) * 0.044, 0.08 + Math.cos(a) * 0.05); /* v2.90.46: loop halved and re-anchored — top stays at the neck (0.228), front stays ON the chest (z 0.13); a naive half-scale about the loop centre would bury the front beads at z 0.08 inside the chest (~0.127) */
     beads.add(b);
   }
-  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.034, 10, 10), MAT.robeGold);
-  guru.position.set(0, 0.038, 0.135); beads.add(guru); /* v2.90.45: guru pulled in with the strand */
-  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 8),
-    new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 }));
-  tassel.position.set(0, -0.012, 0.135); tassel.rotation.x = Math.PI; beads.add(tassel); /* v2.90.45: tassel pulled in with the strand */
+  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.017, 10, 10), MAT.robeGold); /* v2.90.46: guru 0.034 -> 0.017 */
+  guru.position.set(0, 0.133, 0.13); beads.add(guru); /* v2.90.46: just below the new front-bottom bead (0, 0.14, 0.13), on the chest */
+  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.01, 0.035, 8),
+    new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 })); /* v2.90.46: tassel 0.02x0.07 -> 0.01x0.035 */
+  tassel.position.set(0, 0.108, 0.13); tassel.rotation.x = Math.PI; beads.add(tassel); /* v2.90.46: just below the guru, on the chest */
   beads.castShadow = true;
   return beads;
 }
