@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.46">
+<meta name="pt3d-ver" content="2.90.47">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -73,6 +73,16 @@
   .st-char.on { background:rgba(146,96,28,.95); color:#fff; font-weight:700; }
   .st-char.parked { border-color:#7fd48a; }
   #stageHint { font-size:12px; color:#d8c9ae; margin-top:8px; line-height:1.5; min-height:18px; }
+  /* Filming mode (#71): preset frames + guide overlay + Crop 9:16 */
+  .film-sec { font-weight:700; font-size:13px; color:#ffe1a8; margin:10px 0 2px; border-top:1px solid rgba(255,205,120,.3); padding-top:8px; }
+  #filmHint { font-size:12px; color:#d8c9ae; margin-top:6px; line-height:1.5; min-height:16px; }
+  .dp-feed.on { outline:2px solid #ffe1a8; }
+  #filmGuide { position:fixed; inset:0; z-index:25; pointer-events:none; display:none; }
+  #filmGuide .fg-grid-v { position:absolute; top:0; bottom:0; width:0; border-left:1px solid rgba(255,255,255,.45); }
+  #filmGuide .fg-grid-h { position:absolute; left:0; right:0; height:0; border-top:1px solid rgba(255,255,255,.45); }
+  #filmEyeLine { position:absolute; left:0; right:0; top:33.333%; height:0; border-top:2px solid rgba(255,200,80,.85); }
+  #filmEyeLine span { position:absolute; right:8px; top:-20px; font-size:11px; color:#ffcf6e; background:rgba(0,0,0,.45); padding:1px 6px; border-radius:999px; }
+  #filmFrame916 { position:absolute; border:2px solid rgba(255,225,168,.95); box-shadow:0 0 0 9999px rgba(0,0,0,.5); display:none; }
   #bottomCtl { position:fixed; right:12px; bottom:14px; display:flex; flex-direction:column; align-items:flex-end; gap:6px; z-index:30; max-width:97vw; }
   #bottomCtl .ctlRow { display:flex; align-items:center; gap:6px; }
   #bottomCtl .musLbl { font-size:13px; color:#ffe9bd; padding:0 1px; text-shadow:0 1px 4px rgba(0,0,0,.7); }
@@ -229,7 +239,37 @@
   <div class="dp-btns">
     <button id="stageResume" class="dp-feed link">▶️ Cho đi lại (tắt dàn dựng)</button>
   </div>
+  <div class="film-sec">🎬 Khung hình</div>
+  <div class="dp-btns">
+    <button id="filmWide" class="dp-feed mine">📐 Toàn cảnh</button>
+    <button id="filmMed" class="dp-feed mine">🧍 Trung cảnh</button>
+  </div>
+  <div class="dp-btns">
+    <button id="filmClose" class="dp-feed mine">😊 Cận mặt</button>
+    <button id="filmOts" class="dp-feed mine">👤 Qua vai</button>
+  </div>
+  <div class="dp-btns">
+    <button id="filmGuideBtn" class="dp-feed link">⊞ Lưới 1/3</button>
+    <button id="filmCropYTBtn" class="dp-feed link">📺 YouTube 16:9</button>
+  </div>
+  <div class="dp-btns">
+    <button id="filmCropTTBtn" class="dp-feed link">📱 TikTok 9:16</button>
+    <button id="filmPushBtn" class="dp-feed flock">🎥 Đẩy chậm</button>
+  </div>
+  <div class="dp-btns">
+    <button id="filmSaveBtn" class="dp-feed mine">💾 Lưu khung này</button>
+    <button id="filmShareBtn" class="dp-feed link">🔒 Lưu cho mọi máy</button>
+  </div>
+  <div id="filmHint"></div>
   <div id="stageHint"></div>
+</div>
+<div id="filmGuide">
+  <div class="fg-grid-v" style="left:33.333%"></div>
+  <div class="fg-grid-v" style="left:66.666%"></div>
+  <div class="fg-grid-h" style="top:33.333%"></div>
+  <div class="fg-grid-h" style="top:66.666%"></div>
+  <div id="filmEyeLine"><span>👁 mắt</span></div>
+  <div id="filmFrame916"></div>
 </div>
 
 <div class="ui" id="dovePanel">
@@ -266,7 +306,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.46</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.47</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -4080,12 +4120,224 @@ function setStage(on) {
   const b = document.getElementById('btnStage');
   if (b) b.classList.toggle('on', on);
   if (on) { stageBuildChars(); stageRefreshHint(); }
-  else stageResumeAll();
+  else { filmSetOn(false); stageResumeAll(); }
+}
+/* ============ Filming mode (#71) ============
+   Preset camera frames + guide overlay + Crop 9:16 + slow push-in.
+   Presets are ABSOLUTE camera pos/target per room (one tap slides the camera
+   to that exact position). Defaults are computed from the current subject
+   (selected staged character, else the player); Anita frames each once to
+   her liking and saves it. Save: localStorage pt3d-film-v1, and share for
+   everyone with the keeper code through the existing pt3d_set_layout RPC —
+   the film store rides as layoutStore.__film (every layoutStore loop guards
+   on e.dup/e.fam/e.src, so the key is ignored by the layout code). */
+const FILM_KEY = 'pt3d-film-v1';
+const FILM_NAMES = { wide: 'Toàn cảnh', medium: 'Trung cảnh', close: 'Cận mặt', ots: 'Qua vai' };
+let filmStore = {};
+try { filmStore = JSON.parse(localStorage.getItem(FILM_KEY) || '{}'); } catch (e) { filmStore = {}; }
+function filmSaveLocal() { try { localStorage.setItem(FILM_KEY, JSON.stringify(filmStore)); } catch (e) {} }
+const FILM = { on: false, sel: 'medium', guide: false, crop: false, pushIn: false, slide: null, pushSpeed: 0.06 };
+window.__filmMode = false;
+function filmSubject() {
+  if (STAGE.sel && castChars[STAGE.sel]) { const ch = castChars[STAGE.sel]; return { pos: ch.wrap.position, ry: ch.wrap.rotation.y, obj: ch.wrap }; }
+  return { pos: player.position, ry: player.rotation.y, obj: player };
+}
+/* Subject height from the live bounding box (the host is the 1.15 m baby monk;
+   cast members are taller). Framing is height-relative, per the reference
+   sheet: eye level, eyes near the upper third line, headroom above the head. */
+function filmSubjectHeight(obj) {
+  /* The whole group box is wrong: it catches the escort dove / pet riding
+     above the player (measured 1.65 m for the 1.15 m baby). Measure the
+     tallest SKINNED mesh instead — the body itself, bind pose = standing. */
+  try {
+    let best = 0;
+    obj.traverse(o => {
+      if (o.isSkinnedMesh) {
+        const b = new THREE.Box3().setFromObject(o);
+        const h = b.max.y - b.min.y;
+        if (h > best) best = h;
+      }
+    });
+    if (best > 0.5 && best < 3) return best;
+  } catch (e) {}
+  return 1.15;
+}
+function filmPartner() {
+  const f = STAGE.prev && STAGE.prev !== STAGE.sel ? STAGE.prev : null;
+  if (f && castChars[f]) { const ch = castChars[f]; return { pos: ch.wrap.position, ry: ch.wrap.rotation.y }; }
+  return null;
+}
+function filmDefaultPreset(name) {
+  const subj = filmSubject(), S = subj.pos, ry = subj.ry;
+  const H = filmSubjectHeight(subj.obj); /* subject height, m */
+  const eyeH = H * 0.87, chestH = H * 0.65;
+  const fwd = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));
+  const gy = groundY(S.x, S.z);
+  const P = (px, py, pz, tx, ty, tz) => ({ pos: [+px.toFixed(2), +py.toFixed(2), +pz.toFixed(2)], tgt: [+tx.toFixed(2), +ty.toFixed(2), +tz.toFixed(2)] });
+  if (name === 'wide') {
+    /* establishing shot: the whole stage, subject small in it */
+    const p = S.clone().addScaledVector(fwd, H * 7.83);
+    return P(p.x, gy + H * 2.78, p.z, S.x, gy + eyeH, S.z);
+  }
+  if (name === 'medium') {
+    /* default safe shot (reference sheet formula 1): medium, eye level,
+       subject on the left thirds line; target at the chest so the eyes land
+       near the upper third line, with headroom above the head */
+    const d = H * 1.74;
+    const p = S.clone().addScaledVector(fwd, d);
+    const halfW = d * Math.tan(camera.fov * Math.PI / 360) * camera.aspect;
+    const right = fwd.clone().cross(new THREE.Vector3(0, 1, 0));
+    const t = new THREE.Vector3(S.x, gy + chestH, S.z).addScaledVector(right, halfW / 3);
+    return P(p.x, gy + eyeH, p.z, t.x, t.y, t.z);
+  }
+  if (name === 'close') {
+    /* close-up: head and shoulders, eye level. 0.70H was too tight — the
+       face filled the whole frame and the head was cropped (probe 4).
+       1.04H (~1.2 m for the baby) frames head + shoulders, eyes near the
+       upper third. */
+    const p = S.clone().addScaledVector(fwd, H * 1.04);
+    return P(p.x, gy + eyeH, p.z, S.x, gy + eyeH, S.z);
+  }
+  /* ots: camera just behind/above the subject's shoulder, target = the partner's face (or a point ahead) */
+  const p = S.clone().addScaledVector(fwd, -H * 1.04);
+  const pt = filmPartner();
+  const t = pt ? new THREE.Vector3(pt.pos.x, groundY(pt.pos.x, pt.pos.z) + filmSubjectHeight(castChars[STAGE.prev].wrap) * 0.87, pt.pos.z)
+               : S.clone().addScaledVector(fwd, 3);
+  if (!pt) t.y = gy + eyeH;
+  return P(p.x, gy + H * 1.09, p.z, t.x, t.y, t.z);
+}
+function filmPreset(name) {
+  const r = filmStore[room] && filmStore[room][name];
+  return r || filmDefaultPreset(name);
+}
+function filmLoadShared() {
+  try {
+    const sh = layoutStore && layoutStore.__film;
+    if (sh && typeof sh === 'object') {
+      for (const r of Object.keys(sh)) filmStore[r] = Object.assign({}, filmStore[r] || {}, sh[r]);
+      filmSaveLocal();
+    }
+  } catch (e) {}
+}
+function filmSetOn(on) {
+  FILM.on = on; window.__filmMode = on;
+  if (on) { controls.minDistance = 0.5; filmLoadShared(); }
+  else {
+    FILM.slide = null; FILM.pushIn = false;
+    if (FILM.crop) { FILM.crop = false; filmApplyCrop(); }
+    controls.minDistance = 4;
+  }
+  filmRefreshUI(); filmRefreshGuide();
+}
+function filmGo(name) {
+  if (!STAGE.on) setStage(true);
+  filmSetOn(true);
+  FILM.sel = name;
+  const pr = filmPreset(name);
+  FILM.slide = { fp: camera.position.clone(), ft: controls.target.clone(),
+    tp: new THREE.Vector3(pr.pos[0], pr.pos[1], pr.pos[2]),
+    tt: new THREE.Vector3(pr.tgt[0], pr.tgt[1], pr.tgt[2]), t: 0, dur: 0.9 };
+  filmRefreshUI();
+}
+function filmRefreshUI() {
+  const map = { wide: 'filmWide', medium: 'filmMed', close: 'filmClose', ots: 'filmOts' };
+  for (const k of Object.keys(map)) { const b = document.getElementById(map[k]); if (b) b.classList.toggle('on', FILM.on && FILM.sel === k); }
+  const g = document.getElementById('filmGuideBtn'); if (g) g.classList.toggle('on', FILM.guide);
+  const cy = document.getElementById('filmCropYTBtn'); if (cy) cy.classList.toggle('on', FILM.crop === 'yt');
+  const ct = document.getElementById('filmCropTTBtn'); if (ct) ct.classList.toggle('on', FILM.crop === 'tt');
+  const p = document.getElementById('filmPushBtn'); if (p) p.classList.toggle('on', FILM.pushIn);
+  const h = document.getElementById('filmHint');
+  if (h) h.textContent = FILM.on ? ('Khung: ' + FILM_NAMES[FILM.sel] + (FILM.crop === 'yt' ? ' · YouTube 16:9' : FILM.crop === 'tt' ? ' · TikTok 9:16' : '') + (FILM.pushIn ? ' · đang đẩy chậm' : '')) : '';
+}
+function filmRefreshGuide() {
+  const g = document.getElementById('filmGuide');
+  const show = FILM.on && FILM.guide;
+  if (g) g.style.display = show ? 'block' : 'none';
+  if (!show) return;
+  const fr = document.getElementById('filmFrame916');
+  if (fr) {
+    if (FILM.crop === 'tt') { fr.style.display = 'none'; } /* view itself is already 9:16 */
+    else {
+      fr.style.display = 'block';
+      const w = innerWidth, h = innerHeight;
+      let bw = h * 9 / 16, bh = h;
+      if (bw > w) { bw = w; bh = w * 16 / 9; }
+      fr.style.width = Math.floor(bw) + 'px'; fr.style.height = Math.floor(bh) + 'px';
+      fr.style.left = Math.floor((w - bw) / 2) + 'px'; fr.style.top = Math.floor((h - bh) / 2) + 'px';
+    }
+  }
+}
+function filmApplyCrop() {
+  /* FILM.crop: false (full view) | 'yt' (YouTube 16:9 landscape) | 'tt' (TikTok 9:16 vertical).
+     The view itself switches to that aspect, so a screen recording is a
+     finished clip in that format. On a landscape screen 16:9 is the full
+     view; on a portrait phone it is a centred landscape letterbox. */
+  const mode = FILM.crop;
+  const w = innerWidth, h = innerHeight;
+  let bw = w, bh = h, ar = w / h;
+  if (mode === 'tt') {
+    bw = h * 9 / 16; bh = h;
+    if (bw > w) { bw = w; bh = w * 16 / 9; }
+    ar = 9 / 16;
+  } else if (mode === 'yt') {
+    bw = w; bh = w * 9 / 16;
+    if (bh > h) { bh = h; bw = h * 16 / 9; }
+    ar = 16 / 9;
+  }
+  bw = Math.floor(bw); bh = Math.floor(bh);
+  camera.aspect = ar; camera.updateProjectionMatrix();
+  renderer.setSize(bw, bh);
+  const cv = renderer.domElement;
+  if (mode) {
+    cv.style.position = 'absolute';
+    cv.style.left = Math.floor((w - bw) / 2) + 'px';
+    cv.style.top = Math.floor((h - bh) / 2) + 'px';
+    document.body.style.background = '#000';
+  } else {
+    cv.style.position = ''; cv.style.left = ''; cv.style.top = '';
+    document.body.style.background = '';
+  }
+  filmRefreshGuide();
+}
+function filmSaveCurrent() {
+  const name = FILM.sel || 'medium';
+  if (!filmStore[room]) filmStore[room] = {};
+  filmStore[room][name] = {
+    pos: [+camera.position.x.toFixed(2), +camera.position.y.toFixed(2), +camera.position.z.toFixed(2)],
+    tgt: [+controls.target.x.toFixed(2), +controls.target.y.toFixed(2), +controls.target.z.toFixed(2)],
+  };
+  filmSaveLocal();
+  toast('Đã lưu khung ' + FILM_NAMES[name] + ' ✓');
+}
+async function filmSaveShared() {
+  const pin = (keeperUnlocked && keeperCodeHash) ? keeperCodeHash : await askPin();
+  if (!pin) return;
+  if (!sbClient) { toast(L().laySaveErr); return; }
+  try {
+    const store = JSON.parse(JSON.stringify(layoutStore));
+    store.__film = JSON.parse(JSON.stringify(filmStore));
+    const { data, error } = await sbClient.rpc('pt3d_set_layout', { p_pin: pin, p_layout: store });
+    if (error || data !== true) { toast(L().laySaveErr); return; }
+    layoutStore.__film = JSON.parse(JSON.stringify(filmStore));
+    layoutSharedLatest = JSON.parse(JSON.stringify(layoutStore));
+    try { localStorage.setItem(LAYOUT_SHARED_KEY, JSON.stringify(layoutStore)); } catch (e) {}
+    ptSend({ k: 'layout' });
+    toast('Đã lưu khung hình cho mọi máy ✓');
+  } catch (e) { toast(L().laySaveErr); }
 }
 window.__stage = { STAGE, select: stageSelect, park: stagePark, hold: stageHold, resume: stageResume,
   resumeAll: stageResumeAll, faceCamera: stageFaceCamera, faceEachOther: stageFaceEachOther,
   talk: stageTalk, listen: stageListen, swap: stageSwap, set: setStage,
   partnerFor: stagePartnerFor, startTalk: stageStartTalk,
+  film: { go: filmGo, preset: filmPreset, setOn: filmSetOn, setCrop: (mode) => { FILM.crop = (mode === 'yt' || mode === 'tt') ? mode : false; filmApplyCrop(); filmRefreshUI(); },
+    setGuide: (on) => { FILM.guide = !!on; filmRefreshGuide(); filmRefreshUI(); },
+    setPush: (on) => { FILM.pushIn = !!on; filmRefreshUI(); },
+    save: filmSaveCurrent, saveShared: filmSaveShared,
+    state: () => ({ on: FILM.on, sel: FILM.sel, guide: FILM.guide, crop: FILM.crop, pushIn: FILM.pushIn,
+      slide: !!FILM.slide, store: JSON.parse(JSON.stringify(filmStore)),
+      cam: [+camera.position.x.toFixed(2), +camera.position.y.toFixed(2), +camera.position.z.toFixed(2)],
+      tgt: [+controls.target.x.toFixed(2), +controls.target.y.toFixed(2), +controls.target.z.toFixed(2)],
+      aspect: +camera.aspect.toFixed(3) }) },
   walkers: () => { const o = {}; for (const f of Object.keys(castWalkers)) { const ch = castChars[f], w = castWalkers[f]; if (ch && w) o[f] = { state: w.state, staged: !!w.staged, clip: w.clipName, x: +ch.wrap.position.x.toFixed(2), z: +ch.wrap.position.z.toFixed(2), ry: +ch.wrap.rotation.y.toFixed(2), walkTo: w.walkTo }; } return o; },
   /* hand height vs chest height, for the talk-gesture check (world Y, m) */
   hands: (file) => { const ch = castChars[file]; if (!ch) return null; let skin = null; ch.wrap.traverse(o => { if (o.isSkinnedMesh) skin = o; }); if (!skin || !skin.skeleton) return null; const b = {}; for (const j of skin.skeleton.bones) { const n = j.name.replace(/^mixamorig:?/, ''); if (!b[n]) b[n] = j; } ch.wrap.updateMatrixWorld(true); const p = (bone) => { const v = new THREE.Vector3(); b[bone].getWorldPosition(v); return +v.y.toFixed(3); }; const fwd = (bone) => { const v = new THREE.Vector3(); b[bone].getWorldPosition(v); const c = new THREE.Vector3(); ch.wrap.getWorldPosition(c); const d = new THREE.Vector3(v.x - c.x, 0, v.z - c.z); const f = new THREE.Vector3(0, 0, 1).applyQuaternion(ch.wrap.quaternion); return +d.dot(f).toFixed(3); }; return { chestY: p('Spine2'), headY: p('Head'), rHandY: p('RightHand'), lHandY: p('LeftHand'), rHandFwd: fwd('RightHand'), lHandFwd: fwd('LeftHand') }; },
@@ -5130,7 +5382,7 @@ function animate() {
 
   /* camera follow (v2.90.4: suspended while layout editing - the camera
      is free there and must not snap back to the pinned monk) */
-  if (!window.__layoutEdit) { // window.__ form, not the let: animate runs before the layout section is evaluated (same TDZ trap as monkLocked)
+  if (!window.__layoutEdit && !window.__filmMode) { // window.__ form, not the let: animate runs before the layout section is evaluated (same TDZ trap as monkLocked)
   desiredTarget.set(player.position.x, player.position.y + 1.05, player.position.z);
   camDelta.copy(desiredTarget).sub(controls.target).multiplyScalar(0.07);
   controls.target.add(camDelta);
@@ -5151,10 +5403,26 @@ function animate() {
     camera.position.z = controls.target.z + Math.cos(na) * rr;
   }
   }
+  /* filming mode (#71): preset slide + slow push-in, before controls.update() */
+  if (FILM.slide) {
+    const sl = FILM.slide; sl.t += dt;
+    const k = Math.min(1, sl.t / sl.dur), e = k * k * (3 - 2 * k);
+    camera.position.lerpVectors(sl.fp, sl.tp, e);
+    controls.target.lerpVectors(sl.ft, sl.tt, e);
+    if (k >= 1) FILM.slide = null;
+  }
+  if (FILM.pushIn) {
+    const off = camera.position.clone().sub(controls.target);
+    const len = off.length();
+    if (len > 0.9) {
+      const nl = Math.max(0.9, len - FILM.pushSpeed * dt);
+      camera.position.copy(controls.target).add(off.setLength(nl));
+    }
+  }
   controls.update();
   const cgy = groundY(camera.position.x, camera.position.z) + 0.5;
   if (camera.position.y < cgy) camera.position.y = cgy;
-  if (room === 'hall' && !window.__layoutEdit) { // v2.90.4: no hall camera clamp while layout editing - the camera roams free
+  if (room === 'hall' && !window.__layoutEdit && !window.__filmMode) { // v2.90.4: no hall camera clamp while layout editing - the camera roams free
     camera.position.x = THREE.MathUtils.clamp(camera.position.x, -8.3, 8.3);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z, -24.3, -12.3);
     if (camera.position.y > 4.5) camera.position.y = 4.5;
@@ -5208,6 +5476,7 @@ animate();
 setTimeout(pt3dBootLang, 600);
 
 addEventListener('resize', () => {
+  if (typeof FILM !== 'undefined' && FILM.crop) { filmApplyCrop(); filmRefreshGuide(); return; }
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
@@ -6173,6 +6442,16 @@ document.getElementById('stageListen').addEventListener('click', () => { if (STA
 document.getElementById('stageFaceEach').addEventListener('click', stageFaceEachOther);
 document.getElementById('stageSwap').addEventListener('click', stageSwap);
 document.getElementById('stageResume').addEventListener('click', () => setStage(false));
+document.getElementById('filmWide').addEventListener('click', () => filmGo('wide'));
+document.getElementById('filmMed').addEventListener('click', () => filmGo('medium'));
+document.getElementById('filmClose').addEventListener('click', () => filmGo('close'));
+document.getElementById('filmOts').addEventListener('click', () => filmGo('ots'));
+document.getElementById('filmGuideBtn').addEventListener('click', () => { FILM.guide = !FILM.guide; if (FILM.guide) filmSetOn(true); filmRefreshGuide(); filmRefreshUI(); });
+document.getElementById('filmCropYTBtn').addEventListener('click', () => { filmSetOn(true); FILM.crop = FILM.crop === 'yt' ? false : 'yt'; filmApplyCrop(); filmRefreshUI(); });
+document.getElementById('filmCropTTBtn').addEventListener('click', () => { filmSetOn(true); FILM.crop = FILM.crop === 'tt' ? false : 'tt'; filmApplyCrop(); filmRefreshUI(); });
+document.getElementById('filmPushBtn').addEventListener('click', () => { filmSetOn(true); FILM.pushIn = !FILM.pushIn; filmRefreshUI(); });
+document.getElementById('filmSaveBtn').addEventListener('click', () => filmSaveCurrent());
+document.getElementById('filmShareBtn').addEventListener('click', () => filmSaveShared());
 /* v2.90.0: verification handle (same spirit as __pt3d): lets whoever
    checks the build drive the real layout editor handlers headlessly. */
 if (window.__pt3d) window.__pt3d.layout = {
@@ -6763,7 +7042,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.46';
+const PT3D_VER = '2.90.47';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
