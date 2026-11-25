@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.47">
+<meta name="pt3d-ver" content="2.90.48">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -306,7 +306,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.47</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.48</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2922,7 +2922,7 @@ function spawnSky(x, z, b, wish, name) {
   const mats = [];
   if (P) {
     const m = P.sc.clone(true);
-    m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; mats.push(o.material); o.castShadow = false; } });
+    m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.side = THREE.DoubleSide; /* v2.90.48 (#72 sky lantern): thin paper shell — FrontSide culled the top cap's underside when seen from below, leaving a dark concave notch. DoubleSide keeps the cap closed from every angle */ mats.push(o.material); o.castShadow = false; } });
     const tg = new THREE.Group(); tg.quaternion.copy(P.q || new THREE.Quaternion());
     const sc = 1.05 / P.h; m.scale.setScalar(sc); m.position.set(-(P.rx || 0) * sc, -P.y0 * sc, -(P.rz || 0) * sc);
     tg.add(m); g.add(tg);
@@ -3087,6 +3087,16 @@ function swapToModel(g) {
      because it is a child of the pivot. */
   const beads = makeBeads(g.userData.beadSet !== undefined ? g.userData.beadSet : 0);
   pivot.add(beads);
+  /* v2.90.48 (#72 beads, fix properly or remove): hang the strand on the
+     chest bone (Spine2) so it follows the torso's idle/walk/sit sway.
+     Pivot-fixed, the chest surface swayed up to ~4 cm forward past the
+     beads' fixed z during idle and buried them (headless bone sampling:
+     Spine2 z swings 6.081..6.108 while beadFront stays at 5.993). attach()
+     re-parents while preserving the strand's world pose, so the loop keeps
+     its designed place on the chest and rides the bone from then on. */
+  let chestBone = null;
+  inst.traverse(o => { if (o.name === 'mixamorigSpine2') chestBone = o; });
+  if (chestBone) chestBone.attach(beads);
   g.userData.beads = beads;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
   /* v2.90.39: skeletal walk/idle for this avatar (idle first; walk when moving) */
@@ -7042,7 +7052,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.47';
+const PT3D_VER = '2.90.48';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
