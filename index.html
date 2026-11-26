@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.48">
+<meta name="pt3d-ver" content="2.90.49">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -306,7 +306,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.48</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.49</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -2922,10 +2922,16 @@ function spawnSky(x, z, b, wish, name) {
   const mats = [];
   if (P) {
     const m = P.sc.clone(true);
-    m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.side = THREE.DoubleSide; /* v2.90.48 (#72 sky lantern): thin paper shell — FrontSide culled the top cap's underside when seen from below, leaving a dark concave notch. DoubleSide keeps the cap closed from every angle */ mats.push(o.material); o.castShadow = false; } });
+    m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.side = THREE.DoubleSide; /* v2.90.49 (#72 sky lantern): thin paper shell — FrontSide culled the top cap's underside when seen from below, leaving a dark concave notch. DoubleSide keeps the cap closed from every angle */ /* v2.90.49 (#72 sky lantern): the paper must GLOW warm from inside — DoubleSide alone left the interior a dark hole on Anita's phone. Emissive (the paper texture itself as emissive map) makes the lantern read as lit paper from every angle, top included */ o.material.emissive = new THREE.Color(0xff9a3c); o.material.emissiveIntensity = 0.9; if (o.material.map) o.material.emissiveMap = o.material.map; mats.push(o.material); o.castShadow = false; } });
     const tg = new THREE.Group(); tg.quaternion.copy(P.q || new THREE.Quaternion());
     const sc = 1.05 / P.h; m.scale.setScalar(sc); m.position.set(-(P.rx || 0) * sc, -P.y0 * sc, -(P.rz || 0) * sc);
     tg.add(m); g.add(tg);
+    /* v2.90.49 (#72 sky lantern): paper cap cone over the dome top (see the
+       geometry note in the apply script). Faceted (12 seg) to match the
+       Tripo paper, warm emissive like the body, fades with it via mats. */
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xffb45e, roughness: 0.8, side: THREE.DoubleSide, transparent: true, emissive: 0xff8c2e, emissiveIntensity: 0.7 });
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.21, 0.14, 12), capMat);
+    cap.position.set(0, 0.99, 0); cap.castShadow = false; tg.add(cap); mats.push(capMat);
   }
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffbe78, transparent: true, opacity: 0.8, depthWrite: false }));
   glow.scale.set(2.6, 2.6, 1); glow.position.y = 0.5; g.add(glow);
@@ -3081,23 +3087,14 @@ function swapToModel(g) {
   g.userData.bodyG = bodyG;
   g.userData.upperG = pivot;
   g.userData.robeMesh = null; g.userData.beadMats = null;
-  /* v2.90.44: restore the prayer beads on the rigged baby — the strand is
-     rebuilt (makeBeads) and hung on the new pivot at chest height, the same
-     relative layout as the old monk's strand. It follows walk/bow/sit
-     because it is a child of the pivot. */
-  const beads = makeBeads(g.userData.beadSet !== undefined ? g.userData.beadSet : 0);
-  pivot.add(beads);
-  /* v2.90.48 (#72 beads, fix properly or remove): hang the strand on the
-     chest bone (Spine2) so it follows the torso's idle/walk/sit sway.
-     Pivot-fixed, the chest surface swayed up to ~4 cm forward past the
-     beads' fixed z during idle and buried them (headless bone sampling:
-     Spine2 z swings 6.081..6.108 while beadFront stays at 5.993). attach()
-     re-parents while preserving the strand's world pose, so the loop keeps
-     its designed place on the chest and rides the bone from then on. */
-  let chestBone = null;
-  inst.traverse(o => { if (o.name === 'mixamorigSpine2') chestBone = o; });
-  if (chestBone) chestBone.attach(beads);
-  g.userData.beads = beads;
+  /* v2.90.49 (#72 beads, REMOVED): Anita's fix-or-remove rule — after the
+     third failed fix the strand is gone, not repaired a fourth time. .45
+     re-anchored it, .46 halved it, .48 hung it on the Spine2 chest bone,
+     and on her real device it STILL grew out of the neck (photo 25 Nov).
+     No strand is built here any more; userData.beads stays null (the mala
+     pulse block and the bead-colour re-tints both guard on it, so the
+     108-count mala feature keeps working without the 3D strand). */
+  g.userData.beads = null;
   if (g.userData.halo) g.userData.halo.position.set(0, 1.04, -0.37);
   /* v2.90.39: skeletal walk/idle for this avatar (idle first; walk when moving) */
   if (avatarClips && avatarClips.walk && avatarClips.idle) {
@@ -3163,29 +3160,9 @@ setTimeout(monkFallback, 25000); // v2.70.0: only if the model truly cannot load
 
 /* ============ Avatar builder ============ */
 const BEAD_SETS = [[0x8a5a28, 0x6f451f], [0xc89b62, 0xa87c48], [0xd9a441, 0xb97f26]];
-/* v2.90.44: the prayer-bead strand, built procedurally (same 18-bead loop
-   + guru + tassel as the old monk). Returns the group; the caller adds it to
-   the avatar's upper pivot so it hangs on the chest and follows walk/bow/sit. */
-function makeBeads(beadSet) {
-  const beads = new THREE.Group();
-  const bs = BEAD_SETS[beadSet % BEAD_SETS.length];
-  const beadMat = new THREE.MeshStandardMaterial({ color: bs[0], roughness: 0.5 });
-  const beadMat2 = new THREE.MeshStandardMaterial({ color: bs[1], roughness: 0.5 });
-  const beadGeo = new THREE.SphereGeometry(0.013, 9, 9); /* v2.90.46 (Anita): string halved — bead 0.026 -> 0.013 */
-  for (let i = 0; i < 18; i++) {
-    const a = (i / 18) * Math.PI * 2;
-    const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
-    b.position.set(Math.sin(a) * 0.05, 0.184 - Math.cos(a) * 0.044, 0.08 + Math.cos(a) * 0.05); /* v2.90.46: loop halved and re-anchored — top stays at the neck (0.228), front stays ON the chest (z 0.13); a naive half-scale about the loop centre would bury the front beads at z 0.08 inside the chest (~0.127) */
-    beads.add(b);
-  }
-  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.017, 10, 10), MAT.robeGold); /* v2.90.46: guru 0.034 -> 0.017 */
-  guru.position.set(0, 0.133, 0.13); beads.add(guru); /* v2.90.46: just below the new front-bottom bead (0, 0.14, 0.13), on the chest */
-  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.01, 0.035, 8),
-    new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 })); /* v2.90.46: tassel 0.02x0.07 -> 0.01x0.035 */
-  tassel.position.set(0, 0.108, 0.13); tassel.rotation.x = Math.PI; beads.add(tassel); /* v2.90.46: just below the guru, on the chest */
-  beads.castShadow = true;
-  return beads;
-}
+/* v2.90.49 (#72 beads, REMOVED): makeBeads deleted with the strand — see
+   the swapToModel note above. BEAD_SETS stays (profile bead-colour chips
+   still store the choice; the re-tints guard on a null beadMats). */
 function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player = false, beadSet = 0 }) {
   const g = new THREE.Group();
   const bodyG = new THREE.Group(); g.add(bodyG);
@@ -3197,24 +3174,9 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   cyl(0.243, 0.258, 0.075, MAT.robeGold, 0, 0.40, 0, bodyG);
   const upperG = new THREE.Group(); upperG.position.y = 0.58; bodyG.add(upperG);
   const neck = cyl(0.08, 0.09, 0.24, MAT.skin, 0, 0.09, 0, upperG);
-  const beads = new THREE.Group();
-  const bs = BEAD_SETS[beadSet % BEAD_SETS.length];
-  const beadMat = new THREE.MeshStandardMaterial({ color: bs[0], roughness: 0.5 });
-  const beadMat2 = new THREE.MeshStandardMaterial({ color: bs[1], roughness: 0.5 });
-  g.userData.beadMats = [beadMat, beadMat2];
-  const beadGeo = new THREE.SphereGeometry(0.026, 9, 9);
-  for (let i = 0; i < 18; i++) {
-    const a = (i / 18) * Math.PI * 2;
-    const b = new THREE.Mesh(beadGeo, i % 2 ? beadMat : beadMat2);
-    b.position.set(Math.sin(a) * 0.105, 0.14 - Math.cos(a) * 0.088, 0.055 + Math.cos(a) * 0.135);
-    beads.add(b);
-  }
-  const guru = new THREE.Mesh(new THREE.SphereGeometry(0.034, 10, 10), MAT.robeGold);
-  guru.position.set(0, 0.038, 0.195); beads.add(guru);
-  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 8),
-    new THREE.MeshStandardMaterial({ color: 0xb03a2e, roughness: 0.7 }));
-  tassel.position.set(0, -0.012, 0.195); tassel.rotation.x = Math.PI; beads.add(tassel);
-  beads.castShadow = true; upperG.add(beads);
+  /* v2.90.49 (#72 beads, REMOVED): no strand on the placeholder body
+     either — same rule as the rigged avatar above. */
+  g.userData.beadMats = null;
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 22, 18), MAT.skin);
   head.position.y = 0.36; head.castShadow = true; upperG.add(head);
   [-1, 1].forEach(sgn => {
@@ -3245,7 +3207,7 @@ function buildAvatar({ name, sub = '', bald = false, robeMat = MAT.robe, player 
   }
   g.userData.bodyG = bodyG;
   g.userData.beadSet = beadSet;
-  g.userData.beads = beads;
+  g.userData.beads = null; /* v2.90.49 (#72): strand removed — see above */
   g.userData.upperG = upperG;
   scene.add(g);
   if (monkProto) swapToModel(g); else { modelPending.push(g); bodyG.visible = false; } // v2.70.0: no old-cone flash while the real monk loads (Anita: delete the old one)
@@ -7052,7 +7014,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.48';
+const PT3D_VER = '2.90.49';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
