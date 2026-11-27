@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.49">
+<meta name="pt3d-ver" content="2.90.50">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -306,7 +306,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.49</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.50</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -416,7 +416,7 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
    Group 1 (hall + cast + essential UI, ~10.5 MB cold-cache) loads at boot as
    before. Group 2 (yard scenery, STAGE2_URLS below) GLB requests are queued
    here and fired after entry, near-to-far from the hall door, a few at a
-   time. Sky lanterns stay lazy (loadSkyProtos, on first use) and music stays
+   time. Sky lanterns are built in code now (v2.90.50, no GLB load) and music stays
    deferred (preload="none", on first play press) — both already were. */
 const STAGE2_URLS = {
   'models/burner.glb': 1, 'models/xam-set.glb': 1,
@@ -470,7 +470,7 @@ bootMark('imports-ok');
    shifts every part + its colliders by the anchor delta. Rotation applies
    to single pieces only (the shrine moves as a cluster, unrotated). */
 const LAYOUT_KEY = 'pt3d-layout-v1';
-const skyLanterns = []; const skyProtos = [null, null, null]; let skyLoading = false, skyReady = false, skyLastSent = 0; const skyWaiters = []; const skyLastFrom = new Map();
+const skyLanterns = []; let skyLastSent = 0; const skyLastFrom = new Map();
 const chatLastFrom = new Map(); // v2.79.2: chat state lives up top - animate() runs during eval, late consts are TDZ traps
 const chatBubbles = new Map();
 const __chatV = new THREE.Vector3();
@@ -2871,37 +2871,61 @@ function spawnSala(shared) {
   scene.add(g); sala = g;
 }
 
-/* ============ Sky wish lanterns (v2.85.0) — release a paper lantern that rises
-   over the yard for everyone to see; the blessing word is baked into each model:
-   0 = Hạnh Phúc, 1 = Bình An, 2 = Như Ý. Models load lazily on first use. ============ */
-const SKY_URLS = ['models/sky-hanhphuc.glb?v=103', 'models/sky-binhan.glb?v=103', 'models/sky-nhuy.glb?v=103'];
-function loadSkyProtos(cb) {
-  if (skyReady) { cb(); return; }
-  skyWaiters.push(cb);
-  if (skyLoading) return;
-  skyLoading = true;
-  let done = 0;
-  SKY_URLS.forEach((u, i) => {
-    new GLTFLoader().load(u, (gltf) => {
-      const sc = gltf.scene;
-      const bb = new THREE.Box3().setFromObject(sc);
-      const P = { sc, h: Math.max(0.1, bb.max.y - bb.min.y), y0: bb.min.y, q: new THREE.Quaternion(), rx: (bb.min.x + bb.max.x) / 2, rz: (bb.min.z + bb.max.z) / 2 };
-      try {
-        sc.updateMatrixWorld(true);
-        let big = null, bn = 0;
-        sc.traverse(o => { if (o.isMesh && o.geometry && o.geometry.attributes.position && o.geometry.attributes.position.count > bn) { bn = o.geometry.attributes.position.count; big = o; } });
-        if (big) {
-          const pa = big.geometry.attributes.position, vv = new THREE.Vector3();
-          const rim = new THREE.Vector3(), top = new THREE.Vector3(); let rc = 0, tc = 0;
-          const yLo = bb.min.y + (bb.max.y - bb.min.y) * 0.08, yHi = bb.min.y + (bb.max.y - bb.min.y) * 0.85;
-          for (let vi = 0; vi < pa.count; vi++) { vv.fromBufferAttribute(pa, vi).applyMatrix4(big.matrixWorld); if (vv.y <= yLo) { rim.add(vv); rc++; } else if (vv.y >= yHi) { top.add(vv); tc++; } }
-          if (rc > 10 && tc > 10) { rim.divideScalar(rc); top.divideScalar(tc); const ax = top.sub(rim).normalize(); if (ax.lengthSq() > 0.5) P.q.setFromUnitVectors(ax, new THREE.Vector3(0, 1, 0)); P.rx = rim.x; P.rz = rim.z; }
-        }
-      } catch (e) {}
-      skyProtos[i] = P;
-      if (++done === SKY_URLS.length) { skyReady = true; skyWaiters.splice(0).forEach(f => { try { f(); } catch (e) {} }); }
-    }, undefined, () => { if (++done === SKY_URLS.length) { skyReady = true; skyWaiters.splice(0).forEach(f => { try { f(); } catch (e) {} }); } });
+/* ============ Sky wish lanterns — REBUILT FROM SCRATCH in v2.90.50 (#72) ============
+   Anita 2026-11-27 13:44 +07: "cat lai cai den moi di, dung tiep tuc va tren
+   cai cu nua" — the Tripo GLB (models/sky-hanhphuc/binhan/nhuy.glb) is GONE
+   from this path. Two patches (.48 DoubleSide, .49 emissive + cap cone) still
+   read as cut / caved-in on her phone, so the lantern is now built in code
+   from primitives. Same ~1.05 m tall, same rise/orbit/fade behaviour, same 3
+   blessings (0 Hanh Phuc, 1 Binh An, 2 Nhu Y — the word is drawn on the paper
+   now, not baked into a model).
+   - Paper body: LatheGeometry whose profile closes to a REAL point at the apex
+     (r = 0 at y = 1.02) — the top is sealed geometry, no cap laid over a hole.
+   - Paper texture: canvas-drawn warm paper + vertical ribs + blessing word,
+     used as map AND emissiveMap, so it reads as lit paper from below/above/side.
+   - Mouth kept open (r 0.17): bamboo rim ring + burner cup with a warm emissive
+     flame disc inside, so looking up from below shows light, not a dark hole.
+   - Built upright by construction — no lean correction needed (the v2.85.1 lean
+     fix was for the GLB's tilted axis). No network load: releasing is instant. */
+const SKY_WORDS = [['\u5e78\u798f', 'H\u1ea1nh Ph\u00fac'], ['\u5e73\u5b89', 'B\u00ecnh An'], ['\u5982\u610f', 'Nh\u01b0 \u00dd']];
+function skyPaperTex(b) {
+  const w = SKY_WORDS[[0, 1, 2].includes(b) ? b : 0];
+  return canvasTexture(512, 512, (g, W, H) => {
+    g.fillStyle = '#ffd9a0'; g.fillRect(0, 0, W, H);
+    const gr = g.createLinearGradient(0, 0, 0, H);
+    gr.addColorStop(0, 'rgba(255,190,110,0.55)'); gr.addColorStop(0.5, 'rgba(255,220,160,0.12)'); gr.addColorStop(1, 'rgba(255,170,90,0.6)');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(180,110,40,0.35)'; g.lineWidth = 2;
+    for (let i = 0; i < 12; i++) { const x = (i + 0.5) * W / 12; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#a02818'; g.font = 'bold 150px "Segoe UI", sans-serif';
+    g.fillText(w[0], W / 2, H * 0.44);
+    g.fillStyle = '#7a1c10'; g.font = 'bold 44px "Segoe UI", sans-serif';
+    g.fillText(w[1], W / 2, H * 0.66);
   });
+}
+function buildSkyLantern(b) {
+  const g = new THREE.Group(); const mats = [];
+  const tex = skyPaperTex(b);
+  const paper = new THREE.MeshStandardMaterial({ map: tex, emissive: 0xff9a3c, emissiveIntensity: 0.9, emissiveMap: tex, roughness: 0.85, side: THREE.DoubleSide, transparent: true });
+  /* Profile (r, y) measured off the old GLB (NOTES-49): mouth r 0.17, bulge
+     r 0.30 at mid-body, dome r 0.15 at y 0.90, apex CLOSED at r 0, y 1.02. */
+  const prof = [[0.17, 0], [0.235, 0.10], [0.29, 0.28], [0.30, 0.45], [0.275, 0.62], [0.215, 0.78], [0.15, 0.90], [0.09, 0.97], [0.03, 1.01], [0, 1.02]];
+  const body = new THREE.Mesh(new THREE.LatheGeometry(prof.map(p => new THREE.Vector2(p[0], p[1])), 28), paper);
+  body.castShadow = false; g.add(body); mats.push(paper);
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x8a5a22, roughness: 0.8, side: THREE.DoubleSide, transparent: true });
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.018, 8, 28), rimMat);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.02; rim.castShadow = false; g.add(rim); mats.push(rimMat);
+  const bandMat = rimMat.clone();
+  const band = new THREE.Mesh(new THREE.TorusGeometry(0.135, 0.012, 8, 28), bandMat);
+  band.rotation.x = Math.PI / 2; band.position.y = 0.92; band.castShadow = false; g.add(band); mats.push(bandMat);
+  const cupMat = new THREE.MeshStandardMaterial({ color: 0x4a2c12, roughness: 0.7, side: THREE.DoubleSide, transparent: true });
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.05, 0.05, 16), cupMat);
+  cup.position.y = 0.10; cup.castShadow = false; g.add(cup); mats.push(cupMat);
+  const flameMat = new THREE.MeshStandardMaterial({ color: 0xffc46a, emissive: 0xff9a1e, emissiveIntensity: 2.2, transparent: true });
+  const flame = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 10), flameMat);
+  flame.scale.y = 1.5; flame.position.y = 0.15; flame.castShadow = false; g.add(flame); mats.push(flameMat);
+  return { g, mats };
 }
 function makeSkyTag(name, wish) {
   const t = canvasTexture(640, 208, (g) => {
@@ -2917,22 +2941,9 @@ function makeSkyTag(name, wish) {
   return sp;
 }
 function spawnSky(x, z, b, wish, name) {
-  const P = skyProtos[b] || skyProtos.find(q => q);
-  const g = new THREE.Group();
-  const mats = [];
-  if (P) {
-    const m = P.sc.clone(true);
-    m.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.side = THREE.DoubleSide; /* v2.90.49 (#72 sky lantern): thin paper shell — FrontSide culled the top cap's underside when seen from below, leaving a dark concave notch. DoubleSide keeps the cap closed from every angle */ /* v2.90.49 (#72 sky lantern): the paper must GLOW warm from inside — DoubleSide alone left the interior a dark hole on Anita's phone. Emissive (the paper texture itself as emissive map) makes the lantern read as lit paper from every angle, top included */ o.material.emissive = new THREE.Color(0xff9a3c); o.material.emissiveIntensity = 0.9; if (o.material.map) o.material.emissiveMap = o.material.map; mats.push(o.material); o.castShadow = false; } });
-    const tg = new THREE.Group(); tg.quaternion.copy(P.q || new THREE.Quaternion());
-    const sc = 1.05 / P.h; m.scale.setScalar(sc); m.position.set(-(P.rx || 0) * sc, -P.y0 * sc, -(P.rz || 0) * sc);
-    tg.add(m); g.add(tg);
-    /* v2.90.49 (#72 sky lantern): paper cap cone over the dome top (see the
-       geometry note in the apply script). Faceted (12 seg) to match the
-       Tripo paper, warm emissive like the body, fades with it via mats. */
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xffb45e, roughness: 0.8, side: THREE.DoubleSide, transparent: true, emissive: 0xff8c2e, emissiveIntensity: 0.7 });
-    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.21, 0.14, 12), capMat);
-    cap.position.set(0, 0.99, 0); cap.castShadow = false; tg.add(cap); mats.push(capMat);
-  }
+  const built = buildSkyLantern([0, 1, 2].includes(b) ? b : 0);
+  const g = built.g;
+  const mats = built.mats;
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffbe78, transparent: true, opacity: 0.8, depthWrite: false }));
   glow.scale.set(2.6, 2.6, 1); glow.position.y = 0.5; g.add(glow);
   let tag = null;
@@ -2977,8 +2988,7 @@ if (btnSky) btnSky.addEventListener('click', () => {
   if (room !== 'yard') return;
   const now = performance.now();
   if (now - skyLastSent < 45000) { toast(L().skyCool); return; }
-  if (!skyReady) toast(L().skyLoad);
-  loadSkyProtos(async () => {
+  (async () => {
     const r = await askSky();
     if (!r) return;
     skyLastSent = performance.now();
@@ -2986,7 +2996,7 @@ if (btnSky) btnSky.addEventListener('click', () => {
     ptSend({ k: 'sky', b: r.b, w: r.w, x: +player.position.x.toFixed(2), z: +player.position.z.toFixed(2) });
     bumpDaily('sk'); if ((daily.sk || 0) <= 3) addSen(2);
     toast(L().skySent);
-  });
+  })();
 });
 
 function catchSala() {
@@ -4792,6 +4802,7 @@ function addSen(n) {
   }
   meritDirty = true;
   refreshBac();
+  pushStatsSoon(); /* v2.90.50: rank on the server — push the new total (debounced) */
 }
 
 /* v2.69.0: the menu-bar Sit button is gone - meditating starts from the buttons on the cushions. */
@@ -4871,6 +4882,7 @@ function applyName(n) {
   document.getElementById('pName').textContent = n;
   const tag = player.userData.tag;
   if (tag) { tag.material.map = nameTag(n, 'Bậc ' + bacOf(sen)).material.map; tag.material.needsUpdate = true; }
+  syncStatsFromServer(); /* v2.90.50: rank on the server — pull this name's total */
 }
 function openNameModal() {
   nameInput.value = myName || '';
@@ -6004,7 +6016,7 @@ function ptWorld(pl) {
     const rr = remotes.get(pl.from);
     const w = String(pl.w || '').replace(/[<>&"'`\u0000-\u001f]/g, '').slice(0, 60);
     const bx = Math.max(-17, Math.min(17, +pl.x || 0)), bz = Math.max(-24, Math.min(14, +pl.z || 0));
-    loadSkyProtos(() => spawnSky(bx + (rr ? Math.sin(rr.try_ || 0) * 0.85 : 0), bz + (rr ? Math.cos(rr.try_ || 0) * 0.85 : 0), [0, 1, 2].includes(pl.b) ? pl.b : 0, w, rr ? rr.name : ''));
+    spawnSky(bx + (rr ? Math.sin(rr.try_ || 0) * 0.85 : 0), bz + (rr ? Math.cos(rr.try_ || 0) * 0.85 : 0), [0, 1, 2].includes(pl.b) ? pl.b : 0, w, rr ? rr.name : '');
   } else if (pl.k === 'bow') {
     const r = remotes.get(pl.from); if (r) r.bowT = 0;
   } else if (pl.k === 'mv') {
@@ -6061,6 +6073,7 @@ try {
   if (window.supabase) {
     sbClient = window.supabase.createClient(PT3D_SB_URL, PT3D_SB_KEY);
     ptConnect();
+    syncStatsFromServer(); /* v2.90.50: rank on the server — pull this name's total */
     acquireWakeLock(); /* #56: keep the screen awake while in the room */
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { hiddenAt = Date.now(); return; }
@@ -6285,6 +6298,46 @@ async function keeperSet(hash) {
   if (!sbClient) return null;
   try { const { data, error } = await sbClient.rpc('pt3d_keeper_set', { p_code: hash }); if (error) return null; return !!data; }
   catch (e) { return null; }
+}
+/* v2.90.50 (Anita): rank follows the player across devices. Lotus seeds
+   (`stats.sen`) used to live ONLY in this device's localStorage, so the web
+   showed Rank 1 (27 seeds) while the app showed Rank 5 (250+). Now the
+   total also lives on the server (pt3d_stats, keyed by the player's name —
+   one name per person, #58) and the client takes the MAX of local/server,
+   so a higher count earned anywhere is never lost. The server only ever
+   goes UP (greatest of stored/supplied), so a stale device can never wipe
+   a higher count. Graceful: if Supabase or the RPCs are missing (the SQL
+   has not run yet), everything still works local-only. */
+function statsKey() { return (myName || '').trim().toLowerCase(); }
+async function statsGet() {
+  if (!sbClient) return null;
+  const k = statsKey(); if (!k) return null;
+  try { const { data, error } = await sbClient.rpc('pt3d_stats_get', { p_name: k }); if (error) return null; return (typeof data === 'number') ? data : null; }
+  catch (e) { return null; }
+}
+async function statsSet(v) {
+  if (!sbClient) return false;
+  const k = statsKey(); if (!k) return false;
+  try { const { data, error } = await sbClient.rpc('pt3d_stats_set', { p_name: k, p_sen: Math.max(0, Math.floor(v)) }); if (error) return false; return !!data; }
+  catch (e) { return false; }
+}
+let statsPushT = 0;
+function pushStatsSoon() {
+  if (!sbClient || !statsKey()) return;
+  clearTimeout(statsPushT);
+  statsPushT = setTimeout(() => { statsSet(sen); }, 2000);
+}
+async function syncStatsFromServer() {
+  if (!sbClient || !statsKey()) return;
+  const srv = await statsGet();
+  if (srv === null) return;
+  if (srv > sen) {
+    sen = srv; stats.sen = srv; saveStats();
+    if (senEl) senEl.textContent = srv;
+    refreshBac();
+  } else if (sen > srv) {
+    statsSet(sen);
+  }
 }
 function askKeeperCode(isSet) {
   return new Promise(res => {
@@ -7014,7 +7067,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.49';
+const PT3D_VER = '2.90.50';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
