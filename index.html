@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="pt3d-ver" content="2.90.50">
+<meta name="pt3d-ver" content="2.90.51">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2a2019">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -306,7 +306,7 @@
     </div>
   </div>
 </div>
-<div id="credit">Tượng Phật: model 3D Tripo · v2.90.50</div>
+<div id="credit">Tượng Phật: model 3D Tripo · v2.90.51</div>
 <div class="ui" id="hint" data-i18n="hint">Chạm vào sân để đi<br>Kéo để xoay góc nhìn<br>Bấm đệm trống để ngồi thiền</div>
 
 <div id="nameModal">
@@ -6344,8 +6344,8 @@ function askKeeperCode(isSet) {
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,6,3,.66);z-index:200;display:flex;align-items:center;justify-content:center';
     ov.innerHTML = '<div style="background:#2b1d10;border:1px solid rgba(255,205,120,.55);border-radius:14px;padding:18px 20px;width:min(320px,86vw);color:#ffe9bd;font-family:inherit">'
-      + '<div style="font-weight:700;margin-bottom:10px">' + (isSet ? L().keeperSetTitle : L().keeperEnterTitle) + '</div>'
-      + '<div style="font-size:13px;opacity:.85;margin-bottom:10px">' + (isSet ? L().keeperSetPrompt : L().keeperEnterPrompt) + '</div>'
+      + '<div id="keeperTitle" style="font-weight:700;margin-bottom:10px">' + (isSet ? L().keeperSetTitle : L().keeperEnterTitle) + '</div>'
+      + '<div id="keeperPrompt" style="font-size:13px;opacity:.85;margin-bottom:10px">' + (isSet ? L().keeperSetPrompt : L().keeperEnterPrompt) + '</div>'
       + '<input id="keeperInp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;border:1px solid rgba(255,205,120,.4);background:#1d1208;color:#ffe9bd;font-size:16px;letter-spacing:2px">'
       + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
       + '<button id="keeperCancel" class="laybtn">✕</button><button id="keeperOk" class="laybtn">OK</button></div></div>';
@@ -6359,29 +6359,63 @@ function askKeeperCode(isSet) {
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') done(inp.value || null); if (e.key === 'Escape') done(null); });
   });
 }
+/* #77: bound a promise so a hung RPC resolves null instead of hanging forever */
+function withTimeout(p, ms) { return Promise.race([p, new Promise(res => setTimeout(() => res(null), ms))]); }
 async function onKeeperUnlock() {
-  if (keeperUnlocked) { toast(L().keeperUnlocked); return; }
-  if (!sbClient) { toast(L().keeperErr); return; }
-  const hasCode = await keeperStatus();
-  if (hasCode === null) { toast(L().keeperErr); return; }
-  const code = await askKeeperCode(!hasCode);
-  if (code === null) return;
-  if (code.trim().length < 6) { toast(L().keeperSetShort); return; }
-  const hash = await keeperHashCode(code);
-  if (!hasCode) {
-    /* first setup: this code becomes the one keeper code (only when none is stored yet) */
-    const ok = await keeperSet(hash);
+  try {
+    if (keeperUnlocked) { toast(L().keeperUnlocked); return; }
+    if (!sbClient) { toast(L().keeperErr); return; }
+    /* #77: the prompt opens FIRST, without waiting for the server. The old
+       flow awaited keeperStatus() (a network RPC) before showing anything,
+       so a slow/hung RPC left the tap with no prompt, no toast, nothing.
+       Now the prompt opens at once (ENTER mode); a background status check
+       flips it to SET mode if no code is stored yet. */
+    let modeSet = false; /* true once we know no code is stored yet */
+    const codeP = askKeeperCode(false);
+    withTimeout(keeperStatus(), 8000).then(h => {
+      if (h === false) {
+        modeSet = true;
+        const t = document.getElementById('keeperTitle');
+        const p = document.getElementById('keeperPrompt');
+        if (t) t.textContent = L().keeperSetTitle;
+        if (p) p.textContent = L().keeperSetPrompt;
+      }
+    }).catch(() => {});
+    const code = await codeP;
+    if (code === null) return; /* cancelled */
+    if (code.trim().length < 6) { toast(L().keeperSetShort); return; }
+    const hash = await keeperHashCode(code);
+    if (modeSet) {
+      /* no code stored yet: this code becomes the one keeper code */
+      const ok = await withTimeout(keeperSet(hash), 10000);
+      if (ok === null) { toast(L().keeperErr); return; }
+      if (!ok) { toast(L().keeperSetFail); return; }
+      keeperSetUnlocked(hash);
+      toast(L().keeperSetOk);
+      return;
+    }
+    const ok = await withTimeout(keeperVerify(hash), 10000);
     if (ok === null) { toast(L().keeperErr); return; }
-    if (!ok) { toast(L().keeperSetFail); return; }
+    if (ok === false) {
+      /* Could be a first-time setup whose status check had not landed yet:
+         if no code is stored, treat this code as the new one. */
+      const h = await withTimeout(keeperStatus(), 8000);
+      if (h === false) {
+        const setOk = await withTimeout(keeperSet(hash), 10000);
+        if (setOk === null) { toast(L().keeperErr); return; }
+        if (!setOk) { toast(L().keeperSetFail); return; }
+        keeperSetUnlocked(hash);
+        toast(L().keeperSetOk);
+        return;
+      }
+      toast(L().keeperWrong); return;
+    }
     keeperSetUnlocked(hash);
-    toast(L().keeperSetOk);
-    return;
+    toast(L().keeperUnlocked);
+  } catch (e) {
+    /* #77: never silent — any unexpected failure shows the server toast */
+    toast(L().keeperErr);
   }
-  const ok = await keeperVerify(hash);
-  if (ok === null) { toast(L().keeperErr); return; }
-  if (ok === false) { toast(L().keeperWrong); return; }
-  keeperSetUnlocked(hash);
-  toast(L().keeperUnlocked);
 }
 /* #59 scope addition (Anita 23:09): app + web are ONE path. A keeper client
    joins presence under its stable keeper identity (kp = code hash), not its
@@ -7067,7 +7101,7 @@ function makePanelDraggable(el, key) {
    fresh. The page also checks for a newer build every 2 minutes and reloads
    itself once when one exists — with the session snapshot, that update is
    invisible to the visitor (no more testing on stale builds). */
-const PT3D_VER = '2.90.50';
+const PT3D_VER = '2.90.51';
 function ptSaveSession() {
   try {
     sessionStorage.setItem('pt3d-session', JSON.stringify({
